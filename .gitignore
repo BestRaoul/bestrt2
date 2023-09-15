@@ -64,3 +64,6 @@ dkms.conf
 
 artix*
 libs/mlx_linux/test/mlx-test
+
+output/*
+output

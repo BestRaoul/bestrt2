@@ -90,11 +90,12 @@ void	render_movie()
 
 	int	frames = 30;
 	int	framerate = 30;
-	int loops = 3;
+	int loops = 2;
 	//Fix delta time
 	v.delta_time = 1.0/framerate;
 	//Reset motions
 	v.time_passed = 0;
+	v.time_speed = 1;
 	
 	for (int i=0; i<frames; i++)
 	{

@@ -247,7 +247,7 @@ void	checkers(void)
 void	first_animation(void)
 {
 	default_cam();
-	v.camera_pos = v3(3.574662, 3.564830, -2.081380);
+	v.camera_pos = v3(0, 3, 0);
 	v.lookat_toggle = 1;
 	v.lookat = v3(0, 2, 0);
 	v.render_mode = RASTER;
@@ -255,9 +255,9 @@ void	first_animation(void)
 	v.time_speed = 0.4;
 
 	material ground = new_metal(checkerboard(.5,
-		c3(.1, .2, .3),//checkerboard(1, c3(.1,.1,.1), c3(.9, .9, .9)),
+		c3(.2, .3, .1),//checkerboard(1, c3(.1,.1,.1), c3(.9, .9, .9)),
 		c3(.9, .9, .9)), 0);
-	material sphere = new_lambertian(checkerboard(.05, c3(.8,.9,.1), c3(.8, .1, .9)));
+	material sphere = new_lambertian(checkerboard(.05, c3(.9,.6,.1), c3(.3, .1, .9)));
 	material sr 	= new_lambertian(c3(.8,.2,.1));
 
     add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(), ground, PLANE});
@@ -266,12 +266,13 @@ void	first_animation(void)
 
 	t_item *sph = &(v.items[1]);
 	t_item *sph2 = &(v.items[2]);
-	add_motion(&(sph->pos.y), 0.1, 2, ping_pong_2);
+	add_motion(&(sph->pos.y), 1.6, 2.4, ping_pong_2);
 	add_motion(&(sph2->pos.x), -2, 2, cos_tween);
 	add_motion(&(sph2->pos.z), -2, 2, sin_tween);
+	add_motion(&(sph2->pos.y), 2.6, 1.3, ping_pong);
 
-	add_motion(&(v.camera_pos.x), -1, 1, sin_tween);
-	add_motion(&(v.camera_pos.z), -1, 1, cos_tween);
+	add_motion(&(v.camera_pos.x), -4, 4, sin_tween);
+	add_motion(&(v.camera_pos.z), -4, 4, cos_tween);
 }
 
 //__NOT__

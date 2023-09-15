@@ -1,0 +1,58 @@
+threading plan + execute it
+	single thread simplicity
+	quick switch to multiple
+
+mouse images
+	default
+	4 arrows move
+	2 arrows rot/scale around axis
+
+fix issue with total_move and anchor -> after using shift absulute center is not there
+
+item: 
+	+select, +modif
+	?color picker
+	shift + XZY
+
+
+
+1: do fake 3d
+ FIX draw_line Z linear shift but it aint always that
+2. do actuall render bs
+ add bonuses (lights, specular, ..)
+3. do fake generation
+	shift + _p
+	save to disk
+	use motions (frames, time_duration) -> ffmpeg -> ntfy
+4. do threading
+
+----- Things i dont want to do, but have to be done
+
+//make add, move the pointers so that add_item does not break previous add_motions
+//remove mallocs for static size arrays
+//rotate default cylinder
+
+//linux -> CAMERA MOVEMENT - mouse
+
+//TODO intra
+1. specular
+2. window resizing
+3. no crash
+4. parsing
+5-7. read texture from file
+5. texture
+6. bumpmap
+8. colored lights check
+9. 2nd degree object
+
+
+//TODO now
+3. render animation
+
+//TODO
+2. render to disk, multiple imgs -> ffmpeg
+3. ntfy
+4. lights
+5. tris
+6. focus blur
+8. aabb

@@ -74,39 +74,6 @@ color	trace(ray *r, int max_depth)
 	return light;
 }
 
-vec3	ray_color(ray *r, int depth)
-{
-	hit_record rec;
-	
-	if (depth <= 0)
-		return BLACK;
-	
-	if (!hit(r, (interval){0.001, INFINITY}, &rec))
-	{
-		vec3 uv = v_scal(v_add(r->dir, v_3(1)), 0.5);
-		return v.background_color(uv);
-	}
-
-	if (v.render_mode == RAYTRACE_UVS)
-		return new_color(rec.u-((int)rec.u/1), rec.v-((int)rec.v/1), 0);
-
-	vec3 bump_sample = rec.mat.bump.value(rec.u, rec.v, &rec.mat.bump);
-	bump_sample = v_scal(bump_sample, 1);
-	rec.normal = v_norm(v_add(rec.normal, bump_sample));
-	
-
-	ray	scattered;
-	color attenuation;
-	color color_from_emission = rec.mat.emission.value(rec.u, rec.v, &rec.mat.emission);
-	NOT_IMPLEMENTED("temporaryliy disabled ray_color scatter -- ");
-	if (0)// && //!rec.mat.scatter(r, &rec, &attenuation, &scattered, &(rec.mat)))
-		return color_from_emission;
-	
-	color color_from_scatter = v_mult(ray_color(&scattered, depth-1), attenuation);
-
-	return v_add(color_from_scatter, color_from_emission);
-}
-
 # define SPEEDUP 0
 void    render_pixel(int x, int y)
 {

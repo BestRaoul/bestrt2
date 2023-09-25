@@ -43,11 +43,11 @@ void	raster_cylinder(t_item *item)
 	for (int j=0; j<=v_splits; j++) l2[j] = parent_to(l2[j], item);
 
 //TOP & BOT
-	for (int j=0; j<v_splits; j++) draw_projected_line(l1[j], l1[j+1], item->mat.albedo.color_value);
-	for (int j=0; j<v_splits; j++) draw_projected_line(l2[j], l2[j+1], item->mat.albedo.color_value);
+	for (int j=0; j<v_splits; j++) draw_projected_line(l1[j], l1[j+1], item->mat.base_color.color_value);
+	for (int j=0; j<v_splits; j++) draw_projected_line(l2[j], l2[j+1], item->mat.base_color.color_value);
 
 //draw joints
-	for (int j=0; j<v_splits; j++) draw_projected_line(l1[j], l2[j], item->mat.albedo.color_value);
+	for (int j=0; j<v_splits; j++) draw_projected_line(l1[j], l2[j], item->mat.base_color.color_value);
 
 	free(l1);
 	free(l2);
@@ -84,13 +84,13 @@ void	raster_sphere(t_item *item)
 							item->scale.z * ring_scale[j].x);//= v_mult(item->scale, ring_scale[j]);
 		for (int k=0; k<=h_splits; k++) rings[j-1][k] = parent_to_virtual(rings[j-1][k], item->pos, item->rot, new_scale);
 		//circle
-		for (int k=0; k<h_splits; k++)  draw_projected_line(rings[j-1][k], rings[j-1][k+1], item->mat.albedo.color_value);
+		for (int k=0; k<h_splits; k++)  draw_projected_line(rings[j-1][k], rings[j-1][k+1], item->mat.base_color.color_value);
 		//joints
 		if (j > 1)
-			for (int k=0; k<h_splits; k++)  draw_projected_line(rings[j-1][k], rings[j - 2][k], item->mat.albedo.color_value);
+			for (int k=0; k<h_splits; k++)  draw_projected_line(rings[j-1][k], rings[j - 2][k], item->mat.base_color.color_value);
 	}
-	for (int k=0; k<h_splits; k++)  draw_projected_line(rings[0][k], north_pole, item->mat.albedo.color_value);
-	for (int k=0; k<h_splits; k++)  draw_projected_line(rings[v_splits-2][k], south_pole, item->mat.albedo.color_value);
+	for (int k=0; k<h_splits; k++)  draw_projected_line(rings[0][k], north_pole, item->mat.base_color.color_value);
+	for (int k=0; k<h_splits; k++)  draw_projected_line(rings[v_splits-2][k], south_pole, item->mat.base_color.color_value);
 
 	if (v._debug)
 	{
@@ -118,13 +118,13 @@ void	raster_pyramid(t_item *item)
 	c4 = parent_to(c4, item);
 
 //top
-	draw_projected_line(c1, c2, item->mat.albedo.color_value);
-	draw_projected_line(c1, c3, item->mat.albedo.color_value);
-	draw_projected_line(c1, c4, item->mat.albedo.color_value);
+	draw_projected_line(c1, c2, item->mat.base_color.color_value);
+	draw_projected_line(c1, c3, item->mat.base_color.color_value);
+	draw_projected_line(c1, c4, item->mat.base_color.color_value);
 //base
-	draw_projected_line(c2, c3, item->mat.albedo.color_value);
-	draw_projected_line(c3, c4, item->mat.albedo.color_value);
-	draw_projected_line(c4, c2, item->mat.albedo.color_value);
+	draw_projected_line(c2, c3, item->mat.base_color.color_value);
+	draw_projected_line(c3, c4, item->mat.base_color.color_value);
+	draw_projected_line(c4, c2, item->mat.base_color.color_value);
 
 	if(v._debug)
 	{
@@ -149,21 +149,21 @@ void	raster_box(t_item *item)
 	c8 = parent_to(v3(-1, -1,  1), item);
 
 //top
-	draw_projected_line(c1, c2, item->mat.albedo.color_value);
-	draw_projected_line(c2, c3, item->mat.albedo.color_value);
-	draw_projected_line(c3, c4, item->mat.albedo.color_value);
-	draw_projected_line(c4, c1, item->mat.albedo.color_value);
+	draw_projected_line(c1, c2, item->mat.base_color.color_value);
+	draw_projected_line(c2, c3, item->mat.base_color.color_value);
+	draw_projected_line(c3, c4, item->mat.base_color.color_value);
+	draw_projected_line(c4, c1, item->mat.base_color.color_value);
 //bot
-	draw_projected_line(c5, c6, item->mat.albedo.color_value);
-	draw_projected_line(c6, c7, item->mat.albedo.color_value);
-	draw_projected_line(c7, c8, item->mat.albedo.color_value);
-	draw_projected_line(c8, c5, item->mat.albedo.color_value);
+	draw_projected_line(c5, c6, item->mat.base_color.color_value);
+	draw_projected_line(c6, c7, item->mat.base_color.color_value);
+	draw_projected_line(c7, c8, item->mat.base_color.color_value);
+	draw_projected_line(c8, c5, item->mat.base_color.color_value);
 //left
-	draw_projected_line(c1, c5, item->mat.albedo.color_value);
-	draw_projected_line(c2, c6, item->mat.albedo.color_value);
+	draw_projected_line(c1, c5, item->mat.base_color.color_value);
+	draw_projected_line(c2, c6, item->mat.base_color.color_value);
 //right
-	draw_projected_line(c3, c7, item->mat.albedo.color_value);
-	draw_projected_line(c4, c8, item->mat.albedo.color_value);
+	draw_projected_line(c3, c7, item->mat.base_color.color_value);
+	draw_projected_line(c4, c8, item->mat.base_color.color_value);
 
 	if (v._debug)
 	{
@@ -185,16 +185,16 @@ void	raster_quad(t_item *item)
 	vec3 c3 = parent_to(v3(-1, 0, 1), item);
 	vec3 c4 = parent_to(v3(-1, 0,-1), item);
 
-	draw_projected_line(c1, c2, item->mat.albedo.color_value);
-	draw_projected_line(c2, c4, item->mat.albedo.color_value);
-	draw_projected_line(c4, c3, item->mat.albedo.color_value);
-	draw_projected_line(c3, c1, item->mat.albedo.color_value);
+	draw_projected_line(c1, c2, item->mat.base_color.color_value);
+	draw_projected_line(c2, c4, item->mat.base_color.color_value);
+	draw_projected_line(c4, c3, item->mat.base_color.color_value);
+	draw_projected_line(c3, c1, item->mat.base_color.color_value);
 
 	if (1 || v._debug)
 	{
 		vec3 normal = rotate3(v3(0,.5,0), item->rot);
-		draw_projected_line(v_add(item->pos, normal), item->pos, item->mat.albedo.color_value);
-		draw_projected_dot(v_add(item->pos, normal), item->mat.albedo.color_value);
+		draw_projected_line(v_add(item->pos, normal), item->pos, item->mat.base_color.color_value);
+		draw_projected_dot(v_add(item->pos, normal), item->mat.base_color.color_value);
 	}
 }
 
@@ -205,18 +205,18 @@ void	raster_plane(t_item *item)
 	vec3 c3 = parent_to(v3(-1, 0, 1), item);
 	vec3 c4 = parent_to(v3(-1, 0,-1), item);
 
-	draw_projected_line(c1, c2, item->mat.albedo.color_value);
-	draw_projected_line(c2, c4, item->mat.albedo.color_value);
-	draw_projected_line(c4, c3, item->mat.albedo.color_value);
-	draw_projected_line(c3, c1, item->mat.albedo.color_value);
-	draw_projected_line(c1, c4, item->mat.albedo.color_value);
-	draw_projected_line(c2, c3, item->mat.albedo.color_value);
+	draw_projected_line(c1, c2, item->mat.base_color.color_value);
+	draw_projected_line(c2, c4, item->mat.base_color.color_value);
+	draw_projected_line(c4, c3, item->mat.base_color.color_value);
+	draw_projected_line(c3, c1, item->mat.base_color.color_value);
+	draw_projected_line(c1, c4, item->mat.base_color.color_value);
+	draw_projected_line(c2, c3, item->mat.base_color.color_value);
 
 	if (1 || v._debug)
 	{
 		vec3 normal = rotate3(v3(0,.5,0), item->rot);
-		draw_projected_line(v_add(item->pos, normal), item->pos, item->mat.albedo.color_value);
-		draw_projected_dot(v_add(item->pos, normal), item->mat.albedo.color_value);
+		draw_projected_line(v_add(item->pos, normal), item->pos, item->mat.base_color.color_value);
+		draw_projected_dot(v_add(item->pos, normal), item->mat.base_color.color_value);
 	}
 }
 
@@ -232,28 +232,28 @@ void	raster_square(t_item *item)
 	c3 = parent_to(v3(-1,  1), item);
 	c4 = parent_to(v3(-1, -1), item);
 
-	gizmo_line(c1, c2, item->mat.albedo.color_value);
-	gizmo_line(c2, c3, item->mat.albedo.color_value);
-	gizmo_line(c3, c4, item->mat.albedo.color_value);
-	gizmo_line(c4, c1, item->mat.albedo.color_value);
+	gizmo_line(c1, c2, item->mat.base_color.color_value);
+	gizmo_line(c2, c3, item->mat.base_color.color_value);
+	gizmo_line(c3, c4, item->mat.base_color.color_value);
+	gizmo_line(c4, c1, item->mat.base_color.color_value);
 }
 //CIRCLE - 2
 void	raster_circle(t_item *item)
 {
-	gizmo_nshape(max(item->scale.x*2.0/50.0, 10), item->pos, item->rot, item->scale, 0, item->mat.albedo.color_value);
+	gizmo_nshape(max(item->scale.x*2.0/50.0, 10), item->pos, item->rot, item->scale, 0, item->mat.base_color.color_value);
 }
 //TRI.. 3,4,0
 void	raster_tri(t_item *item)
 {
-	gizmo_nshape(3, item->pos, item->rot, item->scale, MYPI, item->mat.albedo.color_value);
+	gizmo_nshape(3, item->pos, item->rot, item->scale, MYPI, item->mat.base_color.color_value);
 }
 void	raster_hex(t_item *item)
 {
-	gizmo_nshape(6, item->pos, item->rot, item->scale, MYPI/6, item->mat.albedo.color_value);
+	gizmo_nshape(6, item->pos, item->rot, item->scale, MYPI/6, item->mat.base_color.color_value);
 }
 void	raster_line(t_item *item)
 {
 	gizmo_line(item->pos,
 		v3(item->pos.x+sin(item->rot.x)*item->scale.x,
-			item->pos.y+cos(item->rot.x)*item->scale.x), item->mat.albedo.color_value);
+			item->pos.y+cos(item->rot.x)*item->scale.x), item->mat.base_color.color_value);
 }

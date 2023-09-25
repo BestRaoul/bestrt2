@@ -101,17 +101,17 @@ vec3	world_to_local(vec3 cam_pos, vec3 cam_rot, vec3 pos)
 	//return rotate3(v_sub(pos, cam_pos), v_scal(cam_rot, -1));
 }
 
-vec3	reverse_project(vec3 pos, float vfov, float aspect)
+vec3	reverse_project(vec3 pos, double vfov, double aspect)
 {
-	float f = pos.z * tan(vfov * DEG2RAD * 0.5f);
+	double f = pos.z * tan(vfov * DEG2RAD * 0.5f);
 	pos.x *= f * aspect;
 	pos.y *= f;
 	return pos;
 }
 
-vec3	project(vec3 pos, float vfov, float aspect)
+vec3	project(vec3 pos, double vfov, double aspect)
 {
-	float f = 1.0 / tan(vfov * DEG2RAD * 0.5f);
+	double f = 1.0 / tan(vfov * DEG2RAD * 0.5f);
 	if (v.orthographic_toggle)
 		f /= 10;
 	else
@@ -128,7 +128,7 @@ vec3	clip_space_to_viewport(vec3 pos)
 	return pos;
 }
 
-vec3	world_to_viewport(vec3 cam_pos, vec3 cam_rot, float vfov, float aspect, vec3 pos)
+vec3	world_to_viewport(vec3 cam_pos, vec3 cam_rot, double vfov, double aspect, vec3 pos)
 {
 	vec3 p = world_to_local(cam_pos, cam_rot, pos);
 	p = project(p, vfov, aspect);
@@ -151,20 +151,29 @@ void	print_pos(vec3 pos, char *msg)
 
 //you gotta guarantee pos is in bounds
 //1 means failure
-int	dist_check(vec3 pos)
+int	check_heat(vec3 pos)
 {
+	int x = pos.x;// / (double)v.upscale;
+	int y = pos.y;// / (double)v.upscale;
 	return (pos.z < 0
-		|| (pos.z > v.dist_heatmap[(int)pos.x][(int)pos.y]));
+		|| (pos.z > v.dist_heatmap[x][y]));
+}
+
+void	set_heat(vec3 pos)
+{
+	int x = pos.x;// / (double)v.upscale;
+	int y = pos.y;// / (double)v.upscale;
+	v.dist_heatmap[x][y] = pos.z;
 }
 
 quat	euler_to_quaternion(vec3 euler) {
     quat q;
-    float t0 = cos(euler.y * 0.5f);
-    float t1 = sin(euler.y * 0.5f);
-    float t2 = cos(euler.z * 0.5f);
-    float t3 = sin(euler.z * 0.5f);
-    float t4 = cos(euler.x * 0.5f);
-    float t5 = sin(euler.z * 0.5f);
+    double t0 = cos(euler.y * 0.5f);
+    double t1 = sin(euler.y * 0.5f);
+    double t2 = cos(euler.z * 0.5f);
+    double t3 = sin(euler.z * 0.5f);
+    double t4 = cos(euler.x * 0.5f);
+    double t5 = sin(euler.z * 0.5f);
 
     q.w = t0 * t2 * t4 + t1 * t3 * t5;
     q.x = t0 * t3 * t4 - t1 * t2 * t5;
@@ -215,6 +224,13 @@ double	clamp(interval _t, double x)
 	return x;
 }
 
+double	clamp_(double x)
+{
+	if (x < 0.0) return 0.0;
+	if (x > 1.0) return 1.0;
+	return x;
+}
+
 double	linear_to_gamma(double linear_component)
 {
 	return sqrt(linear_component);
@@ -256,4 +272,49 @@ vec3	lookRotation(vec3 lookfrom, vec3 lookat) {
 	rot.y = atan2(dir.x, dir.z);
 
     return rot;
+}
+
+vec3	look_at(vec3 lookfrom, vec3 lookat, vec3 up) {
+    vec3 xaxis = v_norm(v_sub(lookat, lookfrom));
+	vec3 zaxis = v_norm(v_cross(up, xaxis));
+	vec3 yaxis = v_cross(xaxis, zaxis);
+
+
+	/*
+	x.x  y.x  z.x  0
+	x.y  y.y  z.y  0
+	x.z  y.z  z.z  0
+	?    ?    ?    1
+	*/
+	double r10 = yaxis.x;
+	double r00 = xaxis.x;
+	double r01 = xaxis.y;
+	double r02 = xaxis.z;
+
+	double r20 = zaxis.x;
+
+	double r21 = zaxis.y;
+	double r22 = zaxis.z;
+
+	double yaw = atan2(r00, r02);//r10, r00);
+
+	double pitch = atan2(-r01, sqrt(r00*r00 + r02*r02));//(-r20, sqrt(r21*r21 + r22*r22));
+
+	double roll = -atan2(r21, r22);
+
+	vec3 rot = v3(pitch, yaw, roll);
+
+    return rot;
+}
+
+// Define the constants for the ACES tone mapping function
+#define A 2.51
+#define B 0.03
+#define C 2.43
+#define D 0.59
+#define E 0.14
+
+// ACES tone mapping function
+double ACES(double x) {
+    return (x * (A * x + B)) / (x * (C * x + D) + E);
 }

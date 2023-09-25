@@ -12,26 +12,33 @@
 
 #include "fractol.h"
 
+Bool	v_eq(vec3 a, vec3 b)
+{
+	return (a.x == b.x
+		 && a.y == b.y
+		 && a.z == b.z);
+}
+
 vec3	v_norm(vec3 a)
 {
-	float	len;
+	double	len;
 
 	len = v_len(a);
 	return (vec3){a.x/len, a.y/len, a.z/len};
 }
 
-vec3	v_scal(vec3 a, float scalar)
+vec3	v_scal(vec3 a, double scalar)
 {
 	return (vec3){a.x * scalar, a.y * scalar, a.z * scalar};
 }
 
 /* distance between 2 points */
-float	vec_dist(vec3 a, vec3 b)
+double	vec_dist(vec3 a, vec3 b)
 {
-	return (fabsf(v_len(v_sub(a, b))));
+	return (fabs(v_len(v_sub(a, b))));
 }
 
-float	pt_dist_to_sphere(vec3 pt, vec3 sphere_center, float rad)
+double	pt_dist_to_sphere(vec3 pt, vec3 sphere_center, double rad)
 {
 	vec3	vct;
 	vec3	closest_sphere_point;

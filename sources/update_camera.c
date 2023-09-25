@@ -12,26 +12,53 @@
 
 #include "fractol.h"
 
-static int	rotate_camera();
-static int	move_camera();
-static void set_camera_values();
-mat4	GetOrientation(void);
+static void	fov_camera();
+static void	rotate_camera();
+static void	move_camera();
+
+static void set_camera_vup();
+static void set_raytrace_values();
+static void set_rotation_matrix();
 
 void    update_camera(void)
 {
-    int	change = 0;
-	change |= move_camera();
-    change |= rotate_camera();
-    if (v.frame == 0 || change || v._p)
+	static vec3 prev_pos = (vec3){0,0,0};
+	static vec3 prev_rot = (vec3){0,0,0};
+	static int	prev_fov = 0;
+
+	fov_camera();
+	move_camera();
+	rotate_camera();
+
+	int change = 0;
+	change |= !v_eq(prev_pos, v.camera_pos);
+	change |= !v_eq(prev_rot, v.camera_rot);
+	change |= prev_fov != v.vfov;
+    
+	if (change || v._p)
 	{
-		set_camera_values();
 		v._rerender = 1;
-		v.rotation_matrix = GetOrientation();
+		set_camera_vup();
+
+		if (v.lookat_toggle && !v_eq(v.camera_pos, v.lookat))
+		{
+			v.camera_rot = lookRotation(v.camera_pos, v.lookat);
+		}
+
+		set_rotation_matrix();
+		set_raytrace_values();
 	}
+
+	//draw_projected_line(v.lookat, v_add(v.lookat, v.vup), v3(1,1,0));
+	//draw_projected_line(v.lookat, v_add(v.lookat, v3(0, 1, 0)), v3(0,1,1));
+
+	prev_pos = v.camera_pos;
+	prev_rot = v.camera_rot;
+	prev_fov = v.vfov;
 }
 
-quat	angleAxis(float angle, vec3 axis) {
-    float s = sin(angle / 2);
+quat	angleAxis(double angle, vec3 axis) {
+    double s = sin(angle / 2);
     quat q;
     q.w = cos(angle / 2);
     q.x = axis.x * s;
@@ -71,21 +98,54 @@ quat	quaternion_multiply(quat a, quat b) {
     return result;
 }
 
-mat4	GetOrientation(void)
+static void set_camera_vup()
+{
+	vec3 temp_lookat = v.lookat_toggle ? v.lookat : v_add(v.camera_pos, rotate3(v3(0,0,1), v.camera_rot));
+
+	vec3 forward = v_norm(v_sub(temp_lookat, v.camera_pos));
+	vec3 right = v_norm(v_cross(forward, v3(0, 1, 0)));
+	vec3 new_up = v_scal(v_cross(forward, right), -1);
+
+	v.vup = new_up;
+
+	if (v.cam_flipp)
+	{
+		NOT_IMPLEMENTED("CAMERA FLIPP");
+		//v.vup = v_scal(v.vup, -1);
+	}
+
+	static vec3 prev_pos = (vec3){};
+	if (v.lookat_toggle)
+	{
+		vec3 pp = v_sub(prev_pos, v.lookat);
+		vec3 p = v_sub(v.camera_pos, v.lookat);
+		if ((signd(pp.x) != signd(p.x) && signd(pp.z) != signd(p.z)))
+		{
+			print_pos(pp, "pp: ");
+			print_pos(p, "p: ");
+			printf("%f != %f and %f != %f\n", signd(pp.x), signd(p.x), signd(pp.z), signd(p.z));
+			v.cam_flipp = !v.cam_flipp;
+		}
+	}
+	prev_pos = v.camera_pos;
+}
+
+static void	set_rotation_matrix()
 {
     quat q = angleAxis(v.camera_rot.x,v3(1,0,0));
     quat q2 = angleAxis(v.camera_rot.y, v3(0,1,0));
 	quat q3 = angleAxis(v.camera_rot.z, v3(0,0,1));
     q = quaternion_multiply(q2, q);
-	q = quaternion_multiply(q3, q);
-	return quaternion_to_mat4(q);
+	//q = quaternion_multiply(q3, q);
+	v.rotation_matrix = quaternion_to_mat4(q);
 }
 
-static void set_camera_values()
+static void set_raytrace_values()
 {
 	double	aspect_ratio = (double)v.w/(double)v.h;
 
 	v.lookfrom = v.camera_pos;
+	vec3 temp_lookat = v.lookat_toggle ? v.lookat : v_add(v.camera_pos, rotate3(v3(0,0,1), v.camera_rot));
 
 	//...
 
@@ -93,14 +153,14 @@ static void set_camera_values()
 
 	//initialize
 	v.camera_center = v.lookfrom;
-	double focal_length = vec_dist(v.lookfrom, v.lookat);
+	double focal_length = vec_dist(v.lookfrom, temp_lookat);
 	double theta = v.vfov * DEG2RAD;
 	double h = tan(theta/2);
 	double viewport_height = 2 * h * focal_length;
 	double viewport_width = viewport_height * aspect_ratio;
 
 	//Calculate the u,v,w unit basis vectors for the camera coordinate frame.
-	_w = v_norm(v_sub(v.lookfrom, v.lookat));
+	_w = v_norm(v_sub(v.lookfrom, temp_lookat));
 	_u = v_norm(v_cross(v.vup, _w));
 	_v = v_cross(_w, _u);
 
@@ -122,67 +182,103 @@ static void set_camera_values()
 		v_scal(v_add(v.pixel_delta_u, v.pixel_delta_v), .5) );
 }
 
-static int	rotate_camera()
+// -----
+
+static void	rotate_camera()
 {
-	if (v._np9)
+	double dist_to = vec_dist(v.camera_pos, v.lookat);
+	
+	if (v._np0)
 	{
-		v.camera_pos = rotate_y(v.camera_pos, 15*DEG2RAD);
+		v.camera_pos = v3(0, 0, 0);
+		v.camera_rot = lookRotation(v3(), v3(0, 0, -1));
+		v.lookat_toggle = 0;
+	}
+	if (v._np1) // from Z
+	{
+		v.camera_pos = v3(0, 0, dist_to);
+		v.lookat_toggle = 1;
+	}
+	if (v._np3) // from X
+	{
+		v.camera_pos = v3(dist_to);
+		v.lookat_toggle = 1;
+	}
+	if (v._np7) // from Y
+	{
+		v.camera_pos = v3(0, dist_to);
+		v.lookat_toggle = 1;
 	}
 	
 	if (v._np5)
 	{
-		if (!v._ctrl)
-			v.orthographic_toggle = !v.orthographic_toggle;
-		else
-			v.camera_rot.z += 15*DEG2RAD;
+		v.orthographic_toggle = !v.orthographic_toggle;
 	}
-	if (v._np0)
-	{
-		v.camera_pos = v3(0, 0, 0);
-		v.camera_rot = v3(0, MYPI, 0);
-	}
-	if (v._np1) // from Z
-	{
-		v.camera_pos = v3(0, 0, -10);
-		v.camera_rot = v3(0);
-	}
-	if (v._np3) // from X
-	{
-		v.camera_pos = v3(10);
-		v.camera_rot = v3(0, -MYPI/2);
-	}
-	if (v._np7) // from Y
-	{
-		v.camera_pos = v3(0, 10);
-		v.camera_rot = v3(MYPI/2, 0, 0);
-	}
-	
-
-	if (v._np4)
-		v.camera_rot.y -= 15*DEG2RAD;
-		//v.camera_pos = rotate_y(v.camera_pos, 15 * DEG2RAD);
-	if (v._np6)
-		v.camera_rot.y += 15*DEG2RAD;
-		//v.camera_pos = rotate_y(v.camera_pos, -15 * DEG2RAD);
-	if (v._np2)
-		v.camera_rot.x += 15*DEG2RAD;
-	if (v._np8)
-		v.camera_rot.x -= 15*DEG2RAD;
 
 	if (v.lookat_toggle)
 	{
-		v.camera_rot = lookRotation(v.camera_pos, v.lookat);
-	}
+		vec3 p = v_sub(v.camera_pos, v.lookat);
+		double d = vec_dist(v.camera_pos, v.lookat);
 
-	return v._np0 || v._np1 || v._np2 || v._np3
-		|| v._np4 || v._np5 || v._np6 || v._np7
-		|| v._np8 || v._np9;
+		if (v._np0)
+		{
+			p = v3(0, 0, 0);
+			v.camera_rot = lookRotation(v3(), v3(0, 0, -1));
+			v.lookat_toggle = 0;
+		}
+		if (v._np1) // from Z
+		{
+			p = v3(0, 0, d);
+			v.lookat_toggle = 1;
+		}
+		if (v._np3) // from X
+		{
+			p = v3(d);
+			v.lookat_toggle = 1;
+		}
+		if (v._np7) // from Y
+		{
+			p = v3(0, d);
+			v.lookat_toggle = 1;
+		}
+
+		if (v._np9) p = rotate_y(p, 180 * DEG2RAD);
+		if (v._np4) p = rotate_y(p, 15 * DEG2RAD);
+		if (v._np6)	p = rotate_y(p, -15 * DEG2RAD);
+		if (v._np2)
+		{
+			double alpha = atan2(p.x, p.z);
+			p = rotate_y(p, -alpha);
+			p = rotate_x(p, 15 * DEG2RAD);
+			p = rotate_y(p, alpha);
+		}
+		if (v._np8)
+		{
+			double alpha = atan2(p.x, p.z);
+			p = rotate_y(p, -alpha);
+			p = rotate_x(p, -15 * DEG2RAD);
+			p = rotate_y(p, alpha);
+		}
+
+		v.camera_pos = v_add(p, v.lookat);
+	}
+	else /* look infront */
+	{
+		if (v._np9)
+			v.camera_rot.z += 15*DEG2RAD;
+		if (v._np4)
+			v.camera_rot.y -= 15*DEG2RAD;
+		if (v._np6)
+			v.camera_rot.y += 15*DEG2RAD;
+		if (v._np2)
+			v.camera_rot.x += 15*DEG2RAD;
+		if (v._np8)
+			v.camera_rot.x -= 15*DEG2RAD;
+	}
 }
 
-static int	move_camera()
+static void	move_camera()
 {
-	static int _prev_fov = 0;
-	
 	if (v._right)
 		v.camera_pos = v_add(v.camera_pos, rotate3(v3(5*v.delta_time), v.camera_rot));
 	if (v._left)
@@ -192,16 +288,13 @@ static int	move_camera()
 	if (v._down)
 		v.camera_pos = v_add(v.camera_pos, rotate3(v3(0, 0, -5*v.delta_time), v.camera_rot));
 	if (v._space && !v._shift)
-		v.camera_pos.y += 5*v.delta_time;
+		v.camera_pos = v_add(v.camera_pos, rotate3(v3(0, 5*v.delta_time), v.camera_rot));
 	if (v._space && v._shift)
-		v.camera_pos.y -= 5*v.delta_time;
-	//v.camera_pos.x += 5*v.delta_time;
-	
-	if (v._scroll)
-		v.vfov = FOV + v._scroll;
-	int	fov_changed = v.vfov != _prev_fov;
-	if (fov_changed) _prev_fov = v.vfov;
+		v.camera_pos = v_add(v.camera_pos, rotate3(v3(0, -5*v.delta_time), v.camera_rot));
+}
 
-	return v._right || v._left || v._up
-		|| v._down || v._space || fov_changed;
+static void	fov_camera()
+{
+	if (v._scroll)
+		v.vfov = 50 + v._scroll;
 }

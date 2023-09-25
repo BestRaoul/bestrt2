@@ -102,6 +102,7 @@ int	handle_key_press(int k)
 			if (v._shift) {v._debug = !v._debug;}
 			else {v._help = !v._help;} break;
 		case K_L: v.lookat_toggle = !v.lookat_toggle; break;
+		case K_M: v.motion_enabled = !v.motion_enabled; break;
 
 		case K_0: v._0 = 1; break;
 		case K_1: v._1 = 1; break;

@@ -88,14 +88,14 @@ void	render_movie()
 	
 	v.render_mode = RENDER_MOVIE;
 
-	int	frames = 30;
-	int	framerate = 30;
-	int loops = 2;
+	int	frames = 50;
+	int	framerate = 10;
+	int loops = 1;
 	//Fix delta time
 	v.delta_time = 1.0/framerate;
 	//Reset motions
 	v.time_passed = 0;
-	v.time_speed = 1;
+	//v.time_speed = 1;
 	
 	for (int i=0; i<frames; i++)
 	{
@@ -118,7 +118,6 @@ void	render_movie()
 
 	ffmpeg_bmp_to_mp4(framerate, loops);
 	//ffmpeg should fork();...
-	write(1, "DONE\n", 5);
 	//?destroy bmp
 	exit(0);
 }

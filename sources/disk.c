@@ -80,7 +80,11 @@ char* getCurrentDateTime() {
     return dateTimeString;
 }
 
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+#define NTFY_SERVER "0.0.0.0:80/balls"
 //"\%03d.bmp"
 /*
 ffmpeg -i output/%03d.bmp -r 24 -c:v libx264 -preset slow -crf 18 output.mp4
@@ -101,7 +105,23 @@ void ffmpeg_bmp_to_mp4(int framerate, int loops)
         "-crf", "18",
         output_filename,
         NULL};
-    execve(argv[0], argv, __environ);
+    pid_t id = fork(); //-1
+    if (!id) execve(argv[0], argv, __environ);
+    
+    char attachement[120];
+    sprintf(attachement, "Attach: %s", output_filename);
+
+    waitpid(id, 0, 0); //-1
+    char *av[20]= {"/bin/curl" ,
+        "-H", "Title: The Render has finished",
+        "-H", "Tags: tada",
+        "-H", "Priority: urgent",
+        "-H", "Click: https://youtube.com",
+        "-H", attachement,
+        "-d", "",
+        NTFY_SERVER,
+    };
+    execve(av[0], av, __environ);
 }
 
 // Function to write a BMP image
@@ -173,3 +193,80 @@ void writeBMP(const char *filename, int width, int height, Color *pixels) {
     fclose(fp);
 }
 
+// Define a BMP header structure
+#pragma pack(push, 1)
+typedef struct {
+    uint16_t signature;   // "BM" (0x4D42)
+    uint32_t fileSize;   // File size in bytes
+    uint16_t reserved1;  // Reserved (0)
+    uint16_t reserved2;  // Reserved (0)
+    uint32_t dataOffset; // Pixel data offset
+    uint32_t headerSize; // Header size (40)
+    int32_t width;       // Image width
+    int32_t height;      // Image height
+    uint16_t planes;     // Color planes (1)
+    uint16_t bitsPerPixel; // Bits per pixel (usually 24)
+    uint32_t compression;  // Compression method (usually 0)
+    uint32_t imageSize;    // Image data size (bytes)
+    int32_t xPixelsPerMeter; // X Pixels per meter (usually 0)
+    int32_t yPixelsPerMeter; // Y Pixels per meter (usually 0)
+    uint32_t totalColors;    // Total colors (usually 0)
+    uint32_t importantColors; // Important colors (usually 0)
+} BMPHeader;
+#pragma pack(pop)
+
+// Function to read a BMP image file and return its data
+int readBMP(const char* filename, bmp_read *r) {
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        fprintf(stderr, "Error: Unable to open file %s\n", filename);
+        return 0;
+    }
+
+    // Read BMP header
+    BMPHeader header;
+    fread(&header, sizeof(BMPHeader), 1, file);
+
+    // Check if the file is actually a BMP file
+    if (header.signature != 0x4D42) {
+        fprintf(stderr, "Error: File %s is not a BMP file\n", filename);
+        fclose(file);
+        return 0;
+    }
+
+    // Check if the BMP format is supported (usually 24 bits per pixel)
+    if (header.bitsPerPixel != 24) {
+        fprintf(stderr, "Error: Unsupported BMP format (bits per pixel != 24)\n");
+        fclose(file);
+        return 0;
+    }
+
+    r->widht = header.width;
+    r->height = header.height;
+    
+    // Allocate memory for pixel data
+    r->pixels = (int**)malloc(sizeof(int*) * header.height);
+    for (int i = 0; i < header.height; i++) {
+        (r->pixels)[i] = (int*)malloc(sizeof(int) * header.width);// * 3); // 3 bytes per pixel
+    }
+
+    // Read pixel data
+    for (int i = header.height - 1; i >= 0; i--) {
+        for (int j = 0; j < header.width; j++) {
+            uint8_t blue, green, red;
+            fread(&blue, 1, 1, file);
+            fread(&green, 1, 1, file);
+            fread(&red, 1, 1, file);
+
+            (r->pixels)[i][j] = new_rgb(red, green, blue);
+            //(r->pixels)[i][j * 3] = (int)red;
+            //(r->pixels)[i][j * 3 + 1] = (int)green;
+            //(r->pixels)[i][j * 3 + 2] = (int)blue;
+        }
+        // Skip any padding bytes
+        fseek(file, (4 - (header.width * 3) % 4) % 4, SEEK_CUR);
+    }
+
+    fclose(file);
+    return 1;
+}

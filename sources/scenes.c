@@ -15,39 +15,70 @@
 void    balls(void);
 void    tweens(void);
 void    quads(void);
+void	lights0(void);
 void	lights(void);
+void	lights2(void);
 void	cornell(void);
+void	mirror_balls(void);
 void	checkers(void);
 void	first_animation(void);
+void	colored_lights(void);
+void	specular(void);
+void	earth(void);
+void	bumpy(void);
+void	mirrors(void);
+void	tomato(void);
 
 void    shapes(void);
 //.. world, specular, glass, reflection...
 
 void    init_scene(void)
 {
-    switch (7)
+	v.item_count = 0;
+	v.items = NULL;
+
+	v.motion_count = 0;
+	v.motions = NULL;
+
+    switch (13)
     {
         case 1 : balls(); break;
         case 2 : tweens(); break;
         case 3 : quads(); break;
+		case 0 : lights0(); break; 
 		case 4 : lights(); break; 
-		case 5 : cornell(); break;
+		case -4 : lights2(); break; 
+		case 5 : mirror_balls(); break;
 		case 6 : checkers(); break;
 		case 7 : first_animation(); break;
+		case 8 : colored_lights(); break;
+		case 9 : specular(); break;
+		case 10: earth(); break;
+		case 11: bumpy(); break;
+		case 12: mirrors(); break;
+		case 13: tomato(); break;
+		//point lights
+		//normal_bump
+		//specular
+		//directional_ligth
 
-        case 10 : shapes(); break;
+        case 99 : shapes(); break;
     }
 }
 
 void    default_cam(void)
 {
+	v.w = 16 * (2*2*3*5);
+	v.h = 9 * (2*2*3*5);
+	v.upscale = 3;
+
 	v.camera_pos = v3(0, 0, 3);
 	v.camera_rot = v3(0, MYPI, 0);
 	v.lookat_toggle = 0;
 	v.lookat = v3(0, 0, 0);
 	v.vup = v3(0,1,0);
-	v.near_plane = NEAR;
-	v.far_plane = FAR;
+	v.near_plane = 0.2;
+	v.far_plane = 1000;
 	v.vfov = 50;
 
 	v.orthographic_toggle = 0;
@@ -55,6 +86,8 @@ void    default_cam(void)
 
 	v.background_color = sky_background;
 	v.time_speed = 1;
+
+	v.max_depth = 8;
 }
 
 void    balls(void)
@@ -127,9 +160,9 @@ void    tweens(void)
 	add_motion(&(v.items[7].rot.y), 0, MYPI, ping_pong);
 	add_motion(&(v.items[8].rot.z), 0, MYPI, ping_pong_2);
 
-	add_motion(&(v.items[ 9].mat.albedo.color_value.z), 0, 255, lerpd);
-	add_motion(&(v.items[10].mat.albedo.color_value.z), 0, 255, ping_pong);
-	add_motion(&(v.items[11].mat.albedo.color_value.z), 0, 255, ping_pong_2);
+	add_motion(&(v.items[ 9].mat.base_color.color_value.z), 0, 255, lerpd);
+	add_motion(&(v.items[10].mat.base_color.color_value.z), 0, 255, ping_pong);
+	add_motion(&(v.items[11].mat.base_color.color_value.z), 0, 255, ping_pong_2);
 }
 
 void    quads(void)
@@ -160,7 +193,54 @@ void    quads(void)
 	add_item((t_item){v3(-_w-s, 0, 0),	v3(_h, 1, _d),	v3(0,0,-MYPI/2),material_wall_right,SS_QUAD});
 }
 
+void	lights0(void)
+{
+	default_cam();
+    v.render_mode = RAYTRACE;
+	v.camera_pos = v3(-10.172291, 2.782435, -0.421150);
+	v.camera_rot = v3(15.523259, 97.909557, 0.000000);
+	v.camera_rot = v_scal(v.camera_rot, DEG2RAD);
+	v.vfov = 30;
+	v.background_color = black_background;
+
+    material material_ground = new_lambertian(c3(0.2, 0.3, 1.0));
+    material material_center = new_lambertian(c3(1.0,   0, 1.0));
+    material material_right  = new_light(c3(0.8, 0.5, 0.1), 20.0);
+	material_right.base_color = c3(0.8, 0.5, 0.1);
+
+    add_item((t_item){v3( 0, -101, 0),	v_3(100),	v3(), material_ground, SPHERE});
+    
+    add_item((t_item){v3( 0, 0, 0),		v_3(1),	v3(), material_center, SPHERE});
+	add_item((t_item){v3( 32, 4, -32),		v_3(20),	v3(), material_right, SPHERE});
+}
+
 void	lights(void)
+{
+	default_cam();
+	v.camera_pos = v3(11.099445, 1.100155, 4.864002);
+	v.camera_rot = v_scal(v3(0.000000, 135.000000, 0.000000), DEG2RAD);
+	v.background_color = shit_sky_background;
+
+	material	b0 = new_lambertian(c3(.4, .1, .8));
+	material	b1 = new_lambertian(c3(.1, .1, .1));
+	material	b2 = new_lambertian(c3(.2, .0, .9));
+	material	b3 = new_lambertian(c3(.0, .8, .2));
+	material	b4 = new_lambertian(c3(.8, .2, .0));
+	material	b5 = new_lambertian(c3(.9, .9, .9));
+
+	add_item((t_item){v3( 0,	-100, 0),	v_3(100),	v3(), 	b0,	SPHERE});
+	add_item((t_item){v3( 20, 	-1.2, .5),	v_3(.7),	v3(), 	b1,	SPHERE});
+	add_item((t_item){v3( 18.5, -1, 0),	v_3(.9),v3(), 	b2,	SPHERE});
+	add_item((t_item){v3( 17, 	-.8, -1.5),v_3(1.1),v3(), 	b3,	SPHERE});
+	add_item((t_item){v3( 15, 	-.4, -3),v_3(1.3),v3(), 	b4,	SPHERE});
+	add_item((t_item){v3( 14, 	0, -7),v_3(2),v3(), 	b5,	SPHERE});
+
+	material	light = new_light(WHITE_MAP, 13.0);
+	//add_item((t_item){v3( 50, -1, -6),	v_3(15),v3(), 	light,	SPHERE});
+	v.upscale = 1;
+}
+
+void	lights2(void)
 {
 	default_cam();
     v.render_mode = RAYTRACE;
@@ -172,7 +252,7 @@ void	lights(void)
     material material_ground = new_lambertian(c3(.7,.8,.9));
     add_item((t_item){v3(0), v_3(100),	v3(), material_ground, PLANE});
 
-	material light = new_light(c3(40, 40, 40));
+	material light = new_light(WHITE_MAP, 40);
     add_item((t_item){v3(0), v_3(.1),	v3(), light, SPHERE});
 
 
@@ -194,38 +274,54 @@ void	lights(void)
 
 }
 
+//top, back, front
+//left, bot, right
+//light
 void    cornell(void)
 {
     default_cam();
     v.render_mode = RAYTRACE;
-	v.camera_pos = v3(0, 0, 3.5);
+	v.camera_pos = v3(0, 0, 3.2);
 	v.background_color = black_background;
+	v.lookat = v3(0, 0, 0);
+	v.lookat_toggle = 1;
 
     material material_wall = new_lambertian(c3(.73, .73, .73));
 	
 	material material_wall_left  = new_lambertian(c3(.12, .45, .15));
-	material material_wall_bot   = material_wall;
+	material material_wall_bot   = new_lambertian(checkerboard(.2, c3(.1, .2, .8), c3(.3, .4, .8)));
 	material material_wall_right = new_lambertian(c3(.65, .05, .05));
 
-	double _w = 1;
+	double _w = 16.0/9.0;
 	double _h = 1;
 	double _d = 1;
 	
 	double s = 0;
 
-	add_item((t_item){v3( 0, _h+s, 0),	v3(_w, 1, _d),	v3(MYPI,0,0), 	material_wall,		QUAD});
-	add_item((t_item){v3( 0, 0,-_d-s),	v3(_w, 1, _h),	v3(MYPI/2,0,0), material_wall,		QUAD});
-	add_item((t_item){v3( 0, 0,_d-s),	v3(_w, 1, _h),	v3(-MYPI/2,0,0),material_wall,		SS_QUAD});
+	add_item((t_item){v3( 0, _h+s, 0),	v3(_w, 1, _d),	v3(MYPI,0,0), 	material_wall,		SS_QUAD});
+	add_item((t_item){v3( 0, 0,-_d-s),	v3(_w, 1, _h),	v3(MYPI/2,0,0), material_wall,		SS_QUAD});
+	add_item((t_item){v3( 0, 0,_d+s),	v3(_w, 1, _h),	v3(-MYPI/2,0,0),material_wall,		SS_QUAD});
 	
-	add_item((t_item){v3( _w+s, 0, 0),	v3(_h, 1, _d),	v3(0,0,MYPI/2),	material_wall_left,	QUAD});
-	add_item((t_item){v3( 0,-_h-s, 0),	v3(_w, 1, _d),	v3(0,0,0), 		material_wall_bot, 	QUAD});
-	add_item((t_item){v3(-_w-s, 0, 0),	v3(_h, 1, _d),	v3(0,0,-MYPI/2),material_wall_right,QUAD});
+	add_item((t_item){v3( _w+s, 0, 0),	v3(_h, 1, _d),	v3(0,0,MYPI/2),	material_wall_left,	SS_QUAD});
+	add_item((t_item){v3( 0,-_h-s, 0),	v3(_w, 1, _d),	v3(0,0,0), 		material_wall_bot, 	SS_QUAD});
+	add_item((t_item){v3(-_w-s, 0, 0),	v3(_h, 1, _d),	v3(0,0,-MYPI/2),material_wall_right,SS_QUAD});
 
-	material light = new_light(checkerboard(0.2, c3(.1,.1,.1), c3(3,3,3)));
-	add_item((t_item){v3( 0, _h+s-1e-8, 0),	v_3(.8),	v3(MYPI,0,0), 	light,	QUAD});
+	material light = new_light(WHITE_MAP, 3);//checkerboard(0.2, c3(.1,.1,.1), c3(3,3,3)));
+	add_item((t_item){v3( 0, _h+s-1e-8, 0),	v_3(.6),	v3(MYPI,0,0), 	light,	SS_QUAD});
+}
 
+void	mirror_balls(void)
+{
+	cornell();
+	
 	material mirror = new_metal(c3(1,1,1), 0);
-	add_item((t_item){v3( 0, -.5, 0),	v_3(.5),	v3(), 	mirror,	SPHERE});
+	add_item((t_item){v3( -1, -.5, 0),	v_3(.5),	v3(), 	mirror,	SPHERE});
+	add_item((t_item){v3( 1, -.5, 0),	v_3(.5),	v3(), 	mirror,	SPHERE});
+
+	t_item *sph1 = &(v.items[7]);
+	t_item *sph2 = &(v.items[8]);
+	add_motion(&(sph1->pos.x), -1, -.5, easeInOutCubic);
+	add_motion(&(sph2->pos.x), 1, .5, easeInOutCubic);
 }
 
 void	checkers(void)
@@ -273,6 +369,185 @@ void	first_animation(void)
 
 	add_motion(&(v.camera_pos.x), -4, 4, sin_tween);
 	add_motion(&(v.camera_pos.z), -4, 4, cos_tween);
+}
+
+void    colored_lights(void)
+{
+    default_cam();
+	v.background_color = black_background;
+	v.lookat = v3(0, 1, 0);
+	v.lookat_toggle = 1;
+	v.camera_pos = v3(4.191477, 5.022816, 4.439668);
+	
+	material ground = new_lambertian(checkerboard(.5,
+		c3(.1, .1, .1),
+		c3(.9, .9, .9)));
+	material sphere = new_lambertian(c3(1,1,1));
+
+    add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(), ground, PLANE});
+    add_item((t_item){v3( 0, 1, 0),	v_3(1),	v3(), sphere, SPHERE});
+
+	material light_red = new_light(c3(1, 0, 0), 1.0);
+	material light_gre = new_light(c3(0, 1, 0), 1.0);
+	material light_blu = new_light(c3(0, 0, 1), 1.0);
+
+	double _h = 3;
+	double _s = 1;
+    add_item((t_item){v3( -_s, _h, -_s),	v_3(.5),v3(), light_red	, SPHERE});
+    add_item((t_item){v3(  _s, _h, -_s),	v_3(.5),v3(), light_gre	, SPHERE});
+    add_item((t_item){v3( -_s, _h,  _s),	v_3(.5),v3(), light_blu	, SPHERE});
+
+	v.motion_enabled = 1;
+	v.time_speed = 0.2;
+	add_motion(&(v.camera_pos.x), -4, 4, sin_tween);
+	add_motion(&(v.camera_pos.z), -4, 4, cos_tween);
+
+	v.upscale = 3;
+	v.max_depth = 50;
+	v.motion_enabled = 0;
+	v.render_mode = RASTER;
+}
+
+void	specular(void)
+{
+	cornell();
+	v.render_mode = RAYTRACE_STEPS;
+
+	material sph_1	   = new_lambertian(WHITE_MAP);
+	material sph_04	   = new_lambertian(WHITE_MAP);
+	material sph_015   = new_lambertian(WHITE_MAP);
+	material sph_002   = new_lambertian(WHITE_MAP);
+
+	sph_1.specular = 1.0;
+	sph_04.specular = 0.4;
+	sph_015.specular = 0.15;
+	sph_002.specular = 0.02;
+
+	sph_1.roughness = BW_MAP(0);
+	sph_04.roughness = BW_MAP(0);
+	sph_015.roughness = BW_MAP(0);
+	sph_002.roughness = BW_MAP(0);
+
+	v.max_depth = 10;
+	v.upscale = 3;
+
+	add_item((t_item){v3( 1.35, 0, 0),	v_3(.4),	v3(), 	sph_1,	SPHERE});
+	add_item((t_item){v3(  .45, 0, 0),	v_3(.4),	v3(), 	sph_04,	SPHERE});
+	add_item((t_item){v3( -.45, 0, 0),	v_3(.4),	v3(), 	sph_015,	SPHERE});
+	add_item((t_item){v3(-1.35, 0, 0),	v_3(.4),	v3(), 	sph_002,	SPHERE});
+}
+
+void	tomato(void)
+{
+	cornell();
+	v.camera_pos = v3 (0.000000, -0.080084, 2.572990);
+	v.lookat_toggle = 1;
+	v.max_depth = 10;
+	v.render_mode = RAYTRACE_STEPS;
+
+
+	v.items[0].mat = new_lambertian(c3(.4, .4, .4));
+	v.items[1].mat = new_lambertian(c3(.2, .3, .8));
+	v.items[3].mat = new_lambertian(WHITE_MAP);
+	material bot = new_lambertian(c3(0.1, 0.1, 0.1));
+	bot.specular = 0.1;
+	bot.roughness = BW_MAP(0.3);
+	v.items[4].mat = bot;
+	v.items[5].mat = new_lambertian(WHITE_MAP);
+	v.item_count = 6;
+
+	material tom   = new_lambertian(c3(1, .1, .2));
+	tom.specular = 0.2;
+	tom.roughness = BW_MAP(0);
+
+	add_item((t_item){v3( 0, -.3, 0),	v_3(.7),	v3(), 	tom,	SPHERE});
+
+	material light = new_light(WHITE_MAP, 2.0);
+
+	add_item((t_item){v3( 15.9/9.0, .7, 0),	v_3(.2),	v3(0, 0, -MYPI/2), 	light,	SS_QUAD});
+	add_item((t_item){v3( 15.9/9.0,  0, 0),	v_3(.2),	v3(0, 0, -MYPI/2), 	light,	SS_QUAD});
+	add_item((t_item){v3( 15.9/9.0,-.7, 0),	v_3(.2),	v3(0, 0, -MYPI/2), 	light,	SS_QUAD});
+	add_item((t_item){v3(-15.9/9.0,  0, 0),	v_3(.4),	v3(0, 0, MYPI/2), 	light,	SS_QUAD});
+
+}
+
+void	earth(void)
+{
+	default_cam();
+	v.camera_pos = v3(0, 0, 4.5);
+	v.lookat_toggle = 1;
+	v.background_color = shit_sky_background;
+
+	texture earth_texture = from_bmp("earth.bmp");
+	material earth_material = new_lambertian(earth_texture);
+
+	texture check = checkerboard(.25, c3(.1,.1,.1), c3(.9,.9,.9));
+	material ground = new_lambertian(checkerboard(.5,
+		earth_texture,
+		c3(.9, .9, .9)));
+
+	add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(), 	earth_material,	SPHERE});
+	add_item((t_item){v3( 0, -1, 0),v3(2,1,1),	v3(), 	ground,	PLANE});
+}
+
+void	bumpy(void)
+{
+	  default_cam();
+    v.render_mode = RAYTRACE_STEPS;
+	v.camera_pos = v3(0, -.26, 1.36);
+	v.background_color = black_background;
+
+	material light = new_light(WHITE_MAP, 3.0);//checkerboard(0.2, c3(.1,.1,.1), c3(3,3,3)));
+	add_item((t_item){v3( 2, 1, .5),	v_3(.8),	v3(MYPI,0,0), 	light,	SS_QUAD});
+
+	texture ea = from_bmp("earth.bmp");
+	material bumpper = new_lambertian_bump(ea,ea);
+
+	add_item((t_item){v3( 0, -.5, 0),	v_3(.5),	v3(), 	bumpper,	SPHERE});
+	v.max_depth = 3;
+	v.upscale = 1;
+	v.w = 400;
+	v.h = 400;
+}
+
+void	mirrors(void)
+{
+	default_cam();
+    v.render_mode = RAYTRACE_STEPS;
+	v.camera_pos = v3(-1.211402, 0.165707, 2.180947);
+	v.background_color = black_background;
+	v.lookat_toggle = 1;
+	v.lookat = v3(0, 0, 0);
+	v.upscale = 2;
+	v.max_depth = 50;
+
+	double fuzzzz = 0.01;
+
+    material material_wall = new_metal(c3(.73, .73, .73), fuzzzz);
+	
+	material material_wall_left  = new_metal(c3(.12, .45, .15), fuzzzz);
+	material material_wall_bot   = new_metal(checkerboard(.1, c3(.1, .2, .8), c3(.3, .4, .8)), fuzzzz);
+	material material_wall_right = new_metal(c3(.65, .05, .05), fuzzzz);
+
+	double _w = 16.0/9.0;
+	double _h = 1;
+	double _d = 1;
+	
+	double s = 0;
+
+	add_item((t_item){v3( 0, _h+s, 0),	v3(_w, 1, _d),	v3(MYPI,0,0), 	material_wall,		SS_QUAD});
+	add_item((t_item){v3( 0, 0,-_d-s),	v3(_w, 1, _h),	v3(MYPI/2,0,0), material_wall,		SS_QUAD});
+	add_item((t_item){v3( 0, 0,_d+s),	v3(_w, 1, _h),	v3(-MYPI/2,0,0),material_wall,		SS_QUAD});
+	
+	add_item((t_item){v3( _w+s, 0, 0),	v3(_h, 1, _d),	v3(0,0,MYPI/2),	material_wall_left,	SS_QUAD});
+	add_item((t_item){v3( 0,-_h-s, 0),	v3(_w, 1, _d),	v3(0,0,0), 		material_wall_bot, 	SS_QUAD});
+	add_item((t_item){v3(-_w-s, 0, 0),	v3(_h, 1, _d),	v3(0,0,-MYPI/2),material_wall_right,SS_QUAD});
+
+	material light = new_light(WHITE_MAP, 3.0);//checkerboard(0.2, c3(.1,.1,.1), c3(3,3,3)));
+	add_item((t_item){v3( 0, _h+s-1e-8, 0),	v_3(.8),	v3(MYPI,0,0), 	light,	SS_QUAD});
+
+	material mirror = new_metal(c3(1,1,1), fuzzzz);
+	add_item((t_item){v3( 0, -.5, 0),	v_3(.5),	v3(), 	mirror,	SPHERE});
 }
 
 //__NOT__

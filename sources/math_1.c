@@ -12,6 +12,13 @@
 
 #include "fractol.h"
 
+double	smoothstep (double edge0, double edge1, double x) {
+   // Scale, and clamp x to 0..1 range
+   x = clamp_((x - edge0) / (edge1 - edge0));
+
+   return x * x * (3.0 - 2.0 * x);
+}
+
 double	distance(vec3 a, vec3 b)
 {
 	return sqrt((b.x-a.x)*(b.x-a.x)+(b.y-a.y)*(b.y-a.y)+(b.z-a.z)*(b.z-a.z));
@@ -52,7 +59,7 @@ int	v_in_bounds(vec3 pos)
 	return (1);
 }
 
-float	fclamp(float x, float min, float max)
+double	fclamp(double x, double min, double max)
 {
 	if (x < min)
 		return (min);

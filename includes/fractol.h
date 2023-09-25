@@ -62,6 +62,7 @@
 #  define K_H 104
 #  define K_P 112
 #  define K_L 108
+#  define K_M 109
 # else
 #  define K_ESC 53
 #  define K_UP 126
@@ -130,18 +131,7 @@
 # define CENTER v3(v.w/2, v.h/2)
 # define CORNER v3(v.w, v.h)
 
-# define UPSCALE 3
-
-# define WIDTH 16 * (2*2*3*5) / UPSCALE
-# define HEIGHT 9 * (2*2*3*5) / UPSCALE
-
-# define NEAR 0.2
-# define FAR 1000
-# define FOV 50
-
-# define MAX_DEPTH 10
-
-# define WTSP world_to_screenpos
+# define NOT_IMPLEMENTED(f) printf("%s feature is not implemented yet..\n", f);
 
 typedef struct s_matrix		mat4;
 typedef struct s_point		vec3;
@@ -161,7 +151,7 @@ typedef struct s_matrix {
 }	mat4;
 
 typedef struct s_quat {
-    float x, y, z, w;
+    double x, y, z, w;
 }	quat;
 
 typedef struct s_point {
@@ -173,19 +163,59 @@ typedef struct s_ray {
 	vec3	dir;
 } ray;
 
+typedef struct s_bmp_read {
+    int widht;
+    int height;
+    int **pixels;
+}  bmp_read;
+
 typedef struct s_texture {
 	color color_value;
 	color (*value)(double, double, const texture *);
+	//checkers
 	texture	*checker_0;
 	texture	*checker_1;
 	double	inv_scale;
+	//image
+	int		image_width;
+	int		image_height;
+	color	*image;
 } texture;
 
 typedef struct s_material {
+	//PBR
+	texture	base_color;		//(diffuse, base_color)
+	texture	metalic;		//(is_metalic, can be texture)  (BW)
+
+	//[subsurface]
+
+	double	specular;		//(how much, specular probability base on IOR)
+	double	specular_tint;	//(lerp between WHITE - base_color)(should always be 0=WHITE)
+
+	texture	roughness;		//(fuzz, ..)  (BW)
+
+	//[anisotropic]
+	//[sheen]
+	//[clearcoat]
+
+	double	ior;
+	double	transmission;			//(dielectric probability)
+	texture	transmission_roughness;	//(BW)
+
+	texture	emission;				//(color)
+	double	emission_strength;		//(1.0 = exact same as base_color)
+	//texture	emission_strength;  	//(BW)
+
+	texture	bump;//normal;
+
+/*
 	//Texture maps: 
 	//.Albedo
-	texture	albedo;
+	texture	base_color;
+	texture specular;
 	//Bump / Normal
+	texture	bump;
+	//scatter method
 	Bool	(*scatter)(ray *, hit_record *, color *, ray *, material *);
 	//specular..
 	double	refraction;
@@ -194,8 +224,9 @@ typedef struct s_material {
 	//opacity
 
 	//Emissive
-	texture	emissive;
+	texture	emission;
 	//? Displacement
+*/
 } material;
 
 typedef struct s_hit_record {
@@ -271,7 +302,8 @@ typedef struct s_vars {
 	void		*win;
 	Cursor		cursor;
 	t__img		img;
-	double		dist_heatmap[WIDTH*UPSCALE][HEIGHT*UPSCALE];
+	vec3		**accumulate_img;
+	double		**dist_heatmap;
 
 	//mouse
 	int			_lmouse;
@@ -336,13 +368,19 @@ typedef struct s_vars {
 
 	//data
 	struct timeval	last_update;
-	float		delta_time; //time since last update in seconds
+	double		delta_time; //time since last update in seconds
  
  //Camera
 	vec3		camera_pos;
 	vec3		camera_rot;
 	quat		camera_quat;
 	mat4 		rotation_matrix;
+
+	int			upscale;
+	int			max_depth;
+
+	double		near;
+	double		far;
 
 	double		vfov;
 	int			lookat_toggle;
@@ -353,7 +391,6 @@ typedef struct s_vars {
 	vec3		pixel_delta_u;
 	vec3		pixel_delta_v;
 	vec3		camera_center;
-	int			max_depth;
 	color		(*background_color)(vec3 uvw);
 
 
@@ -375,6 +412,8 @@ typedef struct s_vars {
 
 	double		time_passed;
 	double		time_speed;
+
+	Bool		cam_flipp;
 
 }	t_vars;
 
@@ -415,8 +454,10 @@ color	rgb2color(int rgb);
 #define WHITE	new_color(1, 1, 1)
 #define BLACK	new_color(0, 0, 0)
 
-#define NO_MAP	solid_color(BLACK);
-#define FULL_MAP	solid_color(WHITE);
+#define BW_MAP(w)		c3(w,w,w)
+#define NO_MAP			BW_MAP(0.0)
+#define FULL_MAP		BW_MAP(1.0)
+#define WHITE_MAP		BW_MAP(1.0)
 
 //int		new_trgb(int t, int r, int g, int b);
 //int		get_r(int trgb);
@@ -530,19 +571,20 @@ double	signd(double n);
 int		max(int a, int b);
 int 	in_bounds(int x, int y);
 int		v_in_bounds(vec3 pos);
-float	fclamp(float i, float max, float min);
+double	fclamp(double i, double max, double min);
 //2
 vec3    v3_base(vec3 in);
 vec3    v_3(double x);
 vec3    v_add(vec3 a, vec3 b);
 vec3    v_sub(vec3 a, vec3 b);
 vec3    v_mult(vec3 a, vec3 b);
-float	v_len(vec3 a);
+double	v_len(vec3 a);
 //3
+Bool	v_eq(vec3 a, vec3 b);
 vec3	v_norm(vec3 a);
-vec3	v_scal(vec3 a, float scalar);
-float	vec_dist(vec3 a, vec3 b);
-float	pt_dist_to_sphere(vec3 pt, vec3 sphere_center, float rad);
+vec3	v_scal(vec3 a, double scalar);
+double	vec_dist(vec3 a, vec3 b);
+double	pt_dist_to_sphere(vec3 pt, vec3 sphere_center, double rad);
 vec3	v_cross(vec3 a, vec3 b);
 double	v_dot(vec3 a, vec3 b);
 double	length_squared(vec3 a);
@@ -558,8 +600,8 @@ vec3	ray_at(const ray *r, double t);
 vec3	lerp(double t, vec3 a, vec3 b);
 vec3    local_p(vec3 p, t_item item);
 //7
-double	random_double();
 double	random_double_l(double min, double max);
+double	random_double();
 vec3	pixel_sample_square(void);
 vec3	random_v3();
 vec3	random_v3_l(double min, double max);
@@ -578,10 +620,11 @@ vec3	plane_alligned_add(vec3 base, vec3 add);
 int		get_elapsed(struct timeval event);
 vec3	*get_npoints(int n, double r_offset);
 void	print_pos(vec3 pos, char *msg);
-int		dist_check(vec3 pos);
+int		check_heat(vec3 pos);
+void	set_heat(vec3 pos);
 
-vec3	project(vec3 pos, float fov, float aspect);
-vec3	reverse_project(vec3 pos, float fov, float aspect);
+vec3	project(vec3 pos, double fov, double aspect);
+vec3	reverse_project(vec3 pos, double fov, double aspect);
 vec3	world_to_screenpos(vec3 pos);
 
 void	draw_grid_and_cardinals(void);
@@ -603,24 +646,34 @@ vec3	refract(vec3 uv, vec3 n, double etai_over_etat);
 double	reflectance(double cosine, double ref_idx);
 
 vec3	lookRotation(vec3 lookfrom, vec3 lookat);
+vec3	look_at(vec3 lookfrom, vec3 lookat, vec3 up);
+
+double	smoothstep (double edge0, double edge1, double x);
 
 // ------Interval
 Bool	contains(interval _t, double x);
 Bool	surrounds(interval _t, double x);
 double	clamp(interval _t, double x);
+double	clamp_(double x);
 
 // ------Materials
-material	new_lambertian	(texture albedo);
-material	new_metal		(texture albedo, double fuzz);
-material	new_dielectric	(texture albedo, double refraction);
-material	new_light		(texture emissive);
+material	new_lambertian	(texture base_color);
+material	new_metal		(texture base_color, double fuzz);
+material	new_dielectric	(texture base_color, double refraction);
+material	new_light		(texture emission, double emission_strength);
+
+material	new_lambertian_bump(texture t, texture bump);
+
+Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *material_color, ray *scattered, material *self);
 
 // ------Textures
 //deepcopy
 texture		*t_deep_copy(texture t);
 texture		solid_color(color c);
 texture		checkerboard(double scale, texture even, texture odd);
-
+texture		from_bmp(const char *filename);
+color  		evaluate(texture *t, double u, double v);
+double   	evaluate_bw(texture *t, double u, double v);
 // ------Tweens
 void	add_motion(double *value, double start_value, double end_value, double (*tween)(double, double , double));
 double	lerpd(double a, double b, double t);
@@ -628,16 +681,19 @@ double	ping_pong(double a, double b, double t);
 double	ping_pong_2(double a, double b, double t);
 double	sin_tween(double a, double b, double t);
 double	cos_tween(double a, double b, double t);
+double	easeInOutCubic(double a, double b, double t);
 
 // ------Backgrounds
 color	sky_background(vec3 uv);
 color	black_background(vec3 uv);
 color	white_background(vec3 uv);
 color	uv_background(vec3 uv);
+color	shit_sky_background(vec3 uv);
 
 // ------Output to disk
 void write_img(void);
 void ffmpeg_bmp_to_mp4(int framerate, int loops);
+int	readBMP(const char* filename, bmp_read *r);
 
 # define INTERVAL_EMPTY (interval){+INFINITY, -INFINITY}
 # define INTERVAL_UNIVERSE (interval){-INFINITY, +INFINITY}

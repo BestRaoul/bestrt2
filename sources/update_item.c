@@ -56,7 +56,7 @@ void	maybe_add_item(void)
 //	if (v._shift) move = v3(move.x/10, move.y/10};
 	total_move = v3(total_move.x + move.x, total_move.y + move.y);
 	v.selection_pos = addin->pos;
-	vec3 selection_point = WTSP(addin->pos);
+	vec3 selection_point = world_to_screenpos(addin->pos);
 
 	if (stage == 0) //Init
 	{

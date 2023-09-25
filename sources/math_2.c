@@ -40,7 +40,7 @@ vec3    v_3(double x)
     return v3(x, x, x);
 }
 
-float	v_len(vec3 a)
+double	v_len(vec3 a)
 {
 	return (sqrtf(a.x * a.x + a.y * a.y + a.z * a.z));
 }

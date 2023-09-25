@@ -47,9 +47,9 @@ int	draw_v_inheat(vec3 p, color c)
 {
 	if (!v_in_bounds(p)) return 0;
 
-	if (!dist_check(p))
+	if (!check_heat(p))
 	{
-		v.dist_heatmap[(int)p.x][(int)p.y] = p.z;
+		set_heat(p);
 		draw_raw(p.x, p.y, c);
 	}
 	return 1;

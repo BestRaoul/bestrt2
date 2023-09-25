@@ -31,28 +31,43 @@ item:
 //make add, move the pointers so that add_item does not break previous add_motions
 //remove mallocs for static size arrays
 //rotate default cylinder
-
 //linux -> CAMERA MOVEMENT - mouse
+//cam add CAMERA FLIPP
+
+
 
 //TODO intra
 1. specular
-2. window resizing
-3. no crash
-4. parsing
-5-7. read texture from file
-5. texture
-6. bumpmap
-8. colored lights check
+? - 3. no crash
+? - 6. bumpmap
+8. point lights
+	//reverse way (simple)
 9. 2nd degree object
+10. object selection with ray_cast (bounce 1) mouse -> XYZ
+	//display axes
+11. instance translation with matrix
+4. parsing
+IGNORED - 2. window resizing
 
-
-//TODO now
-3. render animation
+// fix noise everywhere
 
 //TODO
-2. render to disk, multiple imgs -> ffmpeg
+1. light sampling / important for point light and noise reduction
+2. focus blur
 3. ntfy
+	//cloudflare ->cronjob -> always notify
+3.1 better tweening
+	//add_tween()
+	//from, to (double, vec3)
+	//duration
+	//ease_method
+	//loop, at exit, ...
 4. lights
+	// fix last_bounce
+	// check if color spots work
+	// point lights
+	// ambient light
+	// diffuse light
 5. tris
-6. focus blur
-8. aabb
+	//read from obj
+99. aabb

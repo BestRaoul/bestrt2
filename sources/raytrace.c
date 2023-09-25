@@ -10,7 +10,7 @@
 
 #include "fractol.h"
 
-# define SAMPLES 10
+# define SAMPLES 30
 static int samples = 1;
 static int steps_rendered = 0;
 const int  samples_per_step = 10;
@@ -19,26 +19,59 @@ const int  samples_per_step = 10;
 void	init_ray(double x, double y, ray *r)
 {
 	//Only sample when you want to look at, also sample >1
-	if (v.lookat_toggle)
-	{
-		x = v.w-x;
-		vec3 pixel_center = v_add(v_add(
-			v.pixel00_loc, 
-			v_scal(v.pixel_delta_u, x)),
-			v_scal(v.pixel_delta_v, y));
-		vec3 pixel_sample = v_add(pixel_center, pixel_sample_square());
-		vec3 ray_direction = v_sub(pixel_sample, v.camera_center); // fix to center
 
-		r->orig = v.camera_center;
-		r->dir = v_norm(ray_direction);
-		return;
-	}
+	x = v.w-x;
+	vec3 pixel_center = v_add(v_add(
+		v.pixel00_loc, 
+		v_scal(v.pixel_delta_u, x)),
+		v_scal(v.pixel_delta_v, y));
+	vec3 pixel_sample = v_add(pixel_center, pixel_sample_square());
+	vec3 ray_direction = v_sub(pixel_sample, v.camera_center); // fix to center
 
+	r->orig = v.camera_center;
+	r->dir = v_norm(ray_direction);
+	return;
+
+/*
 	vec3 d;
 	d = get_ray_direction(x, y);
 	d = rotate3(d, v.camera_rot);
 	r->orig = v.camera_center;
 	r->dir = v_norm(d);
+*/
+}
+
+color	trace(ray *r, int max_depth)
+{
+	vec3	light = BLACK;
+	color	contribution = WHITE;
+
+	for (int i=0; i<max_depth; i++)
+	{
+		hit_record rec;
+
+		if (hit(r, (interval){0.001, INFINITY}, &rec))
+		{
+			color 	emitted_light;
+			color	material_color;
+			ray		scattered;
+
+			PBR_scatter(r, &rec, &emitted_light, &material_color, &scattered, &rec.mat);
+
+			contribution = v_mult(contribution, material_color);
+			light = v_add(light, emitted_light);
+
+			*r = scattered;
+		}
+		else
+		{
+			vec3 uv = v_scal(v_add(r->dir, v_3(1)), 0.5);
+			vec3 bg_light = v_mult(v.background_color(uv), contribution);
+			light = v_add(light, bg_light); 
+			break;
+		}
+	}
+	return light;
 }
 
 vec3	ray_color(ray *r, int depth)
@@ -57,10 +90,16 @@ vec3	ray_color(ray *r, int depth)
 	if (v.render_mode == RAYTRACE_UVS)
 		return new_color(rec.u-((int)rec.u/1), rec.v-((int)rec.v/1), 0);
 
+	vec3 bump_sample = rec.mat.bump.value(rec.u, rec.v, &rec.mat.bump);
+	bump_sample = v_scal(bump_sample, 1);
+	rec.normal = v_norm(v_add(rec.normal, bump_sample));
+	
+
 	ray	scattered;
 	color attenuation;
-	color color_from_emission = rec.mat.emissive.value(rec.u, rec.v, &rec.mat.emissive);
-	if (!rec.mat.scatter(r, &rec, &attenuation, &scattered, &(rec.mat)))
+	color color_from_emission = rec.mat.emission.value(rec.u, rec.v, &rec.mat.emission);
+	NOT_IMPLEMENTED("temporaryliy disabled ray_color scatter -- ");
+	if (0)// && //!rec.mat.scatter(r, &rec, &attenuation, &scattered, &(rec.mat)))
 		return color_from_emission;
 	
 	color color_from_scatter = v_mult(ray_color(&scattered, depth-1), attenuation);
@@ -80,31 +119,28 @@ void    render_pixel(int x, int y)
 		if (y % 3) return;
 	}
 
-	vec3	pixel_color = BLACK;
+
+
+	color	sample = BLACK;
 	for (int i=0; i<samples; i++)
 	{
 		ray r;
 		init_ray(x, y, &r);
 
-		pixel_color = v_add(pixel_color, ray_color(&r, 50)); // MAX_DEPTH
+		sample = v_add(sample, trace(&r, v.max_depth));
 	}
-	
-	if (v.render_mode == RAYTRACE || v.render_mode == RAYTRACE_UVS || v.render_mode == RENDER_MOVIE)
-		pixel_color = v_scal(pixel_color, 1.0/samples);
-	else if (v.render_mode == RAYTRACE_STEPS)
-	{
-		color from = rgb2color(get_pixel(x, y));
-		from = v_mult(from, from);
-		from = v_scal(from, steps_rendered*samples_per_step);
-		pixel_color = v_scal(v_add(from, pixel_color), 1.0/((steps_rendered + 1.0) * samples_per_step));
-	}
+	v.accumulate_img[x][y] = v_add(v.accumulate_img[x][y], sample);
+	//*accumulate = sample;//v_add(*accumulate, sample);
+
+	int total_samples = v.render_mode == RAYTRACE_STEPS ? (steps_rendered + 1.0) * samples : samples;
+	color pixel_color = v_scal(v.accumulate_img[x][y], 1.0/(double)total_samples);
 	draw_gamma_corrected(x, y, pixel_color);
 	
-	if (UPSCALE > 1)
+	if (v.upscale > 1)
 	{
-		for (int _y=0; _y<UPSCALE; _y++)
+		for (int _y=0; _y<v.upscale; _y++)
 		{
-			for (int _x=0; _x<UPSCALE; _x++)
+			for (int _x=0; _x<v.upscale; _x++)
 			{
 				draw_gamma_corrected(x+_x, y+_y, pixel_color);
 			}
@@ -140,6 +176,9 @@ void    raytrace(void)
 	static int	_x = 0;
 	static int	_y = 0;
 
+	static struct timeval frame_start;
+
+	//static ;
 	if (v._rerender)
 	{
 		printf("RERENDER ---\n");
@@ -160,6 +199,8 @@ void    raytrace(void)
 		if (v.render_mode == RAYTRACE_STEPS)
 			samples = samples_per_step;
 		steps_rendered = 0;
+
+		gettimeofday(&frame_start, 0);
 	}
 
 	while (_split < w_splits*h_splits)
@@ -172,7 +213,7 @@ void    raytrace(void)
 			while (_x < w_size)
 			{
 				render_pixel(_x+x_off, _y+y_off);
-				_x+=UPSCALE;
+				_x+=v.upscale;
 				if (v.render_mode != RENDER_MOVIE && get_elapsed(v.last_update) > 1000000.0/60.0)
 				{
 					print_progress(_split*w_size*h_size + _x + _y*w_size);
@@ -180,13 +221,15 @@ void    raytrace(void)
 				}
 			}
 			_x = 0;
-			_y+=UPSCALE;
+			_y+=v.upscale;
 		}
 		_y = 0;
 		_split++;
 		if (_split == w_splits*h_splits)
 		{
 			print_progress(v.w * v.h);
+			printf(" in %.2f ms", get_elapsed(frame_start)/1000.0);
+			gettimeofday(&frame_start, 0);
 			printf("\n");
 		}
 		else if (v.render_mode == RENDER_MOVIE)

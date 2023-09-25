@@ -47,6 +47,12 @@ double	cos_tween(double a, double b, double t)
 	return (lerpd(a, b, t));
 }
 
+double	easeInOutCubic(double a, double b, double t)
+{
+	t = t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2;
+	return lerpd(a, b, t);
+}
+
 void	add_motion(double *value, double start_value, double end_value, double (*tween)(double, double , double))
 {
 	motion	*new_motions = calloc(v.motion_count + 1, sizeof(motion));

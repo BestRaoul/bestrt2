@@ -12,11 +12,25 @@
 
 #include "fractol.h"
 
+#include <limits.h>
+
 //RANDOM
 
+//0.0 to 1.0 using PCG hash
 double random_double(void) 
 {
-	return rand() / (RAND_MAX + 1.0);
+    static unsigned int state;
+    state = state * 747796405 + 2891336453;
+    unsigned int result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737;
+    result = (result >> 22) ^ result;
+	return result / 4294967295.0;
+}
+
+double random_normal_distribution(void)
+{
+    double theta = 2 * 3.1415926 * random_double();
+    double rho = sqrt(-2 * log(random_double()));
+    return rho * cos(theta);
 }
 
 double random_double_l(double min, double max)

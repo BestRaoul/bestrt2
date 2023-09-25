@@ -16,8 +16,8 @@ t_vars	v = {};
 
 void	vars_init(void)
 {
-	v.w = WIDTH * UPSCALE;
-	v.h = HEIGHT * UPSCALE;
+	init_scene();
+
 	v.mlx = mlx_init();
 	if (v.mlx == NULL)
 		exit(1);
@@ -25,20 +25,31 @@ void	vars_init(void)
 	v.img.mlx_img = mlx_new_image(v.mlx, v.w, v.h);
 	v.img.addr = mlx_get_data_addr(v.img.mlx_img, &v.img.bpp,
 			&v.img.line_len, &v.img.endian);
+	double *heatmap = malloc(sizeof(double) * v.w * v.h);
+	v.dist_heatmap = malloc(sizeof(double *) * v.w);
+	for (int i=0; i<v.w; i++)
+		v.dist_heatmap[i] = &(heatmap[i * v.h]);
+
+	vec3 *accumlates = malloc(sizeof(vec3) * v.w * v.h);
+	v.accumulate_img = malloc(sizeof(vec3 *) * v.w);
+	for (int i=0; i<v.w; i++)
+		v.accumulate_img[i] = &(accumlates[i * v.h]);
 
 	//DATA
 	gettimeofday(&v.last_update, 0);
-
-	v.item_count = 0;
-	v.items = NULL;
-
-	v.motion_count = 0;
-	v.motions = NULL;
-
-	init_scene();
 }
 
 int	my_exit(void) {exit(0); return (0);}
+
+int handle_window_resize(XConfigureEvent xce)
+{
+	if (xce.width != v.w)
+	{
+		write(1, "bruh", 4);
+	}
+	write(1, "x", 1);
+	return 0;
+}
 
 void	hooks(void)
 {
@@ -51,6 +62,8 @@ void	hooks(void)
 	mlx_hook(v.win, MOTIONNOTIFY, 1L << POINTERMOTIONMASK,
 		handle_mouse_move, NULL);
 	mlx_hook(v.win, 17, 0, my_exit, NULL);
+
+	mlx_hook(v.win, ConfigureNotify, 0, handle_window_resize, NULL);
 }
 
 void	set_cursor(t_xvar *xvar, t_win_list *win, unsigned int xc)

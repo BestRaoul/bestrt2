@@ -113,8 +113,8 @@ void	draw_debug_line(vec3 start, vec3 end, color c)
 //SEGV so much
 void	draw_projected_line(vec3 start, vec3 end, vec3 c)
 {
-	start = WTSP(start);
-	end = WTSP(end);
+	start = world_to_screenpos(start);
+	end = world_to_screenpos(end);
 
 	//2 behind
 	if (start.z < 0 && end.z < 0) return;
@@ -152,7 +152,7 @@ void	draw_projected_line(vec3 start, vec3 end, vec3 c)
 
 void	draw_projected_dot(vec3 pos, color c)
 {
-	pos = WTSP(pos);
+	pos = world_to_screenpos(pos);
 	vec3 _p = v3(0,0,pos.z);
 	for (int x=-2; x<=2; x++)
 		for (int y=-2; y<=2; y++)
@@ -165,6 +165,6 @@ void	draw_projected_dot(vec3 pos, color c)
 
 void	draw_projected_point(vec3 pos, color c)
 {
-	pos = WTSP(pos);
+	pos = world_to_screenpos(pos);
 	draw_v_inheat(pos, c);
 }

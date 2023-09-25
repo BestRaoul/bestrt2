@@ -34,7 +34,8 @@ void	draw_grid_and_cardinals(void)
 //might have error same as clear_img
 void	reset_heatmap(void)
 {
-	memset(&v.dist_heatmap[0], -1, sizeof(v.dist_heatmap));
+	memset(v.dist_heatmap[0], -1, sizeof(double) * v.w * v.h);
+	memset(v.accumulate_img[0], 0, sizeof(vec3) * v.w * v.h);
 }
 
 typedef struct s_sim_hit {
@@ -56,17 +57,38 @@ vec3	simulate_ray(ray *r, int depth, sim_hit *hits, int id)
 		hits[id+1] = (sim_hit){v_add(r->orig, v_scal(r->dir, 0.1)), BLUE};
 		return v.background_color(uv);
 	}
-	hits[id] = (sim_hit){r->orig, rec.mat.albedo.color_value};
+	hits[id] = (sim_hit){r->orig, rec.mat.base_color.color_value};
 
 	ray	scattered;
+	color emitted_light;
+	color material_color;
 	color attenuation;
-	color color_from_emission = rec.mat.emissive.value(rec.u, rec.v, &rec.mat.emissive);
-	if (!rec.mat.scatter(r, &rec, &attenuation, &scattered, &(rec.mat)))
+	color color_from_emission = rec.mat.emission.value(rec.u, rec.v, &rec.mat.emission);
+	if (!PBR_scatter(r, &rec, &emitted_light, &material_color, &scattered, &(rec.mat)))
 		return color_from_emission;
 	
 	color color_from_scatter = v_mult(simulate_ray(&scattered, depth-1, hits, id+1), attenuation);
 
 	return v_add(color_from_scatter, color_from_emission);
+}
+
+void	draw_lookat(void)
+{
+	double dist_to = vec_dist(v.camera_pos, v.lookat);
+	double d = dist_to/25;
+	color	line_color = WHITE;
+
+	draw_projected_dot(v.lookat, v3(.8, .6, .1));
+	draw_projected_line(v_add(v.lookat, v3(0,  d, 0)),
+						v_add(v.lookat, v3(0, -d, 0)),
+						GREEN);
+	draw_projected_line(v_add(v.lookat, v3( d, 0, 0)),
+						v_add(v.lookat, v3(-d, 0, 0)),
+						RED);
+	draw_projected_line(v_add(v.lookat, v3(0, 0,  d)),
+						v_add(v.lookat, v3(0, 0, -d)),
+						BLUE);
+
 }
 
 void	raster(void)
@@ -81,6 +103,8 @@ void	raster(void)
 // /	draw_grid_and_cardinals();
 	raster_items();
 	raster_selection();
+
+	draw_lookat();
 
 	const int sim_depth = 10;
 	static sim_hit hits[11];
@@ -128,7 +152,7 @@ void	raster_selection(void)
 	static int rrot = 0; 
 	rrot++;
 
-	vec3 spot = WTSP(v.selection_pos);
+	vec3 spot = world_to_screenpos(v.selection_pos);
 
 	if (!v_in_bounds(spot)) return;
 

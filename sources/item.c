@@ -43,27 +43,27 @@ t_item	get_item_default()
 						NULL}; //*hit
 	if (v._1)
 	{
-		get.mat.albedo = c3(0, 1, 0);
+		get.mat.base_color = c3(0, 1, 0);
 		get.raster = raster_box, get.hit = hit_box;
 	}
 	else if (v._2)
 	{
-		get.mat.albedo = c3(1, 0, 0);
+		get.mat.base_color = c3(1, 0, 0);
 		get.raster = raster_sphere, get.hit = hit_sphere;
 	}
 	else if (v._3)
 	{
-		get.mat.albedo = c3(1, .8, .1);
+		get.mat.base_color = c3(1, .8, .1);
 		get.raster = raster_pyramid, get.hit = hit_pyramid;
 	}
 	else if (v._4)
 	{
-		get.mat.albedo = c3(.1, .5, 1);
+		get.mat.base_color = c3(.1, .5, 1);
 		get.raster = raster_cylinder, get.hit = hit_cylinder;
 	}
 	else if (v._0)
 	{
-		get.mat.albedo = c3(1, 1, 1);
+		get.mat.base_color = c3(1, 1, 1);
 		get.raster = raster_line, get.hit = hit_line;
 	}
 	return (get);

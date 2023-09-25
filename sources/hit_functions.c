@@ -84,6 +84,7 @@ Bool    hit_plane(const ray *r, const interval ray_t, hit_record *rec, const t_i
     vec3 normal = v_norm(n);
     vec3 w = v_scal(n, 1.0/v_dot(n,n));
     //vec3 normal = v_norm(rotate3(v3(0,1,0), self->rot));
+    
     double D = v_dot(normal, Q);
 
     double denom = v_dot(normal, r->dir);
@@ -101,7 +102,7 @@ Bool    hit_plane(const ray *r, const interval ray_t, hit_record *rec, const t_i
     double alpha = v_dot(w, v_cross(planar_hitpt_vector, v));
     double beta = v_dot(w, v_cross(u, planar_hitpt_vector));
     alpha = alpha/2 + .5;
-    beta = beta/2 + .5;
+    beta = 1 - (beta/2 + .5);
     
     rec->t = t;
     rec->p = intersection;
@@ -157,7 +158,7 @@ Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_it
     if (!is_interior(alpha, beta, rec))
         return False;
     rec->u = alpha;
-    rec->v = beta;
+    rec->v = 1 - beta;
 
     // Ray hits the 2D shape; set the rest of the hit record and return true.
     rec->t = t;

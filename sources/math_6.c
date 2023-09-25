@@ -30,6 +30,8 @@ vec3	ray_at(const ray *r, double t)
 	return v_add(r->orig, v_scal(r->dir, t));
 }
 
+//0.0: a
+//1.0: b
 vec3	lerp(double t, vec3 a, vec3 b)
 {
 	return (vec3){

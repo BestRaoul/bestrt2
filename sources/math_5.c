@@ -32,7 +32,7 @@ vec3	mult_point_matrix(vec3 in, mat4 M)
     out.x   = in.x * M.m[0][0] + in.y * M.m[1][0] + in.z * M.m[2][0] + /* in.z = 1 */ M.m[3][0]; 
     out.y   = in.x * M.m[0][1] + in.y * M.m[1][1] + in.z * M.m[2][1] + /* in.z = 1 */ M.m[3][1]; 
     out.z   = in.x * M.m[0][2] + in.y * M.m[1][2] + in.z * M.m[2][2] + /* in.z = 1 */ M.m[3][2]; 
-    float w = in.x * M.m[0][3] + in.y * M.m[1][3] + in.z * M.m[2][3] + /* in.z = 1 */ M.m[3][3]; 
+    double w = in.x * M.m[0][3] + in.y * M.m[1][3] + in.z * M.m[2][3] + /* in.z = 1 */ M.m[3][3]; 
  
     // normalize if w is different than 1 (convert from homogeneous to Cartesian coordinates)
     if (w != 1) { 

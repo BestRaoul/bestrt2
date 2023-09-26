@@ -35,7 +35,6 @@ void	draw_grid_and_cardinals(void)
 void	reset_heatmap(void)
 {
 	memset(v.dist_heatmap[0], -1, sizeof(double) * v.w * v.h);
-	memset(v.accumulate_img[0], 0, sizeof(vec3) * v.w * v.h);
 }
 
 typedef struct s_sim_hit {

@@ -650,6 +650,8 @@ vec3	look_at(vec3 lookfrom, vec3 lookat, vec3 up);
 
 double	smoothstep (double edge0, double edge1, double x);
 
+double	ACES(double x);
+
 // ------Interval
 Bool	contains(interval _t, double x);
 Bool	surrounds(interval _t, double x);

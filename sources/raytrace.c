@@ -58,8 +58,8 @@ color	trace(ray *r, int max_depth)
 
 			PBR_scatter(r, &rec, &emitted_light, &material_color, &scattered, &rec.mat);
 
+			light = v_add(light, v_mult(emitted_light, contribution));
 			contribution = v_mult(contribution, material_color);
-			light = v_add(light, emitted_light);
 
 			*r = scattered;
 		}
@@ -86,8 +86,6 @@ void    render_pixel(int x, int y)
 		if (y % 3) return;
 	}
 
-
-
 	color	sample = BLACK;
 	for (int i=0; i<samples; i++)
 	{
@@ -97,7 +95,6 @@ void    render_pixel(int x, int y)
 		sample = v_add(sample, trace(&r, v.max_depth));
 	}
 	v.accumulate_img[x][y] = v_add(v.accumulate_img[x][y], sample);
-	//*accumulate = sample;//v_add(*accumulate, sample);
 
 	int total_samples = v.render_mode == RAYTRACE_STEPS ? (steps_rendered + 1.0) * samples : samples;
 	color pixel_color = v_scal(v.accumulate_img[x][y], 1.0/(double)total_samples);
@@ -161,6 +158,7 @@ void    raytrace(void)
 			reset_heatmap();
 			raster_items();
 		}
+		memset(v.accumulate_img[0], 0, sizeof(vec3) * v.w * v.h);
 
 		samples = SAMPLES;
 		if (v.render_mode == RAYTRACE_STEPS)

@@ -456,18 +456,18 @@ void	tomato(void)
 	v.items[5].mat = new_lambertian(WHITE_MAP);
 	v.item_count = 6;
 
-	material tom   = new_lambertian(c3(1, .1, .2));
+	material tom   = new_lambertian(c3(1.0, .1, .2));
 	tom.specular = 0.2;
 	tom.roughness = BW_MAP(0);
 
 	add_item((t_item){v3( 0, -.3, 0),	v_3(.7),	v3(), 	tom,	SPHERE});
 
-	material light = new_light(WHITE_MAP, 2.0);
+	material light = new_light(WHITE_MAP, 5.0);
 
-	add_item((t_item){v3( 15.9/9.0, .7, 0),	v_3(.2),	v3(0, 0, -MYPI/2), 	light,	SS_QUAD});
-	add_item((t_item){v3( 15.9/9.0,  0, 0),	v_3(.2),	v3(0, 0, -MYPI/2), 	light,	SS_QUAD});
-	add_item((t_item){v3( 15.9/9.0,-.7, 0),	v_3(.2),	v3(0, 0, -MYPI/2), 	light,	SS_QUAD});
-	add_item((t_item){v3(-15.9/9.0,  0, 0),	v_3(.4),	v3(0, 0, MYPI/2), 	light,	SS_QUAD});
+	add_item((t_item){v3( 15.9/9.0, .7, 0),	v_3(.2),	v3(0, 0, MYPI/2), 	light,	SS_QUAD});
+	add_item((t_item){v3( 15.9/9.0,  0, 0),	v_3(.2),	v3(0, 0, MYPI/2), 	light,	SS_QUAD});
+	add_item((t_item){v3( 15.9/9.0,-.7, 0),	v_3(.2),	v3(0, 0, MYPI/2), 	light,	SS_QUAD});
+	add_item((t_item){v3(-15.9/9.0,  0, 0),	v_3(.4),	v3(0, 0, -MYPI/2), 	light,	SS_QUAD});
 
 }
 

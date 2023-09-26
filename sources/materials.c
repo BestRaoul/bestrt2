@@ -69,7 +69,10 @@ Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *mate
     *scattered = (ray){rec->p, scatter_dir};
 	*emitted_light = evaluate(&(self->emission), rec->u, rec->v);
 	*emitted_light = v_scal(*emitted_light, self->emission_strength);
-	*material_color = lerp((1 - self->specular_tint) * isSpecularBounce, evaluate(&(self->base_color), rec->u, rec->v), WHITE);
+	if (isSpecularBounce)
+		*material_color = WHITE; // lerp between white and base on tint
+	else
+		*material_color = evaluate(&(self->base_color), rec->u, rec->v);
     return True;
     (void) ray_in;
 }

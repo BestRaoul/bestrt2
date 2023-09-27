@@ -10,7 +10,7 @@
 
 #include "fractol.h"
 
-# define SAMPLES 30
+# define SAMPLES 50
 static int samples = 1;
 static int steps_rendered = 0;
 const int  samples_per_step = 10;
@@ -43,7 +43,7 @@ void	init_ray(double x, double y, ray *r)
 
 color	trace(ray *r, int max_depth)
 {
-	vec3	light = BLACK;
+	vec3	light = v3(0.02, 0.02, 0.02);
 	color	contribution = WHITE;
 
 	for (int i=0; i<max_depth; i++)
@@ -62,12 +62,18 @@ color	trace(ray *r, int max_depth)
 			contribution = v_mult(contribution, material_color);
 
 			*r = scattered;
+
+			if (v.render_mode == RAYTRACE_UVS)
+				return evaluate(&v.uv_debug, rec.u, rec.v);//v3(rec.u, rec.v, 0);
 		}
 		else
 		{
 			vec3 uv = v_scal(v_add(r->dir, v_3(1)), 0.5);
 			vec3 bg_light = v_mult(v.background_color(uv), contribution);
 			light = v_add(light, bg_light); 
+			if (v.render_mode == RAYTRACE_UVS)
+				return evaluate(&v.uv_debug, uv.x, uv.y);//uv;
+
 			break;
 		}
 	}
@@ -92,7 +98,11 @@ void    render_pixel(int x, int y)
 		ray r;
 		init_ray(x, y, &r);
 
-		sample = v_add(sample, trace(&r, v.max_depth));
+		//sample = v_add(sample, trace(&r, v.max_depth));
+		double u = x/(double)v.w;
+		double v_v = 1.0 - y/(double)v.h;
+		sample = v_add(sample, evaluate(&v.uv_debug, u, v_v));
+		//trace(&r, v.max_depth));
 	}
 	v.accumulate_img[x][y] = v_add(v.accumulate_img[x][y], sample);
 

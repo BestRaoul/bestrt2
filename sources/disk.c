@@ -193,66 +193,126 @@ void writeBMP(const char *filename, int width, int height, Color *pixels) {
     fclose(fp);
 }
 
-// Define a BMP header structure
-#pragma pack(push, 1)
-typedef struct {
-    uint16_t signature;   // "BM" (0x4D42)
-    uint32_t fileSize;   // File size in bytes
-    uint16_t reserved1;  // Reserved (0)
-    uint16_t reserved2;  // Reserved (0)
-    uint32_t dataOffset; // Pixel data offset
-    uint32_t headerSize; // Header size (40)
-    int32_t width;       // Image width
-    int32_t height;      // Image height
-    uint16_t planes;     // Color planes (1)
-    uint16_t bitsPerPixel; // Bits per pixel (usually 24)
-    uint32_t compression;  // Compression method (usually 0)
-    uint32_t imageSize;    // Image data size (bytes)
-    int32_t xPixelsPerMeter; // X Pixels per meter (usually 0)
-    int32_t yPixelsPerMeter; // Y Pixels per meter (usually 0)
-    uint32_t totalColors;    // Total colors (usually 0)
-    uint32_t importantColors; // Important colors (usually 0)
-} BMPHeader;
-#pragma pack(pop)
-
 // Function to read a BMP image file and return its data
 int readBMP(const char* filename, bmp_read *r) {
+    
     FILE* file = fopen(filename, "rb");
     if (!file) {
         fprintf(stderr, "Error: Unable to open file %s\n", filename);
         return 0;
     }
 
-    // Read BMP header
-    BMPHeader header;
-    fread(&header, sizeof(BMPHeader), 1, file);
+    uint16_t signature;   // "BM" (0x4D42)
+    uint32_t fileSize;   // File size in bytes
+    uint16_t reserved1;  // Reserved (0)
+    uint16_t reserved2;  // Reserved (0)
+    uint32_t dataOffset; // Pixel data offset
+    uint32_t headerSize; // Header size (12)
+    
+    fread(&signature, sizeof(uint16_t), 1, file);
+    fread(&fileSize, sizeof(uint32_t), 1, file);
+    fread(&reserved1, sizeof(uint16_t), 1, file);
+    fread(&reserved2, sizeof(uint16_t), 1, file);
+    fread(&dataOffset, sizeof(uint32_t), 1, file);
+    fread(&headerSize, sizeof(uint32_t), 1, file);
 
     // Check if the file is actually a BMP file
-    if (header.signature != 0x4D42) {
+    if (signature != 0x4D42) {
         fprintf(stderr, "Error: File %s is not a BMP file\n", filename);
         fclose(file);
         return 0;
     }
+    
+    int32_t width;       // Image width
+    int32_t height;      // Image height
+    uint16_t planes;     // Color planes (1)
+    uint16_t bitsPerPixel; // Bits per pixel (usually 24)
+    /* UNUSED
+    uint32_t compression;  // Compression method (usually 0)
+    uint32_t imageSize;    // Image data size (bytes)
+    int32_t xPixelsPerMeter; // X Pixels per meter (usually 0)
+    int32_t yPixelsPerMeter; // Y Pixels per meter (usually 0)
+    uint32_t totalColors;    // Total colors (usually 0)
+    uint32_t importantColors; // Important colors (usually 0)
+    */
+    
+    int bytes_till_pixels = dataOffset - 18;
+
+    if (headerSize == 12)
+    {
+        fprintf(stderr, "headsize: 12\n");
+        int16_t temp_width;
+        int16_t temp_height;
+        fread(&temp_width, sizeof(int16_t), 1, file);
+        fread(&temp_height, sizeof(int16_t), 1, file);
+
+        fread(&planes, sizeof(uint16_t), 1, file);
+        fread(&bitsPerPixel, sizeof(uint16_t), 1, file);
+
+        width = temp_width;
+        height = temp_height;
+
+        bytes_till_pixels -= 8;
+    }
+    else if (headerSize == 40)
+    {
+        fprintf(stderr, "headsize: 40\n");
+
+        fread(&width, sizeof(int32_t), 1, file);
+        fread(&height, sizeof(int32_t), 1, file);
+        fread(&planes, sizeof(uint16_t), 1, file);
+        fread(&bitsPerPixel, sizeof(uint16_t), 1, file);
+
+        bytes_till_pixels -= 12;
+        /* UNUSED
+        fread(&compression, sizeof(uint32_t), 1, file);
+        fread(&imageSize, sizeof(uint32_t), 1, file);
+        fread(&xPixelsPerMeter, sizeof(int32_t), 1, file);
+        fread(&yPixelsPerMeter, sizeof(int32_t), 1, file);
+        fread(&totalColors, sizeof(uint32_t), 1, file);
+        fread(&importantColors, sizeof(uint32_t), 1, file);
+        */
+    }
+    else if (headerSize <= 124)
+    {
+        fprintf(stderr, "Warning: yolo reading bmp file with weird head size %u\n", headerSize);
+        fread(&width, sizeof(int32_t), 1, file);
+        fread(&height, sizeof(int32_t), 1, file);
+        fread(&planes, sizeof(uint16_t), 1, file);
+        fread(&bitsPerPixel, sizeof(uint16_t), 1, file);
+
+        bytes_till_pixels -= 12;
+    }
+    else
+    {
+        fprintf(stderr, "Error: %u wrong HEADER size\n", headerSize);
+        return 0;
+    }
 
     // Check if the BMP format is supported (usually 24 bits per pixel)
-    if (header.bitsPerPixel != 24) {
+    if (bitsPerPixel != 24) {
         fprintf(stderr, "Error: Unsupported BMP format (bits per pixel != 24)\n");
         fclose(file);
         return 0;
     }
 
-    r->widht = header.width;
-    r->height = header.height;
-    
+    //Read till pixel data start
+    char _c;
+    while (bytes_till_pixels-- > 0)
+        fread(&_c, 1, 1, file);
+
+    r->widht = width;
+    r->height = height;
+
     // Allocate memory for pixel data
-    r->pixels = (int**)malloc(sizeof(int*) * header.height);
-    for (int i = 0; i < header.height; i++) {
-        (r->pixels)[i] = (int*)malloc(sizeof(int) * header.width);// * 3); // 3 bytes per pixel
+    r->pixels = (int**)malloc(sizeof(int*) * r->widht);
+    for (int i = 0; i < r->height; i++) {
+        (r->pixels)[i] = (int*)malloc(sizeof(int) * r->widht);// * 3); // 3 bytes per pixel
     }
 
     // Read pixel data
-    for (int i = header.height - 1; i >= 0; i--) {
-        for (int j = 0; j < header.width; j++) {
+    for (int i = r->height - 1; i >= 0; i--) {
+        for (int j = 0; j < r->widht; j++) {
             uint8_t blue, green, red;
             fread(&blue, 1, 1, file);
             fread(&green, 1, 1, file);
@@ -264,7 +324,7 @@ int readBMP(const char* filename, bmp_read *r) {
             //(r->pixels)[i][j * 3 + 2] = (int)blue;
         }
         // Skip any padding bytes
-        fseek(file, (4 - (header.width * 3) % 4) % 4, SEEK_CUR);
+        fseek(file, (4 - (r->widht * 3) % 4) % 4, SEEK_CUR);
     }
 
     fclose(file);

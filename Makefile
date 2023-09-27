@@ -77,6 +77,7 @@ SOURCES_LIST			:=	main.c\
 							backgrounds.c\
 							textures.c\
 							disk.c\
+							pbr_lighting.c\
 							trashcan.c
 
 SOURCES					:= $(addprefix $(SOURCES_DIRECTORY), $(SOURCES_LIST))

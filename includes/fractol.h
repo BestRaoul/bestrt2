@@ -189,7 +189,7 @@ typedef struct s_material {
 
 	//[subsurface]
 
-	double	specular;		//(how much, specular probability base on IOR)
+	texture	specular;		//(how much, specular probability base on IOR)
 	double	specular_tint;	//(lerp between WHITE - base_color)(should always be 0=WHITE)
 
 	texture	roughness;		//(fuzz, ..)  (BW)
@@ -206,7 +206,7 @@ typedef struct s_material {
 	double	emission_strength;		//(1.0 = exact same as base_color)
 	//texture	emission_strength;  	//(BW)
 
-	texture	bump;//normal;
+	texture	normal;
 
 /*
 	//Texture maps: 
@@ -414,6 +414,8 @@ typedef struct s_vars {
 	double		time_speed;
 
 	Bool		cam_flipp;
+
+	texture		uv_debug;
 
 }	t_vars;
 

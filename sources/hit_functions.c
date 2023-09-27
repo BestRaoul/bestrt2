@@ -58,6 +58,7 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
     vec3 outward_normal = v_scal(v_sub(rec->p, center),  1.0 / radius);
     set_face_normal(rec, r, outward_normal);
     set_sphere_uv(outward_normal, rec);
+    rec->v += ((int)(self->rot.x * RAD2DEG) % 360) /360.0;
     rec->mat = self->mat;
 
     return True;
@@ -65,12 +66,15 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
 
 void    set_plane_uv(double alpha, double beta, hit_record *rec)
 {
+    rec->u = alpha;
+    rec->v = beta;
+    return;
     alpha-=(int)alpha/1;
     beta-=(int)beta/1;
     if (alpha<0)
-        alpha = 1-fabs(alpha);
+        alpha = fabs(alpha);
     if (beta<0)
-        beta =  1-fabs(beta);
+        beta =  fabs(beta);
     rec->u = alpha;
     rec->v = beta;
 }
@@ -157,7 +161,7 @@ Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_it
 
     if (!is_interior(alpha, beta, rec))
         return False;
-    rec->u = alpha;
+    rec->u = 1 - alpha;
     rec->v = 1 - beta;
 
     // Ray hits the 2D shape; set the rest of the hit record and return true.

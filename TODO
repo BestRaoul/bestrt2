@@ -36,20 +36,25 @@ item:
 
 
 
-//TODO intra
-1. specular
-? - 3. no crash
-? - 6. bumpmap
-8. point lights
-	//reverse way (simple)
-9. 2nd degree object
-10. object selection with ray_cast (bounce 1) mouse -> XYZ
-	//display axes
-11. instance translation with matrix
-4. parsing
-IGNORED - 2. window resizing
+//PBR scatter
+- albedo
+- specular
+- metalic
+- transmission
+- emission
+- normal (bump to normal conversion)
 
-// fix noise everywhere
+----------- NOW ---------------
+-1. normal perturbation
+0. sphere UV rotation
+1. point lights
+2. cylinder + 2nd degree object
+3. object selection
+-----------AT 42---------------
+1. parsing
+2. no crash
+-----------NEVER---------------
+IGNORED - 3. window resizing
 
 //TODO
 1. light sampling / important for point light and noise reduction
@@ -70,4 +75,5 @@ IGNORED - 2. window resizing
 	// diffuse light
 5. tris
 	//read from obj
+11. instance translation with matrix
 99. aabb

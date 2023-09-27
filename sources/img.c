@@ -80,6 +80,8 @@ void gradientContrastAdjustment(float* image, int width, int height, float contr
 
 void	draw_gamma_corrected(int x, int y, color c)
 {
+	draw_raw(x, y, c);
+	return ;
 	// Calculate luminance
     double Y = 0.299 * c.x + 0.587 * c.y + 0.114 * c.z;
     

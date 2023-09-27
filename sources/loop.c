@@ -95,6 +95,7 @@ void	render_movie()
 	v.delta_time = 1.0/framerate;
 	//Reset motions
 	v.time_passed = 0;
+	v.motion_enabled = 1;
 	//v.time_speed = 1;
 	
 	for (int i=0; i<frames; i++)

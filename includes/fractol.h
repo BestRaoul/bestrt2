@@ -413,6 +413,13 @@ typedef struct s_vars {
 	double		time_passed;
 	double		time_speed;
 
+	int			max_samples;
+	int			samples_per_step;
+
+	double		animation_duration;
+	int			animation_framerate;
+	double		animation_speed;
+
 	Bool		cam_flipp;
 
 	texture		uv_debug;

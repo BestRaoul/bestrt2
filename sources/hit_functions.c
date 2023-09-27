@@ -28,6 +28,8 @@ void    set_sphere_uv(vec3 p, hit_record *rec)
 
     rec->u = phi / (2*MYPI);
     rec->v = theta / MYPI;
+
+    rec->u = 1 - rec->u;
 }
 
 Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
@@ -66,16 +68,13 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
 
 void    set_plane_uv(double alpha, double beta, hit_record *rec)
 {
-    rec->u = alpha;
-    rec->v = beta;
-    return;
     alpha-=(int)alpha/1;
     beta-=(int)beta/1;
     if (alpha<0)
-        alpha = fabs(alpha);
+        alpha = 1 - fabs(alpha);
     if (beta<0)
-        beta =  fabs(beta);
-    rec->u = alpha;
+        beta = 1 - fabs(beta);
+    rec->u = 1 - alpha;
     rec->v = beta;
 }
 
@@ -206,8 +205,8 @@ Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t
 
     if (!is_interior(alpha, beta, rec))
         return False;
-    rec->u = alpha;
-    rec->v = beta;
+    rec->u = 1 - alpha;
+    rec->v = 1 - beta;
 
     // Ray hits the 2D shape; set the rest of the hit record and return true.
     rec->t = t;

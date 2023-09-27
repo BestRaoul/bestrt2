@@ -111,8 +111,6 @@ color   image_return(double _u, double _v, const texture *self)
     _u = clamp(oy, _u);
     _v = 1.0 - clamp(oy, _v);  // Flip V to image coordinates
 
-    _v = 1;
-
     int x = _u * self->image_width;
     int y = _v * self->image_height;
     color pixel = self->image[x + y * self->image_width];

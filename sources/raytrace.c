@@ -10,11 +10,8 @@
 
 #include "fractol.h"
 
-# define SAMPLES 50
 static int samples = 1;
 static int steps_rendered = 0;
-const int  samples_per_step = 10;
-
 
 void	init_ray(double x, double y, ray *r)
 {
@@ -25,7 +22,8 @@ void	init_ray(double x, double y, ray *r)
 		v.pixel00_loc, 
 		v_scal(v.pixel_delta_u, x)),
 		v_scal(v.pixel_delta_v, y));
-	vec3 pixel_sample = v_add(pixel_center, pixel_sample_square());
+	vec3 pixel_sample = v_add(pixel_center, 
+		v_scal(pixel_sample_square(), samples > 1));
 	vec3 ray_direction = v_sub(pixel_sample, v.camera_center); // fix to center
 
 	r->orig = v.camera_center;
@@ -98,11 +96,7 @@ void    render_pixel(int x, int y)
 		ray r;
 		init_ray(x, y, &r);
 
-		//sample = v_add(sample, trace(&r, v.max_depth));
-		double u = x/(double)v.w;
-		double v_v = 1.0 - y/(double)v.h;
-		sample = v_add(sample, evaluate(&v.uv_debug, u, v_v));
-		//trace(&r, v.max_depth));
+		sample = v_add(sample, trace(&r, v.max_depth));
 	}
 	v.accumulate_img[x][y] = v_add(v.accumulate_img[x][y], sample);
 
@@ -170,9 +164,9 @@ void    raytrace(void)
 		}
 		memset(v.accumulate_img[0], 0, sizeof(vec3) * v.w * v.h);
 
-		samples = SAMPLES;
+		samples = v.max_samples;
 		if (v.render_mode == RAYTRACE_STEPS)
-			samples = samples_per_step;
+			samples = v.samples_per_step;
 		steps_rendered = 0;
 
 		gettimeofday(&frame_start, 0);

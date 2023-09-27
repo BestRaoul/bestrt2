@@ -92,6 +92,13 @@ void    default_cam(void)
 	v.max_depth = 8;
 
 	v.uv_debug = from_bmp("uv_check.bmp");
+
+	v.max_samples = 50;
+	v.samples_per_step = 10;
+
+	v.animation_duration = 1.0;
+	v.animation_framerate = 24;
+	v.animation_speed = 1.0;
 }
 
 void    balls(void)
@@ -520,6 +527,8 @@ void	earth(void)
 	add_item((t_item){v3( 0, -1, 0),v3(2,1,1),	v3(), 	ground,	PLANE});
 }
 
+//UV test
+
 void	bumpy(void)
 {
 	default_cam();
@@ -531,6 +540,7 @@ void	bumpy(void)
 	v.w = 512;
 	v.h = 512;
 	v.background_color = black_background;
+	v.max_samples = 1;
 
 	material light = new_light(WHITE_MAP, 10.0);//checkerboard(0.2, c3(.1,.1,.1), c3(3,3,3)));
 	light.base_color = c3(.1,.1,.1);
@@ -542,7 +552,7 @@ void	bumpy(void)
 	//earth_bumpy.specular = from_bmp("eartspec1k.bmp");
 	earth_bumpy.roughness = NO_MAP;
 
-	add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(MYPI/2), 	earth_bumpy,	QUAD});
+	add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(), 	earth_bumpy,	PLANE});
 
 
 	t_item *sph = &(v.items[1]);
@@ -551,6 +561,11 @@ void	bumpy(void)
 	//add_motion(&(v.camera_pos.x), -1.5, 1.5, sin_tween);
 	//add_motion(&(v.camera_pos.z), -1.5, 1.5, cos_tween);
 	v.time_speed = 0.2;
+	v.animation_duration = 5;
+	v.animation_speed = 0.2;
+	v.animation_framerate = 10;
+
+	v.max_samples = 10;
 }
 
 void	mirrors(void)

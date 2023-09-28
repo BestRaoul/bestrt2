@@ -29,6 +29,7 @@ void	bumpy(void);
 void	mirrors(void);
 void	tomato(void);
 void	glass_ball(void);
+void	normal_reflection(void);
 
 void    shapes(void);
 //.. world, specular, glass, reflection...
@@ -41,7 +42,7 @@ void    init_scene(void)
 	v.motion_count = 0;
 	v.motions = NULL;
 
-    switch (11)
+    switch (5)
     {
         case 1 : balls(); break;
         case 2 : tweens(); break;
@@ -59,6 +60,7 @@ void    init_scene(void)
 		case 12: mirrors(); break;
 		case 13: tomato(); break;
 		case 14: glass_ball(); break;
+		case 15: normal_reflection(); break;
 		//point lights
 		//normal_bump
 		//specular
@@ -99,6 +101,15 @@ void    default_cam(void)
 	v.animation_duration = 1.0;
 	v.animation_framerate = 24;
 	v.animation_speed = 1.0;
+
+	v.skyColorZenith = v3(0.3, 0.3, 0.9);
+	v.skyColorHorizon = WHITE;
+	v.groundColor = v3(0.3, 0.3, 0.3);
+
+	v.sunFocus = 300;
+	v.sunIntensity = 10;
+	v.sunDirection = v_norm(v3(0, 0, -1));
+
 }
 
 void    balls(void)
@@ -333,6 +344,20 @@ void	mirror_balls(void)
 	t_item *sph2 = &(v.items[8]);
 	add_motion(&(sph1->pos.x), -1, -.5, easeInOutCubic);
 	add_motion(&(sph2->pos.x), 1, .5, easeInOutCubic);
+
+	v.lights = malloc(2*sizeof(t_light));
+	v.light_count = 2;
+	v.lights[0] = (t_light){WHITE,
+							v3(15.9/9.0, .9, -.9),
+							5, 
+							False};
+	v.lights[1] = (t_light){WHITE,
+							v3(-15.9/9.0, .9, -.9),
+							5, 
+							False};
+	v.max_depth = 6;
+	v.max_samples = 100;
+	v.upscale = 1;
 }
 
 void	checkers(void)
@@ -527,13 +552,14 @@ void	earth(void)
 	add_item((t_item){v3( 0, -1, 0),v3(2,1,1),	v3(), 	ground,	PLANE});
 }
 
+
 //UV test
 
 void	bumpy(void)
 {
 	default_cam();
     v.render_mode = RAYTRACE_STEPS;
-	v.camera_pos = v3(0, 0, 2.25);
+	v.camera_pos = v3(0.0, 1.5, 2.25);//(0, 0, 2.25);
 	v.lookat_toggle = 1;
 	v.max_depth = 2;
 	v.upscale = 1;
@@ -542,22 +568,21 @@ void	bumpy(void)
 	v.background_color = black_background;
 	v.max_samples = 1;
 
-	material light = new_light(WHITE_MAP, 10.0);//checkerboard(0.2, c3(.1,.1,.1), c3(3,3,3)));
+	material light = new_light(WHITE_MAP, 3.0);
 	light.base_color = c3(.1,.1,.1);
-	add_item((t_item){v3( 0, 0, 4),	v_3(.8),	v3(-MYPI/2,0,0), 	light,	SS_QUAD});
+	add_item((t_item){v3( 0, 1, -2),	v_3(3),	v3(MYPI/2,0,0), 	light,	SS_QUAD});
 
-	texture ea = WHITE_MAP;//from_bmp("earthmap1k.bmp");
-	texture ea_bump = WHITE_MAP;//from_bmp("shapes.bmp");
+	texture ea = from_bmp("shapes.bmp");
+	texture ea_bump = from_bmp("shapes.bmp");
 	material earth_bumpy = new_lambertian_bump(ea,ea_bump);
-	//earth_bumpy.specular = from_bmp("eartspec1k.bmp");
+	//earth_bumpy.specular = 
 	earth_bumpy.roughness = NO_MAP;
 
-	add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(), 	earth_bumpy,	PLANE});
+	add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(0), 	earth_bumpy,	QUAD});
 
 
 	t_item *sph = &(v.items[1]);
 	add_motion(&(sph->rot.y), 0, -MYPI*2, lerpd);
-	add_motion(&(sph->rot.x), 0, -MYPI*2, lerpd);
 	//add_motion(&(v.camera_pos.x), -1.5, 1.5, sin_tween);
 	//add_motion(&(v.camera_pos.z), -1.5, 1.5, cos_tween);
 	v.time_speed = 0.2;
@@ -565,7 +590,63 @@ void	bumpy(void)
 	v.animation_speed = 0.2;
 	v.animation_framerate = 10;
 
-	v.max_samples = 10;
+	v.max_samples = 2;
+	v.render_mode = RAYTRACE;
+}
+
+void	normal_reflection(void)
+{
+	default_cam();
+	v.camera_pos = v3(-2.583034, 2.797927, 3.218940);
+	v.lookat_toggle = 1;
+	v.lookat = v3(0, .4, 0);
+	v.w = 600;
+	v.h = 400;
+	v.upscale = 1;
+	v.background_color = shit_sky_background;
+	v.sunIntensity = .2;
+	v.sunFocus = 30;
+	v.sunDirection = v3(.5, .5, -1);
+	v.skyColorZenith = v3(.4, .9, .9);
+
+	material ground = new_lambertian(checkerboard(.5,
+		c3(.9, .5, .1),//checkerboard(1, c3(.1,.1,.1), c3(.9, .9, .9)),
+		c3(.6, .6, .6)));
+	ground.specular = BW_MAP(1.0);
+	ground.specular_tint = 1.0;
+	ground.roughness = BW_MAP(0.02);
+	texture shaaapes = from_bmp("shapes.bmp");
+	ground.normal = checkerboard(.5,
+		shaaapes,//checkerboard(1, c3(.1,.1,.1), c3(.9, .9, .9)),
+		shaaapes);
+	material sphere = new_lambertian(from_bmp("earthmap1k.bmp"));
+	sphere.normal = from_bmp("earthnormal1k.bmp");
+	sphere.specular = BW_MAP(1.0);
+	sphere.roughness = NO_MAP;
+
+    add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(), ground, PLANE});
+    add_item((t_item){v3( 0, 1.2, 0),		v_3(1),	v3(), sphere, SPHERE});
+
+	//add_motion(&(v.camera_pos.x), 4.5, -4.5, sin_tween);
+	//add_motion(&(v.camera_pos.z), 4.5, -4.5, cos_tween);
+	//add_motion(&(v.sunDirection))
+
+	v.max_samples = 2;
+	v.animation_duration = 2;
+	v.animation_framerate = 24;
+	v.animation_speed = .5;
+	v.time_speed = 0.5;
+
+	v.lights = malloc(2*sizeof(t_light));
+	v.light_count = 2;
+	v.lights[0] = (t_light){WHITE,
+							v_norm(v3(-1, -1, 0)),
+							20, 
+							True};
+	v.lights[1] = (t_light){v3(1, 0, 0),
+							v3(-1, 3, 1),
+							1000, 
+							False};
 }
 
 void	mirrors(void)

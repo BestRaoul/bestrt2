@@ -39,6 +39,51 @@ void	init_ray(double x, double y, ray *r)
 */
 }
 
+color	paint_dist(double d)
+{
+	if (d < 0)
+		d = v.far_plane;
+	
+	//Linear fog
+	//double f = (MAX_DIST - d) / (MAX_DIST);
+	
+	//Exponential fog
+	double density = 0.03;
+	//double f = (1.0) / (pow(2.7, d * density));
+	//Exponential fog 2
+	double f = (1.0) / (pow(pow(2.7, d * density), 2));
+	return lerp(f, BLACK, WHITE);
+	//return lerp(f, v3(.1, .3, .2), v3(.8, .2, .3));
+}
+
+color	material_debug(ray *r, hit_record *rec, ray *scattered)
+{
+	if (0) //Albedo
+	{
+		return evaluate(&rec->mat.base_color, rec->u, rec->v);
+	}
+	else if (0) //Metalic
+	{
+		return evaluate(&rec->mat.metalic, rec->u, rec->v);
+	}
+	else if (0) //Specular
+	{
+		return evaluate(&rec->mat.specular, rec->u, rec->v);
+	}
+	else if (0) //roughness
+	{
+		return evaluate(&rec->mat.roughness, rec->u, rec->v);
+	}
+	else if (0) //transmission_roughness
+	{
+		return evaluate(&rec->mat.transmission_roughness, rec->u, rec->v);
+	}
+	else if (1) //normal
+	{
+		return rec->normal;
+	}
+}
+
 color	trace(ray *r, int max_depth)
 {
 	vec3	light = v3(0.02, 0.02, 0.02);
@@ -49,20 +94,25 @@ color	trace(ray *r, int max_depth)
 		hit_record rec;
 
 		if (hit(r, (interval){0.001, INFINITY}, &rec))
-		{
+		{			
 			color 	emitted_light;
 			color	material_color;
 			ray		scattered;
 
 			PBR_scatter(r, &rec, &emitted_light, &material_color, &scattered, &rec.mat);
 
-			light = v_add(light, v_mult(emitted_light, contribution));
+			//light = v_add(light, v_mult(emitted_light, contribution));
+			light = v_add(light, v_mult(CalcTotalPBRLighting(&rec, r), contribution));
 			contribution = v_mult(contribution, material_color);
 
 			*r = scattered;
 
 			if (v.render_mode == RAYTRACE_UVS)
-				return evaluate(&v.uv_debug, rec.u, rec.v);//v3(rec.u, rec.v, 0);
+				return evaluate(&v.uv_debug, rec.u, rec.v);//v3(rec.u, rec.v, 0); //
+			if (v.render_mode == RAYTRACE_DIST)
+				return paint_dist(rec.t);
+			if (v.render_mode == RAYTRACE_MAT_DEBUG)
+				return material_debug(r, &rec, &scattered);
 		}
 		else
 		{
@@ -70,8 +120,11 @@ color	trace(ray *r, int max_depth)
 			vec3 bg_light = v_mult(v.background_color(uv), contribution);
 			light = v_add(light, bg_light); 
 			if (v.render_mode == RAYTRACE_UVS)
-				return evaluate(&v.uv_debug, uv.x, uv.y);//uv;
-
+				return uv; //evaluate(&v.uv_debug, uv.x, uv.y);//
+			if (v.render_mode == RAYTRACE_DIST)
+				return paint_dist(-1);
+			if (v.render_mode == RAYTRACE_MAT_DEBUG)
+				return uv;
 			break;
 		}
 	}
@@ -152,12 +205,14 @@ void    raytrace(void)
 		printf("RERENDER ---\n");
 		printf("see : %d\n", (int)v.vfov);
 		print_pos(v.camera_pos, "from: ");
-		print_pos(v_scal(v.camera_rot, RAD2DEG), "rot : ");
+		print_pos(v.camera_rot, "rot : ");
 		_split = 0;
 		_x = 0; _y = 0;
 		v._rerender = 0;
 		clear_img(v.img);
-		if (v.render_mode == RAYTRACE || v.render_mode == RAYTRACE_UVS)
+		if (v.render_mode == RAYTRACE
+		 || v.render_mode == RAYTRACE_UVS
+		 || v.render_mode == RAYTRACE_DIST)
 		{
 			reset_heatmap();
 			raster_items();
@@ -167,6 +222,8 @@ void    raytrace(void)
 		samples = v.max_samples;
 		if (v.render_mode == RAYTRACE_STEPS)
 			samples = v.samples_per_step;
+		else if (v.render_mode == RAYTRACE_UVS || v.render_mode == RAYTRACE_DIST || v.render_mode == RAYTRACE_MAT_DEBUG)
+			samples = 1;
 		steps_rendered = 0;
 
 		gettimeofday(&frame_start, 0);

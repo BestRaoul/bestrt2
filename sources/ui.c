@@ -69,10 +69,31 @@ void	help_ui(void)
 	
 }
 
+void	draw_light_gizmo(t_light *l)
+{
+	if (l->is_dir)
+	{
+		vec3 p = v3(0, 3, 0);
+		vec3 p2 = v_add(p, l->pos_dir);
+		p = world_to_screenpos(p);
+		p2 = world_to_screenpos(p2);
+		draw_debug_dot(p2, l->col);
+		draw_debug_line(p, p2, l->col);
+	}
+	else
+	{
+		vec3 p = world_to_screenpos(l->pos_dir);
+		draw_debug_dot(p, l->col);
+	}
+}
+
 void	debug_ui(void)
 {
 	if (!v._debug)
 		return ;
+
+	for (int i=0; i<v.light_count; i++)
+		draw_light_gizmo(&v.lights[i]);
 
 	int _x = v.w - 200;
 	int _h = 50;
@@ -88,6 +109,7 @@ void	debug_ui(void)
 	case RAYTRACE: scribe("-- RAYz --", _x, _h+=16, GREEN); break;
 	case RAYTRACE_STEPS: scribe("-- step by step --", _x, _h+=16, GREEN); break;
 	case RAYTRACE_UVS: scribe("-- UVs --", _x, _h+=16, GREEN); break;
+	case RAYTRACE_DIST: scribe("-- DIST --", _x, _h+=16, GREEN); break;
 	default: scribe("-- wtf?!! --", _x, _h+=16, GREEN); break;
 	}
 

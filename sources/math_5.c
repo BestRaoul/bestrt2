@@ -25,6 +25,20 @@ void	matrix_multiplication(mat4 a, mat4 b, mat4 c)
     }
 }
 
+mat4	mm(mat4 a, mat4 b)
+{
+    mat4    c;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            c.m[i][j] = 0;
+            for (int k = 0; k < 4; k++) {
+                c.m[i][j] += a.m[i][k] * b.m[k][j];
+            }
+        }
+    }
+    return c;
+}
+
 vec3	mult_point_matrix(vec3 in, mat4 M)
 { 
 	vec3 out;

@@ -193,6 +193,7 @@ void writeBMP(const char *filename, int width, int height, Color *pixels) {
     fclose(fp);
 }
 
+//0 on failure
 // Function to read a BMP image file and return its data
 int readBMP(const char* filename, bmp_read *r) {
     
@@ -289,17 +290,28 @@ int readBMP(const char* filename, bmp_read *r) {
         return 0;
     }
 
-    // Check if the BMP format is supported (usually 24 bits per pixel)
-    if (bitsPerPixel != 24) {
-        fprintf(stderr, "Error: Unsupported BMP format (bits per pixel != 24)\n");
-        fclose(file);
-        return 0;
-    }
-
     //Read till pixel data start
     char _c;
     while (bytes_till_pixels-- > 0)
         fread(&_c, 1, 1, file);
+
+    // Check if the BMP format is supported (usually 24 bits per pixel)
+    if (bitsPerPixel == 1 || bitsPerPixel == 4)
+    {
+        NOT_IMPLEMENTED("bmp 1-bit and 4-bit support");
+        fclose(file);
+        return 0;
+    }
+    else if (bitsPerPixel == 8 || bitsPerPixel == 24)
+    { 
+        if (bitsPerPixel == 8)
+            NOT_IMPLEMENTED("add 8-bit bmp read from palette");
+    }
+    else {
+        fprintf(stderr, "Error: Unsupported BMP format (bits per pixel %u != 24)\n", bitsPerPixel);
+        fclose(file);
+        return 0;
+    }
 
     r->widht = width;
     r->height = height;
@@ -313,12 +325,26 @@ int readBMP(const char* filename, bmp_read *r) {
     // Read pixel data
     for (int i = r->height - 1; i >= 0; i--) {
         for (int j = 0; j < r->widht; j++) {
-            uint8_t blue, green, red;
-            fread(&blue, 1, 1, file);
-            fread(&green, 1, 1, file);
-            fread(&red, 1, 1, file);
+            if (bitsPerPixel == 24)
+            {
+                uint8_t blue, green, red;
 
-            (r->pixels)[i][j] = new_rgb(red, green, blue);
+                fread(&blue, 1, 1, file);
+                fread(&green, 1, 1, file);
+                fread(&red, 1, 1, file);
+
+                (r->pixels)[i][j] = new_rgb(red, green, blue);
+            }
+            else if (bitsPerPixel == 8)
+            {
+                uint8_t bw;
+
+                fread(&bw, 1, 1, file);
+                
+                (r->pixels)[i][j] = new_rgb(bw, bw, bw);
+            }
+            else
+                NOT_IMPLEMENTED("how did you even get here");
             //(r->pixels)[i][j * 3] = (int)red;
             //(r->pixels)[i][j * 3 + 1] = (int)green;
             //(r->pixels)[i][j * 3 + 2] = (int)blue;

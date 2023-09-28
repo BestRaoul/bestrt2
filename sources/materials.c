@@ -29,7 +29,7 @@ material	default_material(void)
 	m.specular = NO_MAP;//0.5;
 	m.specular_tint = 0.0;
 
-	m.roughness = BW_MAP(1.0);
+	m.roughness = BW_MAP(0.5);
 
 	m.ior = 1.45;
 	m.transmission = 0.0;
@@ -38,47 +38,17 @@ material	default_material(void)
 	m.emission = NO_MAP;
 	m.emission_strength = 0.0;
 
-	m.normal = NO_MAP;
+	m.normal = c3(0.5, 0.5, 1.0);
 	return m;
 }
 
-/*
-mat4 cotangent_frame( vec3 N, vec3 p, vec3 uv )
-{
-    // get edge vectors of the pixel triangle
-    vec3 dp1 = dFdx( p );
-    vec3 dp2 = dFdy( p );
-    vec3 duv1 = dFdx( uv );
-    vec3 duv2 = dFdy( uv );
- 
-    // solve the linear system
-    vec3 dp2perp = v_cross( dp2, N );
-    vec3 dp1perp = v_cross( N, dp1 );
-    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
- 
-    // construct a scale-invariant frame 
-    float invmax = 1.0 / sqrt( max( v_dot(T,T), v_dot(B,B) ) );
-    return mat3( T * invmax, B * invmax, N );
-}
-
-vec3 perturb_normal( vec3 N, vec3 V, vec3 texcoord , texture *mapBump )
-{
-    // assume N, the interpolated vertex normal and 
-    // V, the view vector (vertex to eye)
-    vec3 map = evaluate( mapBump, texcoord.x, texcoord.y );
-	mat4 TBN = cotangent_frame( N, v_scal(V, -1), texcoord );
-    return v_norm(mult_point_matrix(map, TBN));
-}
-*/
-
 Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *material_color, ray *scattered, material *self)
 {
-	//BUMP map
-	//vec3 new_normal = perturb_normal(rec->normal, v.camera_pos, v3(rec->u, rec->v), &(self->normal));
-	vec3	normalRGB = evaluate(&(self->normal), rec->u, rec->v);
-	normalRGB = v_scal(normalRGB, 100);
-	//rec->normal = v_norm(v_mult(rec->normal, normalRGB));
+	//NORMAL map
+	vec3 normalRGB = evaluate(&self->normal, rec->u, rec->v);
+	vec3 perturbation = v3(normalRGB.x*2 -1, normalRGB.y*2 -1, normalRGB.z);
+	vec3 new_normal = perturb_normal(rec->normal, perturbation);
+	rec->normal = new_normal;
 
 
 	vec3	base = evaluate(&(self->base_color), rec->u, rec->v);
@@ -134,7 +104,7 @@ Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *mate
 	*emitted_light = evaluate(&(self->emission), rec->u, rec->v);
 	*emitted_light = v_scal(*emitted_light, self->emission_strength);
 	if (isSpecularBounce)
-		*material_color = WHITE; // lerp between white and base on tint
+		*material_color = lerp(self->specular_tint, WHITE, base); // lerp between white and base on tint
 	else
 		*material_color = base;
     return True;

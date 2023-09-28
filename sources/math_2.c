@@ -27,6 +27,11 @@ vec3    v_mult(vec3 a, vec3 b)
     return v3(a.x*b.x, a.y*b.y, a.z*b.z);
 }
 
+vec3    v_div(vec3 a, vec3 b)
+{
+    return v3(a.x/b.x, a.y/b.y, a.z/b.z);
+}
+
 
 //defaults to 0
 vec3    v3_base(vec3 in)

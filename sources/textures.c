@@ -60,7 +60,16 @@ texture from_bmp(const char *filename)
 
     // READ BMP HERE
     bmp_read r = (bmp_read){0, 0, 0};
-    readBMP(filename, &r);
+    if (!readBMP(filename, &r))
+    {
+        r.widht = 1;
+        r.height = 1;
+        int *x = malloc(sizeof(int));
+        int **x_ptr = malloc(sizeof(int *));
+        *x = color2rgb(ERROR_CYAN);
+        *x_ptr = x;
+        r.pixels = x_ptr;
+    }
     color *image = malloc(sizeof(color) * r.widht * r.height);
     for (int x=0; x<r.widht; x++)
         for (int y=0; y<r.height; y++)

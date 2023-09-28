@@ -23,22 +23,14 @@ color	sky_background(vec3 uv)
 
 color	shit_sky_background(vec3 uv)
 {
-	color skyColorZenith = v3(0.3, 0.3, 0.9);
-	color skyColorHorizon = WHITE;//v3(0.7, 0.7, 0.4);
-	color groundColor = v3(0.3, 0.3, 0.3);
-
-	double	sunFocus = 300;
-	double	sunIntensity = 10;
-	vec3	sunDirection = v_norm(v3(1.2, .2, -.2));
-
 	vec3 dir = v3(uv.x*2.0 - 1, uv.y*2.0 - 1, uv.z*2.0 - 1);
 	double skyGradientT = pow(smoothstep(0, 0.4, dir.y), 0.35);
-	vec3 skyGradient = lerp(skyGradientT, skyColorHorizon, skyColorZenith);
-	double sun = pow(maxd(0, v_dot(dir, sunDirection)), sunFocus) * sunIntensity;
+	vec3 skyGradient = lerp(skyGradientT, v.skyColorHorizon, v.skyColorZenith);
+	double sun = pow(maxd(0, v_dot(dir, v.sunDirection)), v.sunFocus) * v.sunIntensity;
 
 	double groundToSkyT = smoothstep(-0.01, 0, dir.y);
 	double sunMask = groundToSkyT >= 1;
-	return v_add(lerp(groundToSkyT, groundColor, skyGradient),
+	return v_add(lerp(groundToSkyT, v.groundColor, skyGradient),
 			v_3(sun * sunMask));
 }
 

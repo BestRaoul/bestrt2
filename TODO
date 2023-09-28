@@ -45,11 +45,14 @@ item:
 - normal (bump to normal conversion)
 
 ----------- NOW ---------------
--1. normal perturbation
+OK -1. normal perturbation
+?fov (-.5 ZOOM}
 0. sphere UV rotation
 1. point lights
 2. cylinder + 2nd degree object
 3. object selection
+4. showoff scenes (materials)
+5. UI (material debug, vec3's, color materials);
 -----------AT 42---------------
 1. parsing
 2. no crash

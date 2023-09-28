@@ -147,7 +147,7 @@ typedef struct s_texture	texture;
 typedef vec3 color;
 
 typedef struct s_matrix {
-	double	m[4][4];
+	double	m[4][4]; //row . collumn
 }	mat4;
 
 typedef struct s_quat {
@@ -248,6 +248,8 @@ typedef struct s_item {
 	vec3	pos;
 	vec3	scale;
 	vec3	rot;
+//	mat4	fwd;
+//	mat4	bck;
 	material mat;
 	void 	(*raster)(t_item *);
 	Bool	(*hit)(const ray *, const interval, hit_record *, const t_item *);
@@ -275,6 +277,8 @@ enum e_render_mode {
 	RAYTRACE,
 	RAYTRACE_STEPS,
 	RAYTRACE_UVS,
+	RAYTRACE_DIST,
+	RAYTRACE_MAT_DEBUG,
 	RENDERMODES_MAX,
 	RASTER_HEATMAP,
 	RENDER_MOVIE,
@@ -294,6 +298,15 @@ typedef struct s_motion {
 	double	end_val;
 	double	(*tween)(double, double, double);
 } motion;
+
+typedef struct s_light
+{
+	vec3	col;
+	vec3	pos_dir; //position or direction
+	double	intensity;
+	Bool	is_dir; //whether is a directional light
+} t_light;
+
 
 typedef struct s_vars {
 	int			w;
@@ -393,12 +406,14 @@ typedef struct s_vars {
 	vec3		camera_center;
 	color		(*background_color)(vec3 uvw);
 
-
 	double		near_plane;
 	double		far_plane;
 
 	t_item		*items;
 	int			item_count;
+
+	t_light		*lights;
+	int			light_count;
 
 	int			frame;
 
@@ -423,6 +438,14 @@ typedef struct s_vars {
 	Bool		cam_flipp;
 
 	texture		uv_debug;
+
+	color		skyColorZenith;
+	color		skyColorHorizon;
+	color		groundColor;
+
+	double		sunFocus;
+	double		sunIntensity;
+	vec3		sunDirection;
 
 }	t_vars;
 
@@ -463,6 +486,8 @@ color	rgb2color(int rgb);
 #define WHITE	new_color(1, 1, 1)
 #define BLACK	new_color(0, 0, 0)
 
+#define ERROR_CYAN new_color(0, 1, 1)
+
 #define BW_MAP(w)		c3(w,w,w)
 #define NO_MAP			BW_MAP(0.0)
 #define FULL_MAP		BW_MAP(1.0)
@@ -479,6 +504,7 @@ void	gizmo_dot(vec3 pos, color c);
 void	gizmo_box(vec3 pos, int w, int h, color c);
 void	gizmo_line(vec3 start, vec3 end, color c);
 void	gizmo_drag(vec3 start_pos, vec3 current_pos, color c);
+void	draw_debug_dot(vec3 pos, color c);
 void	draw_debug_line(vec3 start, vec3 end, color c);
 //projected
 void	heat_line(vec3 start, vec3 end, color c);
@@ -587,6 +613,7 @@ vec3    v_3(double x);
 vec3    v_add(vec3 a, vec3 b);
 vec3    v_sub(vec3 a, vec3 b);
 vec3    v_mult(vec3 a, vec3 b);
+vec3    v_div(vec3 a, vec3 b);
 double	v_len(vec3 a);
 //3
 Bool	v_eq(vec3 a, vec3 b);
@@ -601,6 +628,7 @@ double	length_squared(vec3 a);
 vec3	line_intersection(vec3 A, vec3 B, vec3 C, vec3 D);
 vec3	project_onto_screen_limits(vec3 p, vec3 dir);
 //5
+mat4	mm(mat4 a, mat4 b);
 void	matrix_multiplication(mat4 a, mat4 b, mat4 c);
 vec3	mult_point_matrix(vec3 in, mat4 M);
 //6
@@ -701,10 +729,18 @@ color	white_background(vec3 uv);
 color	uv_background(vec3 uv);
 color	shit_sky_background(vec3 uv);
 
+// ------Normals
+vec3    perturb_normal(vec3 normal, vec3 perturbation);
+vec3    texture_diff_bw(texture *t, vec3 uv);
+vec3    compute_rgb_perturbation(texture *t, vec3 normal, vec3 uv);
+
 // ------Output to disk
 void write_img(void);
 void ffmpeg_bmp_to_mp4(int framerate, int loops);
 int	readBMP(const char* filename, bmp_read *r);
+
+// ------PBR shenenigans
+vec3	CalcTotalPBRLighting(hit_record *rec, ray *ray_in);
 
 # define INTERVAL_EMPTY (interval){+INFINITY, -INFINITY}
 # define INTERVAL_UNIVERSE (interval){-INFINITY, +INFINITY}

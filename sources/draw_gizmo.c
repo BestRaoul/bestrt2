@@ -108,6 +108,15 @@ void	draw_debug_line(vec3 start, vec3 end, color c)
 		mlx_pixel_put(v.mlx, v.win, end.x, end.y, color2rgb(c));
 }
 
+void	draw_debug_dot(vec3 pos, color c)
+{
+	for (int x=-2; x<=2; x++)
+		for (int y=-2; y<=2; y++)
+			if (!((x==-2||x==2) && (y==-2||y==2)))
+				if (in_bounds(pos.x+x, pos.y+y))
+					mlx_pixel_put(v.mlx, v.win, pos.x+x, pos.y+y, color2rgb(c));
+}
+
 // -- PROJECTED
 
 //SEGV so much

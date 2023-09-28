@@ -53,9 +53,9 @@ int		color2rgb(color c)
 
 color	rgb2color(int rgb)
 {
-	return new_color(get_r(rgb)/255.0,
-					get_g(rgb)/255.0, 
-					get_b(rgb)/255.0);
+	return new_color(get_r(rgb)/256.0,
+					get_g(rgb)/256.0, 
+					get_b(rgb)/256.0);
 }
 
 int	get_r(int trgb)

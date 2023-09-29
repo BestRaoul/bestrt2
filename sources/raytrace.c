@@ -84,6 +84,14 @@ color	material_debug(ray *r, hit_record *rec, ray *scattered)
 	}
 }
 
+void	maybe_apply_perturb(hit_record *rec)
+{
+	vec3 normalRGB = evaluate(&rec->mat.normal, rec->u, rec->v);
+	vec3 perturbation = v3(normalRGB.x*2 -1, normalRGB.y*2 -1, normalRGB.z);
+	vec3 new_normal = perturb_normal(rec->normal, perturbation);
+	rec->normal = new_normal;
+}
+
 color	trace(ray *r, int max_depth)
 {
 	vec3	light = v3(0.02, 0.02, 0.02);
@@ -95,9 +103,13 @@ color	trace(ray *r, int max_depth)
 
 		if (hit(r, (interval){0.001, INFINITY}, &rec))
 		{			
+			if (v.render_mode == RAYTRACE_UVS) return evaluate(&v.uv_debug, rec.u, rec.v);
+			if (v.render_mode == RAYTRACE_DIST) return paint_dist(rec.t);
 			color 	emitted_light;
 			color	material_color;
 			ray		scattered;
+
+			maybe_apply_perturb(&rec);
 
 			PBR_scatter(r, &rec, &emitted_light, &material_color, &scattered, &rec.mat);
 
@@ -107,15 +119,13 @@ color	trace(ray *r, int max_depth)
 
 			*r = scattered;
 
-			if (v.render_mode == RAYTRACE_UVS)
-				return evaluate(&v.uv_debug, rec.u, rec.v);//v3(rec.u, rec.v, 0); //
-			if (v.render_mode == RAYTRACE_DIST)
-				return paint_dist(rec.t);
+
 			if (v.render_mode == RAYTRACE_MAT_DEBUG)
 				return material_debug(r, &rec, &scattered);
 		}
 		else
 		{
+			break;
 			vec3 uv = v_scal(v_add(r->dir, v_3(1)), 0.5);
 			vec3 bg_light = v_mult(v.background_color(uv), contribution);
 			light = v_add(light, bg_light); 

@@ -1,108 +1,32 @@
 #include "fractol.h"
 
-vec3 schlickFresnel(float vDotH, Bool isMetal, vec3 base_color)
+double distribution_ggx(double nDotH, double roughness)
 {
-    vec3 F0 = v3(0.04);
-
-    if (isMetal) {
-        F0 = base_color;
-    }
-
-    vec3 ret = v_add(F0, 
-               v_scal(v_sub(v_3(1), F0), pow(clamp_(1.0 - vDotH), 5)));
-
-    return ret;
+    double a = roughness * roughness;
+    double a2 = a * a;
+    double denom = nDotH * nDotH * (a2 - 1) + 1;
+    denom = MYPI * denom * denom;
+    return fmax(a2 / denom, 0.0000001);
 }
 
-
-float geomSmith(float dp, double roughness)
+double geometry_smith(double NdotV, double NdotL, double roughness)
 {
-    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
-    float denom = dp * (1 - k) + k;
-    return dp / denom;
+    double r = 1.0 + roughness;
+    double k = (r * r) / 8.0;
+    double ggx1 = NdotV / (NdotV * (1.0 - k) + k);
+    double ggx2 = NdotL / (NdotL * (1.0 - k) + k);
+    return ggx1 * ggx2;
 }
 
-
-float ggxDistribution(float nDotH, double roughness)
+vec3 fresnel_shlick(double HdotV, vec3 base_reflectivity)
 {
-    float alpha2 = roughness * roughness * roughness * roughness;
-    float d = nDotH * nDotH * (alpha2 - 1) + 1;
-    float ggxdistrib = alpha2 / (MYPI * d * d);
-    return ggxdistrib;
+    return v_add(base_reflectivity,
+            v_scal(v_sub(v_3(1), base_reflectivity), pow(1.0 - HdotV, 5)));
 }
 
+// --- VERIFIED ---
 
-vec3 CalcPBRLighting(t_light *light, hit_record *rec, ray *ray_in)
-{
-    double  metalic = evaluate_bw(&rec->mat.metalic, rec->u, rec->v);
-    double  rougness = evaluate_bw(&rec->mat.roughness, rec->u, rec->v);
-    vec3  base_color = evaluate(&rec->mat.base_color, rec->u, rec->v);
-
-    vec3 LightIntensity = v_scal(light->col, light->intensity);
-
-    vec3 l = v3(0.0);
-
-    if (light->is_dir) {
-        l = v_scal(light->pos_dir, -1);
-    } else {
-        l = v_sub(light->pos_dir, rec->p);
-        float LightToPixelDist = v_len(l);
-        l = v_norm(l);
-        LightIntensity = v_scal(LightIntensity, 1.0 / (LightToPixelDist * LightToPixelDist));
-    }
-
-    vec3 n = rec->normal;
-    vec3 v = ray_in->dir;
-    vec3 h = v_norm(v_add(v, l));
-
-    float nDotH = fmax(v_dot(n, h), 0.0);
-    float vDotH = fmax(v_dot(v, h), 0.0);
-    float nDotL = fmax(v_dot(n, l), 0.0);
-    float nDotV = fmax(v_dot(n, v), 0.0);
-
-    vec3 F = schlickFresnel(vDotH, metalic, base_color);
-
-    vec3 kS = F;
-    vec3 kD = v_sub(v_3(1.0), kS);
-
-    vec3 SpecBRDF_nom  = v_scal(F,
-                         ggxDistribution(nDotH, rougness) *
-                         geomSmith(nDotL, rougness) *
-                         geomSmith(nDotV, rougness));
-
-    float SpecBRDF_denom = 4.0 * nDotV * nDotL + 0.0001;
-
-    vec3 SpecBRDF = v_scal(SpecBRDF_nom, 1.0 / SpecBRDF_denom);
-
-    vec3 fLambert = v3(0.0);
-
-    if (!metalic) {
-        fLambert = base_color;
-    }
-
-    vec3 DiffuseBRDF = v_scal(v_mult(kD, fLambert), 1.0 / MYPI);
-
-    vec3 FinalColor = v_mult( v_add(DiffuseBRDF, SpecBRDF),
-                              v_scal(LightIntensity, nDotL));
-
-    return FinalColor;
-}
-
-
-/*
-vec3 CalcPBRDirectionalLight(vec3 Normal)
-{
-    return CalcPBRLighting(gDirectionalLight.Base, gDirectionalLight.Direction, true, Normal);
-}
-
-
-vec3 CalcPBRPointLight(PointLight l, vec3 Normal)
-{
-    return CalcPBRLighting(l.Base, l.LocalPos, false, Normal);
-}
-*/
-
-//0 means no obstruction
+//1 on failure OBSTRUCTED
 Bool    check_obstruction(t_light *l, vec3 p)
 {
         hit_record ignore;
@@ -120,38 +44,64 @@ Bool    check_obstruction(t_light *l, vec3 p)
         return hit(&check, (interval){0.001, max_t}, &ignore);
 }
 
-//list of all point lights (think about how to sample emittingobjects)
-//list of directional lights
-//
-//normal0 ->n
-//texCoord0 ->UV
-//localPos0 ->p
-//
-//cameraLocalPos
-//gMaterial
 vec3 CalcTotalPBRLighting(hit_record *rec, ray *ray_in)
 {
-    vec3 TotalLight = v3();
-    
-    for (int i = 0 ; i<v.light_count ;i++) {
-        t_light *l = &(v.lights[i]);
+    double  metalic     = evaluate_bw(&rec->mat.metalic, rec->u, rec->v);
+    double  roughness   = evaluate_bw(&rec->mat.roughness, rec->u, rec->v);
+    vec3    albedo      = evaluate(&rec->mat.base_color, rec->u, rec->v);
+    vec3    base_reflectivity = lerp(metalic, v3(0, 0, 0.4), albedo); // mix base to albedo
 
-        //check if anything block
-        if (check_obstruction(l, rec->p))
-            continue;
-        
-        //add light from source
-        TotalLight = v_add(TotalLight, CalcPBRLighting(l, rec, ray_in));
+    vec3 N = rec->normal;
+    vec3 V = ray_in->dir;
+
+    vec3 Lo = v3(0.0);
+    for (int i=0; i<v.light_count; i++)
+    {
+        t_light *l = &v.lights[i];
+        if (l->is_dir) { NOT_IMPLEMENTED("directional lights"); continue; }
+        if (check_obstruction(l, rec->p)) continue;
+
+        vec3 L = v_norm(v_sub(l->pos_dir, rec->p));
+        vec3 H = v_norm(v_add(V, L));
+        double distance = v_len(v_sub(l->pos_dir, rec->p));
+        double attenuation = 1.0 / (distance * distance);
+        vec3 radiance = v_scal(l->col, attenuation);
+
+        //Cook-Torrence BRDF
+        double NdotV = fmax(v_dot(N, V), 0.0000001);
+
+        double NdotL = fmax(v_dot(N, L), 0.0000001);
+        double HdotV = fmax(v_dot(H, V), 0.0);
+        double NdotH = fmax(v_dot(N, H), 0.0);
+
+        double D = distribution_ggx(NdotH, roughness);
+        double G = geometry_smith(NdotV, NdotL, roughness);
+        vec3   F = fresnel_shlick(HdotV, base_reflectivity);
+
+        vec3 specular = v_scal(F, D * G); // D * G * F
+        specular = v_scal(specular, 1.0 / (4.0 * NdotV * NdotL));
+
+        //conservation of energy
+        vec3 kd = v_sub(v_3(1.0), F);
+
+        //adapt to metalic
+        kd = v_scal(kd, 1.0 - metalic);
+
+        //combine
+        Lo = v_add(Lo, v_mult(
+                v_add(v_scal(v_mult(kd, albedo), MYPI), specular),
+                v_scal(radiance, NdotL)));
     }
 
-    // HDR tone mapping
-    //TotalLight = TotalLight / (TotalLight + vec3(1.0));
-    TotalLight = v_div(TotalLight, v_add(TotalLight, v3(1,1,1)));
+    vec3 ambient = v_scal(albedo, 0.03);
 
+    vec3 color = v_add(ambient, Lo);
 
-    // Gamma correction
-    vec3 FinalLight = TotalLight;
-    //vec4 FinalLight = vec4(pow(TotalLight, vec3(1.0/2.2)), 1.0);
+    //HDR tone mapping
+    color = v_div(color, v_add(color, v_3(1.0)));
 
-    return FinalLight;
+    //gamma correct
+    color = v3(pow(color.x, 1.0/2.2), pow(color.y, 1.0/2.2), pow(color.z, 1.0/2.2));
+
+    return color;
 }

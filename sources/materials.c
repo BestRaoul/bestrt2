@@ -44,13 +44,6 @@ material	default_material(void)
 
 Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *material_color, ray *scattered, material *self)
 {
-	//NORMAL map
-	vec3 normalRGB = evaluate(&self->normal, rec->u, rec->v);
-	vec3 perturbation = v3(normalRGB.x*2 -1, normalRGB.y*2 -1, normalRGB.z);
-	vec3 new_normal = perturb_normal(rec->normal, perturbation);
-	rec->normal = new_normal;
-
-
 	vec3	base = evaluate(&(self->base_color), rec->u, rec->v);
 	double	metalic = evaluate_bw(&(self->metalic), rec->u, rec->v);
 	double	specular = evaluate_bw(&(self->specular), rec->u, rec->v);

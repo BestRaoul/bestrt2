@@ -42,7 +42,7 @@ void    init_scene(void)
 	v.motion_count = 0;
 	v.motions = NULL;
 
-    switch (5)
+    switch (15)
     {
         case 1 : balls(); break;
         case 2 : tweens(); break;
@@ -355,9 +355,8 @@ void	mirror_balls(void)
 							v3(-15.9/9.0, .9, -.9),
 							5, 
 							False};
-	v.max_depth = 6;
-	v.max_samples = 100;
-	v.upscale = 1;
+	v.max_depth = 1;
+	v.max_samples = 1;
 }
 
 void	checkers(void)
@@ -614,14 +613,14 @@ void	normal_reflection(void)
 		c3(.6, .6, .6)));
 	ground.specular = BW_MAP(1.0);
 	ground.specular_tint = 1.0;
-	ground.roughness = BW_MAP(0.02);
+	ground.roughness = BW_MAP(0.0);
 	texture shaaapes = from_bmp("shapes.bmp");
 	ground.normal = checkerboard(.5,
 		shaaapes,//checkerboard(1, c3(.1,.1,.1), c3(.9, .9, .9)),
 		shaaapes);
 	material sphere = new_lambertian(from_bmp("earthmap1k.bmp"));
 	sphere.normal = from_bmp("earthnormal1k.bmp");
-	sphere.specular = BW_MAP(1.0);
+	sphere.specular = BW_MAP(0.01);
 	sphere.roughness = NO_MAP;
 
     add_item((t_item){v3( 0, 0, 0),	v_3(1),	v3(), ground, PLANE});
@@ -631,22 +630,28 @@ void	normal_reflection(void)
 	//add_motion(&(v.camera_pos.z), 4.5, -4.5, cos_tween);
 	//add_motion(&(v.sunDirection))
 
-	v.max_samples = 2;
+	//Animation
 	v.animation_duration = 2;
 	v.animation_framerate = 24;
 	v.animation_speed = .5;
 	v.time_speed = 0.5;
 
 	v.lights = malloc(2*sizeof(t_light));
-	v.light_count = 2;
+	v.light_count = 1;
 	v.lights[0] = (t_light){WHITE,
-							v_norm(v3(-1, -1, 0)),
+							v3(-1, 3, -1),
 							20, 
-							True};
-	v.lights[1] = (t_light){v3(1, 0, 0),
-							v3(-1, 3, 1),
-							1000, 
 							False};
+	v.max_depth = 3;
+	v.max_samples = 10;
+
+	vec3	*lp = &v.lights[0].pos_dir;
+	double d = 1.5;
+	add_motion(&(lp->x), -d, d, sin_tween);
+	add_motion(&(lp->z), -d, d, cos_tween);
+
+	vec3	*earth_rot = &v.items[1].rot;
+	add_motion(&(earth_rot->y), 0, -MYPI/4, lerpd);
 }
 
 void	mirrors(void)

@@ -224,6 +224,7 @@ double	clamp(interval _t, double x)
 	return x;
 }
 
+//0.0 to 1.0
 double	clamp_(double x)
 {
 	if (x < 0.0) return 0.0;
@@ -246,6 +247,19 @@ vec3	reflect(vec3 v, vec3 n)
 {
     return v_sub(v, v_scal(n, 2 * v_dot(v, n)));
 }
+
+//reflects
+//if under surface pops it up above
+vec3	reflect_safe(vec3 v, vec3 n, vec3 old_n)
+{
+	vec3 reflected = reflect(v, n);
+	if (v_dot(reflected, old_n) < 0) //if reflects under the surface
+	{
+		vec3 new_v = v_scal(reflected, -1);
+		reflected = reflect(new_v, old_n);
+	}
+	return reflected;
+}	
 
 vec3	refract(vec3 uv, vec3 n, double etai_over_etat)
 {
@@ -317,4 +331,11 @@ vec3	look_at(vec3 lookfrom, vec3 lookat, vec3 up) {
 // ACES tone mapping function
 double ACES(double x) {
     return (x * (A * x + B)) / (x * (C * x + D) + E);
+}
+
+double	realistic_specular(double ior)
+{
+	double R0 = (1 - ior) / (1 + ior);
+	R0 = R0 * R0;
+	return R0 / 0.08;
 }

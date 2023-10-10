@@ -27,7 +27,10 @@ int	loop(void)
 
 static void apply_motions()
 {
+	if (!v.motion_enabled) return; //fix so it only adds time when enabled
+	
 	double t = v.time_passed - (int)v.time_passed/1;
+	
 	for(int i=0; i<v.motion_count; i++)
 	{
 		motion m = v.motions[i];
@@ -39,8 +42,7 @@ static void	_update(void)
 {
 	update_delta_time();
 	
-	if (v.motion_enabled)
-		apply_motions();
+	apply_motions();
 
 	maybe_add_item();
 
@@ -66,15 +68,12 @@ static void	draw_heatmap_to_img()
 static void	_render(void)
 {
 	
-	if (v.render_mode == RAYTRACE
-	 || v.render_mode == RAYTRACE_UVS
-	 || v.render_mode == RAYTRACE_STEPS
-	 || v.render_mode == RAYTRACE_DIST
-	 || v.render_mode == RAYTRACE_MAT_DEBUG)
+	if (v.render_mode != RASTER
+	 && v.render_mode != RASTER_HEATMAP)
 		raytrace();
 	else if (v.render_mode == RASTER)
 		raster();
-	else if (v.render_mode == RASTER_HEATMAP)
+	else if (v.render_mode == RASTER_HEATMAP) // rethink raster heatmap
 	{
 		raster();
 		draw_heatmap_to_img();
@@ -87,31 +86,32 @@ static void	_render(void)
 
 	static hit_record rec = (hit_record){};
 	static Bool	did_hit = False;
+	vec3 old_normal;
+	vec3 new_normal;
 
-	if (v._shift)
+	if (0 && v._shift)
 	{
 		ray shoot;
 		init_ray(v.mouse_pos.x, v.mouse_pos.y, &shoot);
 		did_hit = hit(&shoot, (interval){0.001, INFINITY}, &rec);
+
+		old_normal = rec.normal;
+		maybe_apply_perturb(&rec);
+		new_normal = rec.normal;
 	}
 	if (did_hit)
 	{
-		//vec3 new_normal = compute_rgb_perturbation(&rec.mat.normal, rec.normal, v3(rec.u, rec.v));
-		vec3 normalRGB = evaluate(&rec.mat.normal, rec.u, rec.v);
-		//vec3 perturbation = v3(normalRGB.x*2 -1, normalRGB.y*2 -1, normalRGB.z);
-		vec3 new_normal = rec.normal;//perturb_normal(rec.normal, perturbation);
-
 		vec3 from = rec.p; from = world_to_screenpos(from);
-		vec3 to = v_add(rec.p, v_scal(rec.normal, .2)); to = world_to_screenpos(to);
-		vec3 to_h = v_add(rec.p, v_scal(rec.normal, .1)); to_h = world_to_screenpos(to_h);
-		vec3 to_new = v_add(rec.p, v_scal(new_normal, .2)); to_new = world_to_screenpos(to_new);
+		vec3 to_old = v_add(rec.p, v_scal(old_normal, .2)); 	to_old = world_to_screenpos(to_old);
+		vec3 to_old_h = v_add(rec.p, v_scal(old_normal, .1)); 	to_old_h = world_to_screenpos(to_old_h);
+		vec3 to_new = v_add(rec.p, v_scal(new_normal, .2)); 	to_new = world_to_screenpos(to_new);
 
 		color pink = v3(1, .2, 0);
-		color green = normalRGB;//v3(.2, .8, .3);
+		color green = evaluate(&(rec.mat.normal), rec.u, rec.v);
 		draw_debug_dot(from, pink);
-		draw_debug_dot(to, pink);
-		draw_debug_dot(to_h, pink);
-		draw_debug_line(from, to, pink);
+		draw_debug_dot(to_old, pink);
+		draw_debug_dot(to_old_h, pink);
+		draw_debug_line(from, to_old, pink);
 
 		draw_debug_dot(to_new, green);
 		draw_debug_line(from, to_new, green);
@@ -123,12 +123,13 @@ void	render_movie()
 	//close window
 	mlx_destroy_window(v.mlx, v.win);
 	
-	v.render_mode = RENDER_MOVIE;
+	v.render_mode = v.animation_render_mode;
+	v.rendering_movie = True;
 
 	int	framerate = v.animation_framerate;
 	int	frames = framerate * v.animation_duration;
 	v.time_speed = v.animation_speed;
-	int loops = 1;
+	int loops = v.animation_loops;
 	//Fix delta time
 	v.delta_time = 1.0/framerate;
 	//Reset motions

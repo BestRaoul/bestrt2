@@ -94,14 +94,13 @@ void ffmpeg_bmp_to_mp4(int framerate, int loops)
     char output_filename[100]; 
     char filename_format[100]; sprintf(filename_format, "%s/%s", outfolder, ff);
 
-    sprintf(output_filename, "%s/render_%s.mp4", outfolder, getCurrentDateTime());
+    sprintf(output_filename, "%s/render_%s.webm", outfolder, getCurrentDateTime());
 
     char *argv[20] = {"/bin/ffmpeg",
         "-stream_loop", ft_itoa(loops),
         "-i", filename_format,
         "-r", ft_itoa(framerate),
-        "-c:v", "libx264",
-        "-preset", "slow",
+        "-c:v", "libvpx-vp9",
         "-crf", "18",
         output_filename,
         NULL};

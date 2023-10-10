@@ -24,7 +24,13 @@ void	init_ray(double x, double y, ray *r)
 		v_scal(v.pixel_delta_v, y));
 	vec3 pixel_sample = v_add(pixel_center, 
 		v_scal(pixel_sample_square(), samples > 1));
-	vec3 ray_direction = v_sub(pixel_sample, v.camera_center); // fix to center
+	vec3 ray_direction = v_sub(pixel_sample, v.camera_center);
+	if (v.orthographic_toggle)
+	{
+		r->orig = v_scal(pixel_sample, vec_dist(v.camera_pos, v3()));
+		r->dir = rotate3(v3(0, 0, -1), v.camera_rot);
+		return;
+	}
 
 	r->orig = v.camera_center;
 	r->dir = v_norm(ray_direction);
@@ -39,9 +45,9 @@ void	init_ray(double x, double y, ray *r)
 */
 }
 
-color	paint_dist(double d)
+color	paint_dist(Bool did_hit, double d)
 {
-	if (d < 0)
+	if (d < 0 || !did_hit)
 		d = v.far_plane;
 	
 	//Linear fog
@@ -56,7 +62,22 @@ color	paint_dist(double d)
 	//return lerp(f, v3(.1, .3, .2), v3(.8, .2, .3));
 }
 
-color	material_debug(ray *r, hit_record *rec, ray *scattered)
+color	paint_uv(Bool did_hit, hit_record *rec)
+{
+	if (did_hit)
+		return evaluate(&v.uv_debug, rec->u, rec->v);
+	return BLACK; // v_scal(v_add(r->dir, v_3(1)), 0.5);
+}
+
+color	paint_env(vec3 r_dir)
+{
+	vec3 uv = v_scal(v_add(r_dir, v_3(1)), 0.5);
+	color irradiance = evaluate(&v.irradiance_map, uv.x, uv.y);
+	return irradiance;			
+}
+
+//see material values
+color	show_mat_values(hit_record *rec)
 {
 	if (0) //Albedo
 	{
@@ -84,64 +105,146 @@ color	material_debug(ray *r, hit_record *rec, ray *scattered)
 	}
 }
 
+color	paint_se(shader_end *se)
+{
+	return v_add(v_mult(se->specular_color, se->specular_light),
+				 v_mult(se->diffuse_color, se->diffuse_light));
+}
+
+# define UNLIT(mode) (mode==NORMAL || mode==MIST || mode==EMISSION || mode==ENVIRONEMENT)
+
+color	paint_mat_debug_unlit(Bool did_hit, hit_record *rec, ray *r)
+{
+	if (v.mat_debugmode==NORMAL)
+	{
+		if (!did_hit) return BLACK;
+		maybe_apply_perturb(rec);
+		double r = -rec->normal.x;
+		double g = -rec->normal.z;
+		double b = rec->normal.y;
+		return v3(r,g,b);
+	}
+	else if (v.mat_debugmode==MIST)
+	{
+		return paint_dist(did_hit, rec->t);
+	}
+	else if (v.mat_debugmode==EMISSION)
+	{
+		if (!did_hit) return BLACK;
+		color e = evaluate(&rec->mat.emission, rec->u, rec->v);
+		e = v_scal(e, rec->mat.emission_strength);
+		return e;
+	}
+	else if (v.mat_debugmode==ENVIRONEMENT)
+	{
+		if (did_hit) return BLACK;
+		return paint_env(r->dir);
+	}
+	return ERROR_CYAN;
+}
+
+color	paint_mat_debug_lit(shader_end *se, hit_record *rec)
+{
+	if (v.mat_debugmode==DIFFUSE_LIGHT)
+	{
+		return se->diffuse_light;
+	}
+	else if (v.mat_debugmode==DIFFUSE_COLOR)
+	{
+		return se->diffuse_color;
+	}
+	else if (v.mat_debugmode==SPECULAR_LIGHT)
+	{
+		return se->specular_light;
+	}
+	else if (v.mat_debugmode==SPECULAR_COLOR)
+	{
+		return se->specular_color;
+	}
+	else if (v.mat_debugmode==COMBINED)
+	{
+		return paint_se(se);
+	}
+	write(1, "error", 5);
+	return ERROR_CYAN;
+}
+
+
 void	maybe_apply_perturb(hit_record *rec)
 {
 	vec3 normalRGB = evaluate(&rec->mat.normal, rec->u, rec->v);
 	vec3 perturbation = v3(normalRGB.x*2 -1, normalRGB.y*2 -1, normalRGB.z);
+	perturbation = v_scal(perturbation, rec->mat.normal_strength);
+	perturbation.z = fabs(perturbation.z);
 	vec3 new_normal = perturb_normal(rec->normal, perturbation);
+	rec->old_normal = rec->normal;
 	rec->normal = new_normal;
 }
 
 color	trace(ray *r, int max_depth)
 {
-	vec3	light = v3(0.02, 0.02, 0.02);
+	vec3	light = BLACK;
 	color	contribution = WHITE;
 
-	for (int i=0; i<max_depth; i++)
+	for (int bounce=0; bounce<=max_depth; bounce++)
 	{
 		hit_record rec;
+		Bool did_hit = hit(r, (interval){0.001, INFINITY}, &rec);
 
-		if (hit(r, (interval){0.001, INFINITY}, &rec))
+		if		(v.render_mode == RAYTRACE_UVS) return paint_uv(did_hit, &rec);
+		else if	(v.render_mode == RAYTRACE_DIST) return paint_dist(did_hit, rec.t);
+		else if	(v.render_mode == RAYTRACE_MAT_DEBUG && UNLIT(v.mat_debugmode)) return paint_mat_debug_unlit(did_hit, &rec, r);
+
+		if (did_hit)
 		{			
-			if (v.render_mode == RAYTRACE_UVS) return evaluate(&v.uv_debug, rec.u, rec.v);
-			if (v.render_mode == RAYTRACE_DIST) return paint_dist(rec.t);
 			color 	emitted_light;
-			color	material_color;
 			ray		scattered;
 
+
+			emitted_light = evaluate(&(rec.mat.emission), rec.u, rec.v);
+			emitted_light = v_scal(emitted_light, rec.mat.emission_strength);
+			light = v_add(light, v_mult(emitted_light, contribution));
+			
 			maybe_apply_perturb(&rec);
+    		
+			shader_end se = CalcTotalPBRLighting(&rec, r);
+			if (v.render_mode == RAYTRACE_MAT_DEBUG) return paint_mat_debug_lit(&se, &rec);
+			
+			Bool was_specular;
+			PBR_scatter(r, &rec, &scattered, &was_specular);
 
-			PBR_scatter(r, &rec, &emitted_light, &material_color, &scattered, &rec.mat);
+			light = v_add(light, v_mult(paint_se(&se), contribution));
 
-			//light = v_add(light, v_mult(emitted_light, contribution));
-			light = v_add(light, v_mult(CalcTotalPBRLighting(&rec, r), contribution));
-			contribution = v_mult(contribution, material_color);
+			contribution = v_mult(contribution, was_specular?se.specular_color:se.diffuse_color);
 
 			*r = scattered;
-
-
-			if (v.render_mode == RAYTRACE_MAT_DEBUG)
-				return material_debug(r, &rec, &scattered);
 		}
 		else
 		{
+			if (v.render_mode != RAYTRACE_MAT_DEBUG)
+			{
+				if (bounce==0 && v.background_color == NULL)return paint_env(r->dir);
+
+				vec3 uv = v_scal(v_add(r->dir, v_3(1)), 0.5);
+				vec3 bg_light = v_mult(v.background_color(uv), contribution);
+				light = v_add(light, bg_light); 
+				break;
+			}		
+			if (v.render_mode == RAYTRACE_MAT_DEBUG) return v.mat_debugmode==COMBINED?paint_env(r->dir):BLACK;
+			if (v.render_mode == RAYTRACE_STEPS) break;
 			break;
-			vec3 uv = v_scal(v_add(r->dir, v_3(1)), 0.5);
-			vec3 bg_light = v_mult(v.background_color(uv), contribution);
-			light = v_add(light, bg_light); 
-			if (v.render_mode == RAYTRACE_UVS)
-				return uv; //evaluate(&v.uv_debug, uv.x, uv.y);//
-			if (v.render_mode == RAYTRACE_DIST)
-				return paint_dist(-1);
-			if (v.render_mode == RAYTRACE_MAT_DEBUG)
-				return uv;
+	
+			vec3 bg_light = v_mult(paint_env(r->dir), contribution);//v.background_color(uv), contribution);
+			light = v_add(light, bg_light); 	
 			break;
 		}
 	}
+	//light = hdr_tone(light);
+	//light = gamma_correct(light);
 	return light;
 }
 
-# define SPEEDUP 0
+# define SPEEDUP 1
 void    render_pixel(int x, int y)
 {
 	//4x speedup
@@ -163,7 +266,9 @@ void    render_pixel(int x, int y)
 	}
 	v.accumulate_img[x][y] = v_add(v.accumulate_img[x][y], sample);
 
-	int total_samples = v.render_mode == RAYTRACE_STEPS ? (steps_rendered + 1.0) * samples : samples;
+	int total_samples = (v.render_mode == RAYTRACE_STEPS
+					  || v.render_mode == RAYTRACE_STEPS_2
+					  || v.render_mode == RAYTRACE_STEPS_3) ? (steps_rendered + 1.0) * samples : samples;
 	color pixel_color = v_scal(v.accumulate_img[x][y], 1.0/(double)total_samples);
 	draw_gamma_corrected(x, y, pixel_color);
 	
@@ -230,7 +335,9 @@ void    raytrace(void)
 		memset(v.accumulate_img[0], 0, sizeof(vec3) * v.w * v.h);
 
 		samples = v.max_samples;
-		if (v.render_mode == RAYTRACE_STEPS)
+		if (v.render_mode == RAYTRACE_STEPS
+	 	 || v.render_mode == RAYTRACE_STEPS_2
+	 	 || v.render_mode == RAYTRACE_STEPS_3)
 			samples = v.samples_per_step;
 		else if (v.render_mode == RAYTRACE_UVS || v.render_mode == RAYTRACE_DIST || v.render_mode == RAYTRACE_MAT_DEBUG)
 			samples = 1;
@@ -250,7 +357,7 @@ void    raytrace(void)
 			{
 				render_pixel(_x+x_off, _y+y_off);
 				_x+=v.upscale;
-				if (v.render_mode != RENDER_MOVIE && get_elapsed(v.last_update) > 1000000.0/60.0)
+				if (!v.rendering_movie && get_elapsed(v.last_update) > 1000000.0/60.0)
 				{
 					print_progress(_split*w_size*h_size + _x + _y*w_size);
 					return;
@@ -272,7 +379,9 @@ void    raytrace(void)
 			print_progress(_split*w_size*h_size);
 	}
 	
-	if (v.render_mode == RAYTRACE_STEPS)
+	if (v.render_mode == RAYTRACE_STEPS
+	 || v.render_mode == RAYTRACE_STEPS_2
+	 || v.render_mode == RAYTRACE_STEPS_3)
 	{
 		_split = 0;
 		_x = 0; _y = 0;

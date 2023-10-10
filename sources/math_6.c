@@ -35,9 +35,9 @@ vec3	ray_at(const ray *r, double t)
 vec3	lerp(double t, vec3 a, vec3 b)
 {
 	return (vec3){
-		(1-t)*a.x + t*b.x,
-		(1-t)*a.y + t*b.y,
-		(1-t)*a.z + t*b.z
+		(1.-t)*a.x + t*b.x,
+		(1.-t)*a.y + t*b.y,
+		(1.-t)*a.z + t*b.z
 	};
 }
 

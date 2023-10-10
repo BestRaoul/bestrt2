@@ -24,7 +24,7 @@ void    update_camera(void)
 {
 	static vec3 prev_pos = (vec3){0,0,0};
 	static vec3 prev_rot = (vec3){0,0,0};
-	static int	prev_fov = 0;
+	static double	prev_fov = 0;
 
 	fov_camera();
 	move_camera();
@@ -213,6 +213,7 @@ static void	rotate_camera()
 	if (v._np5)
 	{
 		v.orthographic_toggle = !v.orthographic_toggle;
+		v._rerender = 1;
 	}
 
 	if (v.lookat_toggle)

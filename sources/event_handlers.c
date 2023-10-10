@@ -97,6 +97,7 @@ int	handle_key_press(int k)
 		
 		case K_R: v._rerender = 1; v._R = !v._R;
 			v.render_mode = (v.render_mode+1) % RENDERMODES_MAX; break;
+		case K_T: v._rerender = 1; v.mat_debugmode = (v.mat_debugmode+1) % MAT_DEBUGMODES_MAX; break;
 		//^toggles
 		case K_H: v._H = !v._H;
 			if (v._shift) {v._debug = !v._debug;}

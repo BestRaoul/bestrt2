@@ -26,12 +26,12 @@ material	default_material(void)
 	m.base_color = WHITE_MAP;
 	m.metalic = NO_MAP;
 
-	m.specular = NO_MAP;//0.5;
+	m.specular = NO_MAP;
 	m.specular_tint = 0.0;
 
-	m.roughness = BW_MAP(0.5);
+	m.roughness = NO_MAP;
 
-	m.ior = 1.45;
+	m.ior = 1.0;
 	m.transmission = 0.0;
 	m.transmission_roughness = NO_MAP;
 
@@ -39,17 +39,18 @@ material	default_material(void)
 	m.emission_strength = 0.0;
 
 	m.normal = c3(0.5, 0.5, 1.0);
+	m.normal_strength = 1.0;
 	return m;
 }
 
-Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *material_color, ray *scattered, material *self)
+Bool	PBR_scatter(ray *ray_in, hit_record *rec, ray *scattered, Bool *was_specular)
 {
+	material *self = &rec->mat;
 	vec3	base = evaluate(&(self->base_color), rec->u, rec->v);
 	double	metalic = evaluate_bw(&(self->metalic), rec->u, rec->v);
 	double	specular = evaluate_bw(&(self->specular), rec->u, rec->v);
 	double	roughness = evaluate_bw(&(self->roughness), rec->u, rec->v);
 	double	t_roughness = evaluate_bw(&(self->transmission_roughness), rec->u, rec->v);
-	vec3	emission = evaluate(&(self->emission), rec->u, rec->v);
 
 	//? contine
 
@@ -61,12 +62,12 @@ Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *mate
     {
 		diffuse_dir = rec->normal;
 	}
-	Bool	isSpecularBounce = specular >= random_double();
+	Bool	isSpecularBounce = specular >= random_double() || metalic;
 	
-	if (isSpecularBounce || metalic)
+	if (isSpecularBounce)
 	{
-		vec3	reflection_dir = reflect(ray_in->dir, v_add(rec->normal,
-					v_scal(random_unit_vector(), roughness)));
+		vec3	reflection_dir = reflect_safe(ray_in->dir, v_add(rec->normal,
+					v_scal(random_unit_vector(), roughness)), rec->old_normal);
 
 		double	smoothness = 1.0 - roughness;
 		scatter_dir = lerp(smoothness, diffuse_dir, reflection_dir);
@@ -84,6 +85,7 @@ Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *mate
 		{
 			scatter_dir = reflect(ray_in->dir, v_add(rec->normal,
 					v_scal(random_unit_vector(), roughness)));
+			isSpecularBounce = True;
 		}
 		else
 			scatter_dir = refract(ray_in->dir, v_add(rec->normal,
@@ -94,12 +96,7 @@ Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *mate
 
 	scatter_dir = v_norm(scatter_dir);
     *scattered = (ray){rec->p, scatter_dir};
-	*emitted_light = evaluate(&(self->emission), rec->u, rec->v);
-	*emitted_light = v_scal(*emitted_light, self->emission_strength);
-	if (isSpecularBounce)
-		*material_color = lerp(self->specular_tint, WHITE, base); // lerp between white and base on tint
-	else
-		*material_color = base;
+	*was_specular = isSpecularBounce;
     return True;
     (void) ray_in;
 }

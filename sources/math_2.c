@@ -17,6 +17,11 @@ vec3    v_add(vec3 a, vec3 b)
     return v3(a.x+b.x, a.y+b.y, a.z+b.z);
 }
 
+vec3   from_to(vec3 a, vec3 b)
+{
+    return (v_sub(b, a));
+}
+
 vec3    v_sub(vec3 a, vec3 b)
 {
     return v3(a.x-b.x, a.y-b.y, a.z-b.z);

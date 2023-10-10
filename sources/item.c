@@ -12,7 +12,7 @@
 
 #include "fractol.h"
 
-void	add_item(t_item t)
+t_item	*add_item(t_item t)
 {
 	t_item	*new_items = calloc(v.item_count + 1, sizeof(t_item));
 	for (int i=0; i<v.item_count; i++)
@@ -20,6 +20,7 @@ void	add_item(t_item t)
 	new_items[v.item_count] = t;
 	v.items = new_items;
 	v.item_count++;
+	return NULL;
 }
 
 void	remove_item(t_item *t_ptr)

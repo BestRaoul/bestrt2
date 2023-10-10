@@ -43,7 +43,7 @@ void	help_ui(void)
 	scribe_num("FPS %d", (int)(1.0/v.delta_time), 10, 10, new_color(.9, .8, 0));
 	
 
-	int	_h = v.h - 350;
+	int	_h = v.h - 320;
 	int	_x = 30;
 	color	_c = new_color(.9, .8, 0);
 
@@ -74,7 +74,7 @@ void	draw_light_gizmo(t_light *l)
 	if (l->is_dir)
 	{
 		vec3 p = v3(0, 3, 0);
-		vec3 p2 = v_add(p, l->pos_dir);
+		vec3 p2 = v_add(p, l->dir);
 		p = world_to_screenpos(p);
 		p2 = world_to_screenpos(p2);
 		draw_debug_dot(p2, l->col);
@@ -82,10 +82,24 @@ void	draw_light_gizmo(t_light *l)
 	}
 	else
 	{
-		vec3 p = world_to_screenpos(l->pos_dir);
+		vec3 p = world_to_screenpos(l->pos);
 		draw_debug_dot(p, l->col);
 	}
 }
+
+char	*mat_debugmode_names[9] = {
+	"-- MAT (normal) --",
+	"-- MAT (mist) --",
+
+	"-- MAT (diffuse light) --",
+	"-- MAT (diffuse color) --",
+	"-- MAT (specular light) --",
+	"-- MAT (specular color) --",
+
+	"-- MAT (emission) --",
+	"-- MAT (environement) --",
+	"-- MAT (combined) --",
+};
 
 void	debug_ui(void)
 {
@@ -108,11 +122,17 @@ void	debug_ui(void)
 	case RASTER: scribe("-- Raster --", _x, _h+=16, GREEN); break;
 	case RAYTRACE: scribe("-- RAYz --", _x, _h+=16, GREEN); break;
 	case RAYTRACE_STEPS: scribe("-- step by step --", _x, _h+=16, GREEN); break;
+	case RAYTRACE_STEPS_2: scribe("-- step by step 2 --", _x, _h+=16, GREEN); break;
+	case RAYTRACE_STEPS_3: scribe("-- step by step 3 --", _x, _h+=16, GREEN); break;
 	case RAYTRACE_UVS: scribe("-- UVs --", _x, _h+=16, GREEN); break;
 	case RAYTRACE_DIST: scribe("-- DIST --", _x, _h+=16, GREEN); break;
+	case RAYTRACE_MAT_DEBUG: scribe(mat_debugmode_names[v.mat_debugmode], _x, _h+=16, GREEN); break;
 	default: scribe("-- wtf?!! --", _x, _h+=16, GREEN); break;
 	}
 
+	_h+=16;
+	color at_moose = rgb2color(get_pixel(v.mouse_pos.x, v.mouse_pos.y));
+	scribe_v3d("col:   ",at_moose, _x, _h+=16, v_norm(at_moose));
 
 	//plane draw
 //	if (v.plane == XY || v.plane == X)

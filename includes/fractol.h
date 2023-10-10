@@ -63,6 +63,7 @@
 #  define K_P 112
 #  define K_L 108
 #  define K_M 109
+#  define K_T 116
 # else
 #  define K_ESC 53
 #  define K_UP 126
@@ -207,31 +208,14 @@ typedef struct s_material {
 	//texture	emission_strength;  	//(BW)
 
 	texture	normal;
+	double	normal_strength;
 
-/*
-	//Texture maps: 
-	//.Albedo
-	texture	base_color;
-	texture specular;
-	//Bump / Normal
-	texture	bump;
-	//scatter method
-	Bool	(*scatter)(ray *, hit_record *, color *, ray *, material *);
-	//specular..
-	double	refraction;
-	//glossy
-	double	fuzz;
-	//opacity
-
-	//Emissive
-	texture	emission;
-	//? Displacement
-*/
 } material;
 
 typedef struct s_hit_record {
 	vec3	p;
 	vec3	normal;
+	vec3	old_normal;
 	double	t;
 	Bool	front_face;
 	material mat;
@@ -273,15 +257,36 @@ enum e_slct {
 };
 
 enum e_render_mode {
-	RASTER,
 	RAYTRACE,
 	RAYTRACE_STEPS,
-	RAYTRACE_UVS,
-	RAYTRACE_DIST,
 	RAYTRACE_MAT_DEBUG,
+	RAYTRACE_UVS,
+	RASTER,
 	RENDERMODES_MAX,
+
+	//deprecated
+	RAYTRACE_STEPS_2,
+	RAYTRACE_STEPS_3,
+	RAYTRACE_DIST,
+
 	RASTER_HEATMAP,
 	RENDER_MOVIE,
+};
+
+enum e_mat_debugmode {
+	NORMAL,
+	MIST,
+	
+	DIFFUSE_LIGHT,
+	DIFFUSE_COLOR,
+	SPECULAR_LIGHT,
+	SPECULAR_COLOR,
+
+	EMISSION,
+	ENVIRONEMENT,
+	COMBINED,
+
+	MAT_DEBUGMODES_MAX,
 };
 
 typedef struct s__img {
@@ -302,11 +307,18 @@ typedef struct s_motion {
 typedef struct s_light
 {
 	vec3	col;
-	vec3	pos_dir; //position or direction
+	vec3	pos;
+	vec3	dir;
 	double	intensity;
-	Bool	is_dir; //whether is a directional light
+	Bool	is_dir; //whether is a directional light or positional
 } t_light;
 
+typedef struct s_shader_end {
+	vec3	diffuse_light;
+	color	diffuse_color;
+	vec3	specular_light;
+	color	specular_color;
+} shader_end;
 
 typedef struct s_vars {
 	int			w;
@@ -434,10 +446,19 @@ typedef struct s_vars {
 	double		animation_duration;
 	int			animation_framerate;
 	double		animation_speed;
+	//animation samples
+	int			animation_render_mode;
+	int			animation_loops;
+	Bool		rendering_movie;
+
+	//sun dir
+	//sky texture -> skybox
 
 	Bool		cam_flipp;
 
 	texture		uv_debug;
+	texture		irradiance_map;
+	texture		blurry_irradiance_map;
 
 	color		skyColorZenith;
 	color		skyColorHorizon;
@@ -446,6 +467,10 @@ typedef struct s_vars {
 	double		sunFocus;
 	double		sunIntensity;
 	vec3		sunDirection;
+
+	double		ambient;
+
+	int			mat_debugmode;
 
 }	t_vars;
 
@@ -536,7 +561,7 @@ void	_reset_consumable_clicks(void);
 
 
 //item.c
-void	add_item(t_item t);
+t_item	*add_item(t_item t);
 void	remove_item(t_item *t_ptr);
 t_item	get_item_default();
 
@@ -576,6 +601,9 @@ Bool    hit_quad	(const ray *r, const interval ray_t, hit_record *rec, const t_i
 Bool	hit_ss_quad	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
 //triangle
 //quad
+//cylinder
+//cone
+Bool	check_hit(const ray *r, const interval ray_t);
 
 //raytrace.c
 //		--Pixels
@@ -615,6 +643,7 @@ vec3    v_sub(vec3 a, vec3 b);
 vec3    v_mult(vec3 a, vec3 b);
 vec3    v_div(vec3 a, vec3 b);
 double	v_len(vec3 a);
+vec3   from_to(vec3 a, vec3 b);
 //3
 Bool	v_eq(vec3 a, vec3 b);
 vec3	v_norm(vec3 a);
@@ -679,6 +708,7 @@ double	linear_to_gamma(double linear_component);
 
 Bool	near_zero(vec3 e);
 vec3	reflect(vec3 v, vec3 n);
+vec3	reflect_safe(vec3 v, vec3 n, vec3 old_n);
 vec3	refract(vec3 uv, vec3 n, double etai_over_etat);
 double	reflectance(double cosine, double ref_idx);
 
@@ -686,6 +716,9 @@ vec3	lookRotation(vec3 lookfrom, vec3 lookat);
 vec3	look_at(vec3 lookfrom, vec3 lookat, vec3 up);
 
 double	smoothstep (double edge0, double edge1, double x);
+double	realistic_specular(double ior);
+
+vec3	parent_to(vec3 v, const t_item *item);
 
 double	ACES(double x);
 
@@ -703,16 +736,19 @@ material	new_light		(texture emission, double emission_strength);
 
 material	new_lambertian_bump(texture t, texture bump);
 
-Bool	PBR_scatter(ray *ray_in, hit_record *rec, color *emitted_light, color *material_color, ray *scattered, material *self);
+Bool	PBR_scatter(ray *ray_in, hit_record *rec, ray *scattered, Bool *was_specular);
 
 // ------Textures
 //deepcopy
-texture		*t_deep_copy(texture t);
+texture		*t_shallow_copy(texture *t);
+texture		*t_deep_copy(texture *t);
 texture		solid_color(color c);
 texture		checkerboard(double scale, texture even, texture odd);
 texture		from_bmp(const char *filename);
 color  		evaluate(texture *t, double u, double v);
 double   	evaluate_bw(texture *t, double u, double v);
+color   	evaluate_spread(texture *t, double _u, double _v, double _spread);
+color		getGaussianBlur(int x, int y, const texture *self);
 // ------Tweens
 void	add_motion(double *value, double start_value, double end_value, double (*tween)(double, double , double));
 double	lerpd(double a, double b, double t);
@@ -734,13 +770,20 @@ vec3    perturb_normal(vec3 normal, vec3 perturbation);
 vec3    texture_diff_bw(texture *t, vec3 uv);
 vec3    compute_rgb_perturbation(texture *t, vec3 normal, vec3 uv);
 
+void	maybe_apply_perturb(hit_record *rec);
+
 // ------Output to disk
 void write_img(void);
 void ffmpeg_bmp_to_mp4(int framerate, int loops);
 int	readBMP(const char* filename, bmp_read *r);
 
 // ------PBR shenenigans
-vec3	CalcTotalPBRLighting(hit_record *rec, ray *ray_in);
+shader_end	CalcTotalPBRLighting(hit_record *rec, ray *ray_in);
+
+// ------bs
+color	hdr_tone(color c);
+color	aces_tone(color c);
+color	gamma_correct(color c);
 
 # define INTERVAL_EMPTY (interval){+INFINITY, -INFINITY}
 # define INTERVAL_UNIVERSE (interval){-INFINITY, +INFINITY}

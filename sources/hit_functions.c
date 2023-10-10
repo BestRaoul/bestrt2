@@ -21,8 +21,10 @@ void    set_face_normal(hit_record *rec, const ray *r, vec3 outward_normal)
     rec->normal = rec->front_face ? outward_normal : v_scal(outward_normal, -1);
 }
 
-void    set_sphere_uv(vec3 p, hit_record *rec)
+void    set_sphere_uv(vec3 p, hit_record *rec, vec3 sphere_rot)
 {
+    //p = rotate3(p, sphere_rot);
+
     double theta = acos(-p.y);
     double phi = atan2(-p.z, p.x) + MYPI;
 
@@ -59,7 +61,7 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
     rec->p = ray_at(r, rec->t);
     vec3 outward_normal = v_scal(v_sub(rec->p, center),  1.0 / radius);
     set_face_normal(rec, r, outward_normal);
-    set_sphere_uv(outward_normal, rec);
+    set_sphere_uv(outward_normal, rec, self->rot);
     rec->v += ((int)(self->rot.x * RAD2DEG) % 360) /360.0;
     rec->mat = self->mat;
 
@@ -221,13 +223,81 @@ Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t
 
 Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
-    return hit_sphere(r, ray_t, rec, self);
+    t_item side = (t_item){};
+    side.mat = self->mat;
+
+    double _w = self->scale.x;
+    double _h = self->scale.y;
+    double _d = self->scale.z;
+
+    Bool got_hit = False;
+
+    //Front
+    side.pos = parent_to(v3(0,0,1), self);
+    side.rot = v_add(v3(MYPI/2), self->rot);
+    side.scale = v3(_w, 0, _h);
+    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
+    //back
+    side.pos = parent_to(v3(0,0,-1), self);
+    side.rot = v_add(v3(-MYPI/2), self->rot);
+    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
+
+    //Top
+    side.pos = parent_to(v3(0,1,0), self);
+    side.rot = self->rot;
+    side.scale = v3(_w, 0, _d);
+    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
+    //Bot
+    side.pos = parent_to(v3(0,-1,0), self);
+    side.rot = v_add(v3(MYPI), self->rot);
+    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
+
+    //Right
+    side.pos = parent_to(v3(-1,0,0), self);
+    side.rot = v3(0,0,MYPI/2);
+    side.scale = v3(_h, 0, _d);
+    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
+    //Left
+    side.pos = parent_to(v3(1,0,0), self);
+    side.rot = v3(0,0,-MYPI/2);
+    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
+
+    return got_hit;
 }
 
 //FIX rotated cylinder
 Bool    hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
-    return hit_sphere(r, ray_t, rec, self);
+    vec3 center = self->pos;
+    double radius = self->scale.x; //fix
+    
+    vec3 oc = v_sub(r->orig, center);
+    double a = v_dot(r->dir, r->dir);
+    double half_b = v_dot(oc, r->dir);
+    double c = v_dot(oc, oc) - radius*radius;
+    
+    double discriminant = half_b*half_b - a*c;
+    if (discriminant == 0) return False;
+    double sqrtd = sqrt(discriminant);
+
+    // Find the nearest root that lies in the acceptable range.
+    double root = (-half_b - sqrtd) / a;
+    if (!surrounds(ray_t, root))
+    {
+        root = (-half_b + sqrtd) / a;
+        if (!surrounds(ray_t, root))
+            return False;
+    }
+
+    rec->t = root;
+    rec->p = ray_at(r, rec->t);
+    vec3 outward_normal = v_scal(v_sub(rec->p, center),  1.0 / radius);
+    set_face_normal(rec, r, outward_normal);
+    set_sphere_uv(outward_normal, rec, self->rot);
+    rec->v += ((int)(self->rot.x * RAD2DEG) % 360) /360.0;
+    rec->mat = self->mat;
+
+    return True;
 }
 
 Bool    hit_pyramid(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
@@ -259,4 +329,21 @@ Bool	hit(const ray *r, const interval ray_t, hit_record *rec)
     *rec = temp_rec;
 
 	return hit_anything;
+}
+
+Bool	check_hit(const ray *r, const interval ray_t)
+{
+	hit_record	temp_rec;
+
+	t_item item;
+	for (int i=0; i<v.item_count; i++)
+	{
+		item = v.items[i];
+		if (item.hit(r, (interval){ray_t.min, ray_t.max}, &temp_rec, &item))
+		{
+			return True;
+		}
+	}
+
+	return False;
 }

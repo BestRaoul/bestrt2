@@ -16,6 +16,51 @@ color   solid_color_return(double u, double v, const texture *self);
 color   checkeboard_return(double u, double v, const texture *self);
 color   image_return(double u, double v, const texture *self);
 
+color getGaussianBlur(int x, int y, const texture *self) {
+    float kernel[5][5] = {
+        {1.0f, 4.0f,  6.0f,  4.0f, 1.0f},
+        {4.0f, 16.0f, 24.0f, 16.0f, 4.0f},
+        {6.0f, 24.0f, 36.0f, 24.0f, 6.0f},
+        {4.0f, 16.0f, 24.0f, 16.0f, 4.0f},
+        {1.0f, 4.0f,  6.0f,  4.0f, 1.0f}
+    };
+
+    color sum = v3(0.0);
+    int kCenter = 2; // Center of the kernel
+
+    double width = self->image_width;
+    double height = self->image_height;
+
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            int xOffset = x + i*3 - kCenter;
+            int yOffset = y + j*3 - kCenter;
+
+            // Check bounds
+            if (xOffset >= 0 && xOffset < width && yOffset >= 0 && yOffset < height) {
+                color pixelValue = self->value(xOffset / width, yOffset / height, self);
+                sum.x += kernel[i][j] * pixelValue.x;
+                sum.y += kernel[i][j] * pixelValue.y;
+                sum.z += kernel[i][j] * pixelValue.z;
+            }
+        }
+    }
+
+    // Normalize the result
+    return v_scal(sum, 1.0 / 256.0f);
+}
+//9 points evaluation
+color   evaluate_spread(texture *t, double _u, double _v, double _spread)
+{
+    int s=2;
+    color lo = v3();
+    for (int i=-s; i<=s; i++)
+        for (int j=-s; j<=s; j++)
+            lo = v_add(lo, t->value(_u + (i * _spread), _v + (j * _spread), t));
+    return v_scal(lo, 1.0 / (s*s));
+}
+
+
 color   evaluate(texture *t, double _u, double _v)
 {
     return t->value(_u, _v, t);
@@ -27,16 +72,25 @@ double   evaluate_bw(texture *t, double _u, double _v)
     return (get.x + get.y + get.z) / 3.0;
 }
 
-texture *t_deep_copy(texture t)
+texture *t_shallow_copy(texture *t)
 {
     texture *copy_t = malloc(sizeof(texture));
-    memcpy(copy_t, &t, sizeof(texture));
+    memcpy(copy_t, t, sizeof(texture));
+    return copy_t;
+}
+
+texture *t_deep_copy(texture *t)
+{
+    texture *copy_t = malloc(sizeof(texture));
+    memcpy(copy_t, t, sizeof(texture));
+    copy_t->image = malloc(sizeof(color)*t->image_height*t->image_width);
+    memcpy(copy_t->image, t->image, sizeof(color)*t->image_height*t->image_width);
     return copy_t;
 }
 
 texture solid_color(color c)
 {
-    texture t;
+    texture t = (texture){};
     t.color_value = c;
     t.value = solid_color_return;
 
@@ -45,18 +99,18 @@ texture solid_color(color c)
 
 texture checkerboard(double scale, texture even, texture odd)
 {
-    texture t;
+    texture t = (texture){};
     t.color_value = WHITE;
     t.value = checkeboard_return;
     t.inv_scale = scale;
-    t.checker_0 = t_deep_copy(even);
-    t.checker_1 = t_deep_copy(odd);
+    t.checker_0 = t_shallow_copy(&even);
+    t.checker_1 = t_shallow_copy(&odd);
     return t;
 }
 
 texture from_bmp(const char *filename)
 {
-    texture t;
+    texture t = (texture){};
 
     // READ BMP HERE
     bmp_read r = (bmp_read){0, 0, 0};

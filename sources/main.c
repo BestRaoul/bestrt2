@@ -17,6 +17,11 @@ t_vars	v = {};
 void	vars_init(void)
 {
 	init_scene();
+	texture *b = t_deep_copy(&v.irradiance_map);
+	for (double y=0; y<b->image_height; y++)
+		for (double x=0; x<b->image_width; x++)
+			b->image[(int)x + (int)y * b->image_width] = getGaussianBlur(x, y, b);
+	v.blurry_irradiance_map = *b;
 
 	v.mlx = mlx_init();
 	if (v.mlx == NULL)

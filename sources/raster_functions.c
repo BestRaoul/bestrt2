@@ -13,7 +13,7 @@
 #include "fractol.h"
 
 //parent V to the ITEM
-vec3	parent_to(vec3 v, t_item *item)
+vec3	parent_to(vec3 v, const t_item *item)
 {
 	v = v_mult(v, item->scale);
 	v = rotate3(v, item->rot);
@@ -29,6 +29,11 @@ vec3	parent_to_virtual(vec3 v, vec3 pos, vec3 rot, vec3 scale)
 	return (v);
 }
 
+vec3	swap_yz(vec3 v)
+{
+	return v3(v.x, v.z, v.y);
+}
+
 void	raster_cylinder(t_item *item)
 {
 	int		v_splits = 16;
@@ -36,8 +41,11 @@ void	raster_cylinder(t_item *item)
 	vec3	*l1 = get_npoints(v_splits, 0);
 	vec3	*l2 = get_npoints(v_splits, 0);
 
-	for (int j=0; j<=v_splits; j++) l1[j] = v_add(l1[j], v3(0, 0,  1));
-	for (int j=0; j<=v_splits; j++) l2[j] = v_add(l2[j], v3(0, 0, -1));
+	for (int j=0; j<=v_splits; j++) l1[j] = swap_yz(l1[j]);
+	for (int j=0; j<=v_splits; j++) l2[j] = swap_yz(l2[j]);
+
+	for (int j=0; j<=v_splits; j++) l1[j] = v_add(l1[j], v3(0,  1, 0));
+	for (int j=0; j<=v_splits; j++) l2[j] = v_add(l2[j], v3(0, -1, 0));
 
 	for (int j=0; j<=v_splits; j++) l1[j] = parent_to(l1[j], item);
 	for (int j=0; j<=v_splits; j++) l2[j] = parent_to(l2[j], item);
@@ -51,11 +59,6 @@ void	raster_cylinder(t_item *item)
 
 	free(l1);
 	free(l2);
-}
-
-vec3	swap_yz(vec3 v)
-{
-	return v3(v.x, v.z, v.y);
 }
 
 void	raster_sphere(t_item *item)

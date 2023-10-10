@@ -34,33 +34,38 @@ item:
 //linux -> CAMERA MOVEMENT - mouse
 //cam add CAMERA FLIPP
 
+NdotV inside scatter specular reflection???
 
+fix ambient bounces
 
-//PBR scatter
-- albedo
-- specular
-- metalic
-- transmission
-- emission
-- normal (bump to normal conversion)
 
 ----------- NOW ---------------
-OK -1. normal perturbation
-?fov (-.5 ZOOM}
-0. sphere UV rotation
-1. point lights
-2. cylinder + 2nd degree object
-3. object selection
-4. showoff scenes (materials)
-5. UI (material debug, vec3's, color materials);
+-1 . profilling
+0. cylinder + 2nd degree object + (box rotation)
+2. proper 8-bit read
+3. showoff scenes (materials)
+4. object selection
+6. add_item, add_tween (duration, loop, delay)
+98. (bump to normal conversion)
+99. UI (material debug, vec3's, color materials);
 -----------AT 42---------------
+0. normal map are fugged
 1. parsing
 2. no crash
+3. ptrs ALLL
+--- after
+3. tween, item, lights, sky, rendermovie CLEANUP
+4. UI
+5. plenty render modes
+6. ao
 -----------NEVER---------------
+IGNORED - 2. directional light/IBL (roughness)
 IGNORED - 3. window resizing
+IGNORED - 0. ZOOM
+IGNORED - 7. proper hdri map to cube idk
+IGNORED - ?. specular TINT
 
 //TODO
-1. light sampling / important for point light and noise reduction
 2. focus blur
 3. ntfy
 	//cloudflare ->cronjob -> always notify
@@ -70,13 +75,10 @@ IGNORED - 3. window resizing
 	//duration
 	//ease_method
 	//loop, at exit, ...
-4. lights
-	// fix last_bounce
-	// check if color spots work
-	// point lights
-	// ambient light
-	// diffuse light
 5. tris
 	//read from obj
 11. instance translation with matrix
+22. MIS
+33. shaders 
+44. bidiractional path tracing
 99. aabb

@@ -59,11 +59,10 @@ vec3	simulate_ray(ray *r, int depth, sim_hit *hits, int id)
 	hits[id] = (sim_hit){r->orig, rec.mat.base_color.color_value};
 
 	ray	scattered;
-	color emitted_light;
-	color material_color;
 	color attenuation;
 	color color_from_emission = rec.mat.emission.value(rec.u, rec.v, &rec.mat.emission);
-	if (!PBR_scatter(r, &rec, &emitted_light, &material_color, &scattered, &(rec.mat)))
+	Bool useless;
+	if (!PBR_scatter(r, &rec, &scattered, &useless))
 		return color_from_emission;
 	
 	color color_from_scatter = v_mult(simulate_ray(&scattered, depth-1, hits, id+1), attenuation);
@@ -140,6 +139,10 @@ void	raster_items(void)
 	for (int i=0; i < v.item_count; i++)
 	{
 		t_item t = v.items[i];
+		if (v_len(t.mat.base_color.color_value) != 0)
+			t.mat.base_color.color_value = v_norm(t.mat.base_color.color_value);
+		else
+			t.mat.base_color.color_value = random_unit_vector();
 		t.raster(&t);
 	}
 }

@@ -78,11 +78,15 @@ void gradientContrastAdjustment(float* image, int width, int height, float contr
     }
 }
 
-void	draw_gamma_corrected(int x, int y, color c)
+color	hdr_tone(color c)
 {
-	draw_raw(x, y, c);
-	return ;
-	// Calculate luminance
+   c = v_div(c, v_add(c, v_3(1.0)));
+   return c;
+}
+
+color	aces_tone(color c)
+{
+   	// Calculate luminance
     double Y = 0.299 * c.x + 0.587 * c.y + 0.114 * c.z;
     
     // Adjust luminance
@@ -92,15 +96,31 @@ void	draw_gamma_corrected(int x, int y, color c)
     double R_mapped = c.x * (Y_mapped / Y);
     double G_mapped = c.y * (Y_mapped / Y);
     double B_mapped = c.z * (Y_mapped / Y);
-    
+
+   return v3(R_mapped, G_mapped, B_mapped);
+}
+
+color	gamma_correct(color c)
+{
     // Clamp values to [0, 1] and apply gamma correction if needed
-    c.x = clamp((interval){0.0, 1.0}, R_mapped);
-    c.y = clamp((interval){0.0, 1.0}, G_mapped);
-    c.z = clamp((interval){0.0, 1.0}, B_mapped);
+    //c.x = clamp((interval){0.0, 1.0}, c.x);
+    //c.y = clamp((interval){0.0, 1.0}, c.y);
+    //c.z = clamp((interval){0.0, 1.0}, c.z);
     
-	c.x = linear_to_gamma(c.x);
-	c.y = linear_to_gamma(c.y);
-	c.z = linear_to_gamma(c.z);
+	c.x = pow(c.x, 1.0/2.2);
+	c.y = pow(c.y, 1.0/2.2);
+	c.z = pow(c.z, 1.0/2.2);
+
+	return c;
+}
+
+void	draw_gamma_corrected(int x, int y, color c)
+{
+	draw_raw(x, y, c);
+	return;
+	
+	c = aces_tone(c);
+	c = gamma_correct(c);
 
 	draw_raw(x, y, c);
 }

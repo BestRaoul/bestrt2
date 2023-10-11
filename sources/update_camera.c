@@ -67,26 +67,23 @@ quat	angleAxis(double angle, vec3 axis) {
     return q;
 }
 
-mat4	quaternion_to_mat4(quat q) {
-    mat4 m;
-    m.m[0][0] = 1 - 2 * q.y * q.y - 2 * q.z * q.z;
-    m.m[0][1] = 2 * q.x * q.y - 2 * q.z * q.w;
-    m.m[0][2] = 2 * q.x * q.z + 2 * q.y * q.w;
-    m.m[0][3] = 0;
-    m.m[1][0] = 2 * q.x * q.y + 2 * q.z * q.w;
-    m.m[1][1] = 1 - 2 * q.x * q.x - 2 * q.z * q.z;
-    m.m[1][2] = 2 * q.y * q.z - 2 * q.x * q.w;
-    m.m[1][3] = 0;
-    m.m[2][0] = 2 * q.x * q.z - 2 * q.y * q.w;
-    m.m[2][1] = 2 * q.y * q.z + 2 * q.x * q.w;
-    m.m[2][2] = 1 - 2 * q.x * q.x - 2 * q.y * q.y;
-    m.m[2][3] = 0;
-    m.m[3][0] = 0;
-    m.m[3][1] = 0;
-    m.m[3][2] = 0;
-    m.m[3][3] = 1;
-
-    return m;
+void	quaternion_to_m4x4(quat q, m4x4 m) {
+    m[0][0] = 1 - 2 * q.y * q.y - 2 * q.z * q.z;
+    m[0][1] = 2 * q.x * q.y - 2 * q.z * q.w;
+    m[0][2] = 2 * q.x * q.z + 2 * q.y * q.w;
+    m[0][3] = 0;
+    m[1][0] = 2 * q.x * q.y + 2 * q.z * q.w;
+    m[1][1] = 1 - 2 * q.x * q.x - 2 * q.z * q.z;
+    m[1][2] = 2 * q.y * q.z - 2 * q.x * q.w;
+    m[1][3] = 0;
+    m[2][0] = 2 * q.x * q.z - 2 * q.y * q.w;
+    m[2][1] = 2 * q.y * q.z + 2 * q.x * q.w;
+    m[2][2] = 1 - 2 * q.x * q.x - 2 * q.y * q.y;
+    m[2][3] = 0;
+    m[3][0] = 0;
+    m[3][1] = 0;
+    m[3][2] = 0;
+    m[3][3] = 1;
 }
 
 quat	quaternion_multiply(quat a, quat b) {
@@ -134,10 +131,10 @@ static void	set_rotation_matrix()
 {
     quat q = angleAxis(v.camera_rot.x,v3(1,0,0));
     quat q2 = angleAxis(v.camera_rot.y, v3(0,1,0));
-	quat q3 = angleAxis(v.camera_rot.z, v3(0,0,1));
+	// quat q3 = angleAxis(v.camera_rot.z, v3(0,0,1));
     q = quaternion_multiply(q2, q);
 	//q = quaternion_multiply(q3, q);
-	v.rotation_matrix = quaternion_to_mat4(q);
+	quaternion_to_m4x4(q, v.rotation_matrix);
 }
 
 static void set_raytrace_values()

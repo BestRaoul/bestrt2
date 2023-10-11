@@ -196,7 +196,8 @@ color	trace(ray *r, int max_depth)
 		else if	(v.render_mode == RAYTRACE_MAT_DEBUG && UNLIT(v.mat_debugmode)) return paint_mat_debug_unlit(did_hit, &rec, r);
 
 		if (did_hit)
-		{			
+		{		
+			return RED;	
 			color 	emitted_light;
 			ray		scattered;
 
@@ -221,6 +222,7 @@ color	trace(ray *r, int max_depth)
 		}
 		else
 		{
+			return WHITE;	
 			if (v.render_mode != RAYTRACE_MAT_DEBUG)
 			{
 				if (bounce==0 && v.background_color == NULL)return paint_env(r->dir);
@@ -244,17 +246,23 @@ color	trace(ray *r, int max_depth)
 	return light;
 }
 
-# define SPEEDUP 1
+# define HALF 1
+# define SPEEDUP 0
 void    render_pixel(int x, int y)
 {
+	if (HALF)
+	{
+		if (x % 2) return;
+	}
 	//4x speedup
 	if (SPEEDUP)
 	{
-		if (x % 2 && (y+1) % 2) return;
-		if ((x+1) % 2 && y % 2) return;
+		// if (x % 2 && (y+1) % 2) return;
+		// if ((x+1) % 2 && y % 2) return;
 		if (x % 3) return;
 		if (y % 3) return;
 	}
+
 
 	color	sample = BLACK;
 	for (int i=0; i<samples; i++)
@@ -344,6 +352,17 @@ void    raytrace(void)
 		steps_rendered = 0;
 
 		gettimeofday(&frame_start, 0);
+
+		t_item *item;
+		for (int i=0; i<v.item_count; i++)
+		{
+			item = &v.items[i];
+			transform t = (transform){item->pos, item->rot, item->scale};
+			// create_transform_matrix(&t, item->fwd);
+			set_transform_matrix(&t, item->fwd, item->bck);
+
+			print_mx4(item->fwd);
+		}
 	}
 
 	while (_split < w_splits*h_splits)

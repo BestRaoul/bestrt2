@@ -40,7 +40,7 @@ fix ambient bounces
 
 
 ----------- NOW ---------------
--1 . profilling
+-1 . transformation matrices, unable to do box without
 0. cylinder + 2nd degree object + (box rotation)
 2. proper 8-bit read
 3. showoff scenes (materials)

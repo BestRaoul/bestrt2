@@ -13,40 +13,40 @@
 #include "fractol.h"
 
 //unused
-void	matrix_multiplication(mat4 a, mat4 b, mat4 c)
+void	mm_(m4x4 a, m4x4 b, m4x4 c)
 {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            c.m[i][j] = 0;
+            c[i][j] = 0;
             for (int k = 0; k < 4; k++) {
-                c.m[i][j] += a.m[i][k] * b.m[k][j];
+                c[i][j] += a[i][k] * b[k][j];
             }
         }
     }
 }
 
-mat4	mm(mat4 a, mat4 b)
+s_m4	mm(m4x4 a, m4x4 b)
 {
-    mat4    c;
+    s_m4    c;
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            c.m[i][j] = 0;
+            c.mat[i][j] = 0;
             for (int k = 0; k < 4; k++) {
-                c.m[i][j] += a.m[i][k] * b.m[k][j];
+                c.mat[i][j] += a[i][k] * b[k][j];
             }
         }
     }
     return c;
 }
 
-vec3	mult_point_matrix(vec3 in, mat4 M)
+vec3	mult_point_matrix(vec3 in, m4x4 M)
 { 
 	vec3 out;
     //out = in * M;
-    out.x   = in.x * M.m[0][0] + in.y * M.m[1][0] + in.z * M.m[2][0] + /* in.z = 1 */ M.m[3][0]; 
-    out.y   = in.x * M.m[0][1] + in.y * M.m[1][1] + in.z * M.m[2][1] + /* in.z = 1 */ M.m[3][1]; 
-    out.z   = in.x * M.m[0][2] + in.y * M.m[1][2] + in.z * M.m[2][2] + /* in.z = 1 */ M.m[3][2]; 
-    double w = in.x * M.m[0][3] + in.y * M.m[1][3] + in.z * M.m[2][3] + /* in.z = 1 */ M.m[3][3]; 
+    out.x   = in.x * M[0][0] + in.y * M[1][0] + in.z * M[2][0] + /* in.z = 1 */ M[3][0]; 
+    out.y   = in.x * M[0][1] + in.y * M[1][1] + in.z * M[2][1] + /* in.z = 1 */ M[3][1]; 
+    out.z   = in.x * M[0][2] + in.y * M[1][2] + in.z * M[2][2] + /* in.z = 1 */ M[3][2]; 
+    double w = in.x * M[0][3] + in.y * M[1][3] + in.z * M[2][3] + /* in.z = 1 */ M[3][3]; 
  
     // normalize if w is different than 1 (convert from homogeneous to Cartesian coordinates)
     if (w != 1) { 

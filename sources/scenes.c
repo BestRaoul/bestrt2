@@ -32,6 +32,8 @@ void	glass_ball(void);
 void	normal_reflection(void);
 void	pbr_balls(void);
 
+void	test(void);
+
 void    shapes(void);
 //.. world, specular, glass, reflection...
 
@@ -51,7 +53,7 @@ void    init_scene(void)
 	v.motion_count = 0;
 	v.motions = NULL;
 
-    switch (105)
+    switch (109)
     {
         case 1 : balls(); break;
         case 2 : tweens(); break;
@@ -85,6 +87,8 @@ void    init_scene(void)
 		case 105: showoff_5(); break;
 		case 106: showoff_2(); break;
 		case 107: showoff_2(); break;
+
+		case 109: test(); break;
     }
 }
 
@@ -135,6 +139,36 @@ void    default_cam(void)
 }
 
 //SHOWOFF
+
+void	test(void)
+{
+	default_cam();
+    v.render_mode = RAYTRACE;
+	v.lookat_toggle = 1;
+	v.lookat = v3(0,0,0);
+	v.camera_pos = v3(0,0,4.5);
+	v.vfov = 50;
+	v.ambient = 0;
+	v.background_color = white_background;
+	v.irradiance_map = NO_MAP;
+	v.max_samples = 1;
+	v.max_depth = 0;
+	v.w =  500; v.h = 500;
+	v.upscale = 5;
+
+    material material_ground = new_lambertian(checkerboard(.5, c3(.2,.3,.1), c3(.9, .9, .9)));
+    material material_center = new_lambertian(c3(0.1, 0.2, 0.4));
+    material material_left	 = new_dielectric(c3(1,1,1), 1.5);
+	// material_left.transmission = 1.0;
+    material material_right  = new_metal(c3(0.8, 0.6, 0.2), 0.02);
+
+    // add_item((t_item){v3( 0, -.5, 0),	v_3(1),	v3(), material_ground, PLANE});
+    
+    add_item((t_item){v3( 0, 0, 0),		v3(1,.5,.5),	v3(0), material_center, SPHERE});
+	add_item((t_item){v3(-1.5, 0, 0),		v3(.5,1,.5),	v3(), material_left, SPHERE});
+	// add_item((t_item){v3(-1, 0, 0),		v_3(-0.4),	v3(), material_left, SPHERE});
+	add_item((t_item){v3( 1.5, 0, 0),		v3(.5,.5,1),	v3(), material_right, SPHERE});
+}
 
 //1 : green plane, 3 balls (gold, blue, hollow glass)
 //ok, 1 noise

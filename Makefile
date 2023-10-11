@@ -20,7 +20,7 @@ else
 endif
 
 CC						:= gcc
-CFLAGS					:= -g -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -ggdb $(FSANITIZE) $(OS_FLAG)
+CFLAGS					:= -pg -g -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -ggdb $(FSANITIZE) $(OS_FLAG)
 RM						:= rm -f
 
 LIB_DIRECTORY			:= ./libs/
@@ -68,6 +68,7 @@ SOURCES_LIST			:=	main.c\
 							math_5.c\
 							math_6.c\
 							math_7.c\
+							math_8.c\
 							materials.c\
 							envelope.c\
 							hit_functions.c\

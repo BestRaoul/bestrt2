@@ -134,7 +134,6 @@
 
 # define NOT_IMPLEMENTED(f) printf("%s feature is not implemented yet..\n", f);
 
-typedef struct s_matrix		mat4;
 typedef struct s_point		vec3;
 typedef struct s_quat		quat;
 
@@ -147,9 +146,11 @@ typedef struct s_texture	texture;
 
 typedef vec3 color;
 
-typedef struct s_matrix {
-	double	m[4][4]; //row . collumn
-}	mat4;
+typedef double m4x4[4][4];
+
+typedef struct {
+	m4x4 mat;
+} s_m4;
 
 typedef struct s_quat {
     double x, y, z, w;
@@ -158,6 +159,12 @@ typedef struct s_quat {
 typedef struct s_point {
 	double	x, y, z;
 }	vec3;
+
+typedef struct {
+	vec3	pos;
+	vec3	rot;
+	vec3	scale;
+} transform;
 
 typedef struct s_ray {
 	vec3	orig;
@@ -232,11 +239,13 @@ typedef struct s_item {
 	vec3	pos;
 	vec3	scale;
 	vec3	rot;
-//	mat4	fwd;
-//	mat4	bck;
+
 	material mat;
 	void 	(*raster)(t_item *);
 	Bool	(*hit)(const ray *, const interval, hit_record *, const t_item *);
+
+	m4x4	fwd;
+	m4x4	bck;
 }	t_item;
 
 enum e_plne {
@@ -399,7 +408,7 @@ typedef struct s_vars {
 	vec3		camera_pos;
 	vec3		camera_rot;
 	quat		camera_quat;
-	mat4 		rotation_matrix;
+	m4x4 		rotation_matrix;
 
 	int			upscale;
 	int			max_depth;
@@ -657,9 +666,10 @@ double	length_squared(vec3 a);
 vec3	line_intersection(vec3 A, vec3 B, vec3 C, vec3 D);
 vec3	project_onto_screen_limits(vec3 p, vec3 dir);
 //5
-mat4	mm(mat4 a, mat4 b);
-void	matrix_multiplication(mat4 a, mat4 b, mat4 c);
-vec3	mult_point_matrix(vec3 in, mat4 M);
+void	mm_(m4x4 a, m4x4 b, m4x4 c);
+s_m4	mm(m4x4 a, m4x4 b);
+void	matrix_multiplication(m4x4 a, m4x4 b, m4x4 c);
+vec3	mult_point_matrix(vec3 in, m4x4 M);
 //6
 vec3    get_ray_direction(int i, int j);
 vec3	ray_at(const ray *r, double t);
@@ -784,6 +794,14 @@ shader_end	CalcTotalPBRLighting(hit_record *rec, ray *ray_in);
 color	hdr_tone(color c);
 color	aces_tone(color c);
 color	gamma_correct(color c);
+
+// -----Transformation Mx4
+void set_transform_matrix(const transform *t, m4x4 m, m4x4 m_bck);
+void create_transform_matrix(const transform* t, m4x4 result);
+void multiply_matrix_vector(const m4x4 mat, const vec3 in, vec3* out);
+void multiply_matrix_vector_2(const m4x4 M, const vec3 in, vec3* out);
+void print_mx4(m4x4 matrix);
+
 
 # define INTERVAL_EMPTY (interval){+INFINITY, -INFINITY}
 # define INTERVAL_UNIVERSE (interval){-INFINITY, +INFINITY}

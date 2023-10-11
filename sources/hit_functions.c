@@ -36,6 +36,20 @@ void    set_sphere_uv(vec3 p, hit_record *rec, vec3 sphere_rot)
 
 Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
+    vec3 vhat = r->dir;
+    //a = 1.0
+
+    double _b = 2.0 * v_dot(r->orig, vhat);
+
+    double _c = v_dot(r->orig, r->orig) - 1.0;
+
+    double intTest = (_b*_b) - 4.0 * _c;
+
+    if (intTest > 0.0)
+        return True;
+    else
+        return False;
+
     vec3 center = self->pos;
     double radius = self->scale.x; //fix
     
@@ -268,33 +282,50 @@ Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_ite
 //FIX rotated cylinder
 Bool    hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
-    vec3 center = self->pos;
-    double radius = self->scale.x; //fix
-    
-    vec3 oc = v_sub(r->orig, center);
-    double a = v_dot(r->dir, r->dir);
-    double half_b = v_dot(oc, r->dir);
-    double c = v_dot(oc, oc) - radius*radius;
-    
-    double discriminant = half_b*half_b - a*c;
-    if (discriminant == 0) return False;
-    double sqrtd = sqrt(discriminant);
+    vec3 rayDir = r->dir;
+    vec3 rayStartToCylinder = v_sub(r->orig, self->pos);
 
-    // Find the nearest root that lies in the acceptable range.
-    double root = (-half_b - sqrtd) / a;
-    if (!surrounds(ray_t, root))
-    {
-        root = (-half_b + sqrtd) / a;
-        if (!surrounds(ray_t, root))
+    double radius = self->scale.x;
+    double height = self->scale.y;
+
+    double a = rayDir.x * rayDir.x + rayDir.y * rayDir.y;
+    double b = 2.0 * (rayDir.x * rayStartToCylinder.x + rayDir.y * rayStartToCylinder.y);
+    double c = rayStartToCylinder.x * rayStartToCylinder.x + rayStartToCylinder.y * rayStartToCylinder.y - radius * radius;
+
+    double discriminant = b * b - 4 * a * c;
+
+    double root;
+
+    if (discriminant < 0) {
+        // No intersection
+        return False;
+    } else {
+        double t1 = (-b - sqrt(discriminant)) / (2 * a);
+        double t2 = (-b + sqrt(discriminant)) / (2 * a);
+
+        double z1 = r->orig.z + t1 * rayDir.z;// ray_at(r, t1);
+        double z2 = r->orig.z + t2 * rayDir.z;
+
+        if ((z1 >= self->pos.z) && (z1 <= (self->pos.z + height)) &&
+            (t1 >= 0)) {
+            // Intersection at t1
+            root = t1;
+        } else if ((z2 >= self->pos.z) && (z2 <= (self->pos.z + height)) &&
+                   (t2 >= 0)) {
+            // Intersection at t2
+            root = t2;
+        } else {
+            // No intersection with the cylinder sides
             return False;
+        }
     }
 
     rec->t = root;
     rec->p = ray_at(r, rec->t);
-    vec3 outward_normal = v_scal(v_sub(rec->p, center),  1.0 / radius);
+    vec3 outward_normal = v_scal(v3(rec->p.x - self->pos.x, rec->p.y - self->pos.y, 0),  1.0 / radius);
     set_face_normal(rec, r, outward_normal);
-    set_sphere_uv(outward_normal, rec, self->rot);
-    rec->v += ((int)(self->rot.x * RAD2DEG) % 360) /360.0;
+    // set_sphere_uv(outward_normal, rec, self->rot);
+    // rec->v += ((int)(self->rot.x * RAD2DEG) % 360) /360.0;
     rec->mat = self->mat;
 
     return True;
@@ -316,11 +347,19 @@ Bool	hit(const ray *r, const interval ray_t, hit_record *rec)
 	Bool		hit_anything = False;
 	double		closest_so_far = ray_t.max;
 
-	t_item item;
 	for (int i=0; i<v.item_count; i++)
 	{
-		item = v.items[i];
-		if (item.hit(r, (interval){ray_t.min, closest_so_far}, &temp_rec, &item))
+        //apply_ray (...)
+        vec3 p1 = r->orig;
+        vec3 p2 = v_add(r->orig, r->dir);
+        vec3 p1_n, p2_n;
+        multiply_matrix_vector(v.items[i].bck, p1, &p1_n);
+        multiply_matrix_vector(v.items[i].bck, p2, &p2_n);
+        ray local_r;
+        local_r.orig = p1_n;
+        local_r.dir =  v_norm(v_sub(p2_n, p1_n));
+        //end applyt...
+		if (v.items[i].hit(&local_r, (interval){ray_t.min, closest_so_far}, &temp_rec, &v.items[i]))
 		{
 			hit_anything = True;
 			closest_so_far = temp_rec.t;

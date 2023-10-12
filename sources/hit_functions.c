@@ -100,38 +100,37 @@ void    set_plane_uv(double alpha, double beta, hit_record *rec)
 
 Bool    hit_plane(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
-    vec3 Q = self->pos;
-    vec3 u = rotate3(v3(self->scale.x,0,0), self->rot);
-    vec3 v = rotate3(v3(0,0,self->scale.z), self->rot);
-    vec3 n = v_cross(u, v);
-    vec3 normal = v_norm(n);
-    vec3 w = v_scal(n, 1.0/v_dot(n,n));
-    //vec3 normal = v_norm(rotate3(v3(0,1,0), self->rot));
+    ray local_r = apply_ray(r, self->bck);
     
-    double D = v_dot(normal, Q);
+    vec3 u = v3(1,0,0); //?
+    vec3 v = v3(0,0,1); //?
 
-    double denom = v_dot(normal, r->dir);
-
+    const vec3 n = v3(0,1,0);
+    
+    double denom = local_r.dir.y;
     //No hit if parallel
     if (fabs(denom) < 0.001) return False;
 
     // Return false if the hit point parameter t is outside the ray interval.
-    double t = (D - v_dot(normal, r->orig)) / denom;
-    if (!contains(ray_t, t)) return False;
+    double lt = (-local_r.orig.y) / denom;
+    if (lt < 0.0) return False;
+    
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt)) return False;
 
-    vec3 intersection = ray_at(r, t);
+    rec->t = gt;
+    rec->p = ray_at(r, gt);
 
-    vec3 planar_hitpt_vector = v_sub(intersection, Q);
-    double alpha = v_dot(w, v_cross(planar_hitpt_vector, v));
-    double beta = v_dot(w, v_cross(u, planar_hitpt_vector));
+    vec3 out_normal = rotate3(v3(0,1,0), self->rot);
+    set_face_normal(rec, r, out_normal);
+
+    double alpha = rec->p.x;
+    double beta = -rec->p.z;
     alpha = alpha/2 + .5;
     beta = 1 - (beta/2 + .5);
-    
-    rec->t = t;
-    rec->p = intersection;
-    rec->mat = self->mat;
-    set_face_normal(rec, r, normal);
     set_plane_uv(alpha, beta, rec);
+    
+    rec->mat = self->mat;
 
     return True;
 }

@@ -200,31 +200,26 @@ color	trace(ray *r, int max_depth)
 			color 	emitted_light;
 			ray		scattered;
 
-			// emitted_light = evaluate(&(rec.mat.emission), rec.u, rec.v);
-			// emitted_light = v_scal(emitted_light, rec.mat.emission_strength);
-			// light = v_add(light, v_mult(emitted_light, contribution));
+			emitted_light = evaluate(&(rec.mat.emission), rec.u, rec.v);
+			emitted_light = v_scal(emitted_light, rec.mat.emission_strength);
+			light = v_add(light, v_mult(emitted_light, contribution));
 			
-			// maybe_apply_perturb(&rec);
+			maybe_apply_perturb(&rec);
     		
-			// shader_end se = CalcTotalPBRLighting(&rec, r);
-			// if (v.render_mode == RAYTRACE_MAT_DEBUG) return paint_mat_debug_lit(&se, &rec);
+			shader_end se = CalcTotalPBRLighting(&rec, r);
+			if (v.render_mode == RAYTRACE_MAT_DEBUG) return paint_mat_debug_lit(&se, &rec);
 			
 			Bool was_specular;
 			PBR_scatter(r, &rec, &scattered, &was_specular);
 
-			// light = v_add(light, v_mult(paint_se(&se), contribution));
+			light = v_add(light, v_mult(paint_se(&se), contribution));
 
-			// contribution = v_mult(contribution, was_specular?se.specular_color:se.diffuse_color);
-			contribution = v_mult(contribution, rec.mat.base_color.color_value);
+			contribution = v_mult(contribution, was_specular?se.specular_color:se.diffuse_color);
 
 			*r = scattered;
 		}
 		else
 		{
-			return contribution;
-			light = v_mult(WHITE, contribution);
-			break;
-			/*
 			if (v.render_mode != RAYTRACE_MAT_DEBUG)
 			{
 				if (bounce==0 && v.background_color == NULL)return paint_env(r->dir);
@@ -234,7 +229,8 @@ color	trace(ray *r, int max_depth)
 				light = v_add(light, bg_light);
 				break;
 			}		
-			if (v.render_mode == RAYTRACE_MAT_DEBUG) return v.mat_debugmode==COMBINED?paint_env(r->dir):BLACK;
+			else return v.mat_debugmode==COMBINED?paint_env(r->dir):BLACK;
+			/*
 			if (v.render_mode == RAYTRACE_STEPS) break;
 			break;
 	
@@ -249,7 +245,7 @@ color	trace(ray *r, int max_depth)
 	return light;
 }
 
-# define HALF 1
+# define HALF 0
 # define SPEEDUP 0
 void    render_pixel(int x, int y)
 {

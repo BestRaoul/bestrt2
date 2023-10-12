@@ -73,7 +73,7 @@ ray	apply_ray(const ray *in, const m4x4 t)
     multiply_matrix_vector(t, in->orig, &p1);
     multiply_matrix_vector(t, v_add(in->orig, in->dir), &p2);
 
-    return (ray){p1, v_sub(p2, p1)};
+    return (ray){p1, v_norm(v_sub(p2, p1))};
 }
 
 void inverse(const m4x4 in, m4x4 out) {

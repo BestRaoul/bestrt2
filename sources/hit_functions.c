@@ -49,7 +49,6 @@ double  t2global(const double lt, const ray *local_r, const ray *r, const m4x4 f
 Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
     ray local_r = apply_ray(r, self->bck);
-    local_r.dir = v_norm(local_r.dir);
 
     //a = 1.0
 
@@ -64,6 +63,7 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
 
     double t1 = (-b + sqrtd) / 2.0;
     double t2 = (-b - sqrtd) / 2.0;
+    //If inside, ignore
     if ((t1 < 0.0) || (t2 < 0.0))
     {
         return False;
@@ -79,43 +79,10 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
 
     rec->t = gt;
     rec->p = ray_at(r, gt);
-    rec->normal = ray_at(&local_r, lt);
-
+    set_face_normal(rec, &local_r, ray_at(&local_r, lt));
+    set_sphere_uv(rec, rec->normal, self->rot);
     rec->mat = self->mat;
     
-    return 1;
-/*   
-    // Find the nearest root that lies in the acceptable range.
-    double root = (-b + sqrtd) / 2.0; //IN LOCAL T
-    double t = t2global(root, &local_r, r, self->fwd);
-    if (!surrounds(ray_t, t))
-    {
-        root = (-b - sqrtd) / 2.0;
-        t = t2global(root, &local_r, r, self->fwd);
-        if (!surrounds(ray_t, t))
-            return False;
-    }
-*/
-
-    double root, t;
-    rec->p = ray_at(r, t);
-    rec->t = t;
-
-    rec->normal = v3(0,1,0);//v_scal(local_r.dir, root);
-
-    rec->mat = self->mat;
-    
-    return 1;
-//-----------------------------------
-    double local_t = root;
-    vec3 local_p = ray_at(&local_r, local_t);
-
-    vec3 outward_normal = local_p;
-    outward_normal = v3(0,1,0);
-    set_face_normal(rec, &local_r, outward_normal);
-    set_sphere_uv(rec, outward_normal, self->rot);
-
-
     return True;
 }
 

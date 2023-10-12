@@ -81,6 +81,7 @@ SOURCES_LIST			:=	main.c\
 							pbr_lighting.c\
 							normals.c\
 							transform.c\
+							simulation.c\
 							trashcan.c
 
 SOURCES					:= $(addprefix $(SOURCES_DIRECTORY), $(SOURCES_LIST))

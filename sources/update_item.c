@@ -33,9 +33,11 @@ void	maybe_add_item(void)
 			*addin = get_item_default();
 		}
 		stage = 0;
+		
+		write(1, "WTFFFF", 7);
 	}
 
-	if (!addin) return;
+	if (addin == NULL) return;
 
 	if (v._space)
 	{

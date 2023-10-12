@@ -30,6 +30,19 @@ vec3	ray_at(const ray *r, double t)
 	return v_add(r->orig, v_scal(r->dir, t));
 }
 
+double	t_at(const ray *r, vec3 ray)
+{
+	//ray = orig + dir * t
+	//ray - orig = dir * t
+	//sub = dir * t
+	//sub / dir = t
+	vec3 sub = v_sub(ray, r->orig);
+	double tx = sub.x / r->dir.x;
+	double ty = sub.y / r->dir.y;
+	double tz = sub.z / r->dir.z;
+	return tx;
+}
+
 //0.0: a
 //1.0: b
 vec3	lerp(double t, vec3 a, vec3 b)

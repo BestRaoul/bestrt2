@@ -12,7 +12,7 @@
 
 #include "fractol.h"
 
-void    set_face_normal(hit_record *rec, const ray *r, vec3 outward_normal)
+void    set_face_normal(hit_record *rec, const ray *r, const vec3 outward_normal)
 {
     // Sets the hit record normal vector.
     // NOTE: the parameter `outward_normal` is assumed to have unit length.
@@ -21,7 +21,7 @@ void    set_face_normal(hit_record *rec, const ray *r, vec3 outward_normal)
     rec->normal = rec->front_face ? outward_normal : v_scal(outward_normal, -1);
 }
 
-void    set_sphere_uv(vec3 p, hit_record *rec, vec3 sphere_rot)
+void    set_sphere_uv(hit_record *rec, const vec3 p, const vec3 sphere_rot)
 {
     //p = rotate3(p, sphere_rot);
 
@@ -32,52 +32,89 @@ void    set_sphere_uv(vec3 p, hit_record *rec, vec3 sphere_rot)
     rec->v = theta / MYPI;
 
     rec->u = 1 - rec->u;
+
+    //temporary fix to texture not rotating properly
+    rec->v += ((int)(sphere_rot.x * RAD2DEG) % 360) /360.0;
+}
+
+//If you find a better quicker way to go from local_t to global
+//tell me.
+double  t2global(const double lt, const ray *local_r, const ray *r, const m4x4 fwd)
+{
+    vec3 temp;
+    multiply_matrix_vector(fwd, ray_at(local_r, lt), &temp);
+    return vec_dist(r->orig, temp);
 }
 
 Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
-    vec3 vhat = r->dir;
+    ray local_r = apply_ray(r, self->bck);
+    local_r.dir = v_norm(local_r.dir);
+
     //a = 1.0
 
-    double _b = 2.0 * v_dot(r->orig, vhat);
+    double b = 2.0 * v_dot(local_r.orig, local_r.dir);
 
-    double _c = v_dot(r->orig, r->orig) - 1.0;
+    double c = v_dot(local_r.orig, local_r.orig) - 1.0;
 
-    double intTest = (_b*_b) - 4.0 * _c;
-
-    if (intTest > 0.0)
-        return True;
-    else
-        return False;
-
-    vec3 center = self->pos;
-    double radius = self->scale.x; //fix
+    double discriminant = (b*b) - 4.0 * c;
     
-    vec3 oc = v_sub(r->orig, center);
-    double a = v_dot(r->dir, r->dir);
-    double half_b = v_dot(oc, r->dir);
-    double c = v_dot(oc, oc) - radius*radius;
-    
-    double discriminant = half_b*half_b - a*c;
     if (discriminant < 0) return False;
     double sqrtd = sqrt(discriminant);
 
-    // Find the nearest root that lies in the acceptable range.
-    double root = (-half_b - sqrtd) / a;
-    if (!surrounds(ray_t, root))
+    double t1 = (-b + sqrtd) / 2.0;
+    double t2 = (-b - sqrtd) / 2.0;
+    if ((t1 < 0.0) || (t2 < 0.0))
     {
-        root = (-half_b + sqrtd) / a;
-        if (!surrounds(ray_t, root))
-            return False;
+        return False;
     }
 
-    rec->t = root;
-    rec->p = ray_at(r, rec->t);
-    vec3 outward_normal = v_scal(v_sub(rec->p, center),  1.0 / radius);
-    set_face_normal(rec, r, outward_normal);
-    set_sphere_uv(outward_normal, rec, self->rot);
-    rec->v += ((int)(self->rot.x * RAD2DEG) % 360) /360.0;
+    double lt, gt;
+    // Determine which point of intersection was closest to the camera.
+    lt = (t1 < t2)? t1 : t2;
+    gt = t2global(lt, &local_r, r, self->fwd);
+
+    if (!surrounds(ray_t, gt))
+        return False;
+
+    rec->t = gt;
+    rec->p = ray_at(r, gt);
+    rec->normal = ray_at(&local_r, lt);
+
     rec->mat = self->mat;
+    
+    return 1;
+/*   
+    // Find the nearest root that lies in the acceptable range.
+    double root = (-b + sqrtd) / 2.0; //IN LOCAL T
+    double t = t2global(root, &local_r, r, self->fwd);
+    if (!surrounds(ray_t, t))
+    {
+        root = (-b - sqrtd) / 2.0;
+        t = t2global(root, &local_r, r, self->fwd);
+        if (!surrounds(ray_t, t))
+            return False;
+    }
+*/
+
+    double root, t;
+    rec->p = ray_at(r, t);
+    rec->t = t;
+
+    rec->normal = v3(0,1,0);//v_scal(local_r.dir, root);
+
+    rec->mat = self->mat;
+    
+    return 1;
+//-----------------------------------
+    double local_t = root;
+    vec3 local_p = ray_at(&local_r, local_t);
+
+    vec3 outward_normal = local_p;
+    outward_normal = v3(0,1,0);
+    set_face_normal(rec, &local_r, outward_normal);
+    set_sphere_uv(rec, outward_normal, self->rot);
+
 
     return True;
 }
@@ -349,17 +386,7 @@ Bool	hit(const ray *r, const interval ray_t, hit_record *rec)
 
 	for (int i=0; i<v.item_count; i++)
 	{
-        //apply_ray (...)
-        vec3 p1 = r->orig;
-        vec3 p2 = v_add(r->orig, r->dir);
-        vec3 p1_n, p2_n;
-        multiply_matrix_vector(v.items[i].bck, p1, &p1_n);
-        multiply_matrix_vector(v.items[i].bck, p2, &p2_n);
-        ray local_r;
-        local_r.orig = p1_n;
-        local_r.dir =  v_norm(v_sub(p2_n, p1_n));
-        //end applyt...
-		if (v.items[i].hit(&local_r, (interval){ray_t.min, closest_so_far}, &temp_rec, &v.items[i]))
+		if (v.items[i].hit(r, (interval){ray_t.min, closest_so_far}, &temp_rec, &v.items[i]))
 		{
 			hit_anything = True;
 			closest_so_far = temp_rec.t;
@@ -374,11 +401,9 @@ Bool	check_hit(const ray *r, const interval ray_t)
 {
 	hit_record	temp_rec;
 
-	t_item item;
 	for (int i=0; i<v.item_count; i++)
 	{
-		item = v.items[i];
-		if (item.hit(r, (interval){ray_t.min, ray_t.max}, &temp_rec, &item))
+		if (v.items[i].hit(r, (interval){ray_t.min, ray_t.max}, &temp_rec, &(v.items[i])))
 		{
 			return True;
 		}

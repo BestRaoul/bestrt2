@@ -43,8 +43,11 @@ material	default_material(void)
 	return m;
 }
 
-Bool	PBR_scatter(ray *ray_in, hit_record *rec, ray *scattered, Bool *was_specular)
+Bool	PBR_scatter(const ray *ray_in, hit_record *rec, ray *scattered, Bool *was_specular)
 {
+    *scattered = (ray){rec->p, rec->normal};
+	return 0;
+	
 	material *self = &rec->mat;
 	vec3	base = evaluate(&(self->base_color), rec->u, rec->v);
 	double	metalic = evaluate_bw(&(self->metalic), rec->u, rec->v);

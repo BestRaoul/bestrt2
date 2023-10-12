@@ -196,40 +196,42 @@ color	trace(ray *r, int max_depth)
 		else if	(v.render_mode == RAYTRACE_MAT_DEBUG && UNLIT(v.mat_debugmode)) return paint_mat_debug_unlit(did_hit, &rec, r);
 
 		if (did_hit)
-		{		
-			return RED;	
+		{
 			color 	emitted_light;
 			ray		scattered;
 
-
-			emitted_light = evaluate(&(rec.mat.emission), rec.u, rec.v);
-			emitted_light = v_scal(emitted_light, rec.mat.emission_strength);
-			light = v_add(light, v_mult(emitted_light, contribution));
+			// emitted_light = evaluate(&(rec.mat.emission), rec.u, rec.v);
+			// emitted_light = v_scal(emitted_light, rec.mat.emission_strength);
+			// light = v_add(light, v_mult(emitted_light, contribution));
 			
-			maybe_apply_perturb(&rec);
+			// maybe_apply_perturb(&rec);
     		
-			shader_end se = CalcTotalPBRLighting(&rec, r);
-			if (v.render_mode == RAYTRACE_MAT_DEBUG) return paint_mat_debug_lit(&se, &rec);
+			// shader_end se = CalcTotalPBRLighting(&rec, r);
+			// if (v.render_mode == RAYTRACE_MAT_DEBUG) return paint_mat_debug_lit(&se, &rec);
 			
 			Bool was_specular;
 			PBR_scatter(r, &rec, &scattered, &was_specular);
 
-			light = v_add(light, v_mult(paint_se(&se), contribution));
+			// light = v_add(light, v_mult(paint_se(&se), contribution));
 
-			contribution = v_mult(contribution, was_specular?se.specular_color:se.diffuse_color);
+			// contribution = v_mult(contribution, was_specular?se.specular_color:se.diffuse_color);
+			contribution = v_mult(contribution, rec.mat.base_color.color_value);
 
 			*r = scattered;
 		}
 		else
 		{
-			return WHITE;	
+			return contribution;
+			light = v_mult(WHITE, contribution);
+			break;
+			/*
 			if (v.render_mode != RAYTRACE_MAT_DEBUG)
 			{
 				if (bounce==0 && v.background_color == NULL)return paint_env(r->dir);
 
 				vec3 uv = v_scal(v_add(r->dir, v_3(1)), 0.5);
 				vec3 bg_light = v_mult(v.background_color(uv), contribution);
-				light = v_add(light, bg_light); 
+				light = v_add(light, bg_light);
 				break;
 			}		
 			if (v.render_mode == RAYTRACE_MAT_DEBUG) return v.mat_debugmode==COMBINED?paint_env(r->dir):BLACK;
@@ -239,6 +241,7 @@ color	trace(ray *r, int max_depth)
 			vec3 bg_light = v_mult(paint_env(r->dir), contribution);//v.background_color(uv), contribution);
 			light = v_add(light, bg_light); 	
 			break;
+			*/
 		}
 	}
 	//light = hdr_tone(light);
@@ -362,6 +365,7 @@ void    raytrace(void)
 			set_transform_matrix(&t, item->fwd, item->bck);
 
 			print_mx4(item->fwd);
+			print_mx4(item->bck);
 		}
 	}
 

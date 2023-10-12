@@ -52,70 +52,19 @@ static void	_update(void)
 	//set_all_transform_matrices()
 }
 
-static void	draw_heatmap_to_img()
-{
-	for (int x=0; x<v.w; x++)
-		for (int y=0; y<v.h; y++)
-			{
-				double dist = v.dist_heatmap[x][y];
-				int farfar = 15;
-				int l = (farfar*farfar - dist*dist)/farfar/farfar;
-				color c = new_color(.25, l*(dist<farfar), 0);
-				draw_raw(x, y, c);
-			}
-}
-
 static void	_render(void)
 {
-	
-	if (v.render_mode != RASTER
-	 && v.render_mode != RASTER_HEATMAP)
+	if (v.render_mode == RASTER)
+		raster();
+	else
 		raytrace();
-	else if (v.render_mode == RASTER)
-		raster();
-	else if (v.render_mode == RASTER_HEATMAP) // rethink raster heatmap
-	{
-		raster();
-		draw_heatmap_to_img();
-	}
+
+	simulate_rayzz();
 
 	mlx_put_image_to_window(v.mlx, v.win, v.img.mlx_img, 0, 0);
 
 	help_ui();
 	debug_ui();
-
-	static hit_record rec = (hit_record){};
-	static Bool	did_hit = False;
-	vec3 old_normal;
-	vec3 new_normal;
-
-	if (0 && v._shift)
-	{
-		ray shoot;
-		init_ray(v.mouse_pos.x, v.mouse_pos.y, &shoot);
-		did_hit = hit(&shoot, (interval){0.001, INFINITY}, &rec);
-
-		old_normal = rec.normal;
-		maybe_apply_perturb(&rec);
-		new_normal = rec.normal;
-	}
-	if (did_hit)
-	{
-		vec3 from = rec.p; from = world_to_screenpos(from);
-		vec3 to_old = v_add(rec.p, v_scal(old_normal, .2)); 	to_old = world_to_screenpos(to_old);
-		vec3 to_old_h = v_add(rec.p, v_scal(old_normal, .1)); 	to_old_h = world_to_screenpos(to_old_h);
-		vec3 to_new = v_add(rec.p, v_scal(new_normal, .2)); 	to_new = world_to_screenpos(to_new);
-
-		color pink = v3(1, .2, 0);
-		color green = evaluate(&(rec.mat.normal), rec.u, rec.v);
-		draw_debug_dot(from, pink);
-		draw_debug_dot(to_old, pink);
-		draw_debug_dot(to_old_h, pink);
-		draw_debug_line(from, to_old, pink);
-
-		draw_debug_dot(to_new, green);
-		draw_debug_line(from, to_new, green);
-	}
 }
 
 void	render_movie()
@@ -160,3 +109,20 @@ void	render_movie()
 	//?destroy bmp
 	exit(0);
 }
+
+/*
+static void	draw_heatmap_to_img()
+{
+	for (int x=0; x<v.w; x++)
+		for (int y=0; y<v.h; y++)
+			{
+				double dist = v.dist_heatmap[x][y];
+				int farfar = 15;
+				int l = (farfar*farfar - dist*dist)/farfar/farfar;
+				color c = new_color(.25, l*(dist<farfar), 0);
+				draw_raw(x, y, c);
+			}
+}
+
+// else if (v.render_mode == RASTER_HEATMAP); //raster(); draw_heatmap_to_img();
+*/

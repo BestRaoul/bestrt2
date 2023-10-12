@@ -63,14 +63,18 @@ vec3	apply(vec3 *p, t_item *item, Bool dirFlag)
 {
 
 }
-
-ray	apply_ray(ray *ray_in, t_item *item, Bool dirFlag)
-{
-	ray output_ray;
-
-
-}
 */
+
+//returns ray IN transformed by T
+ray	apply_ray(const ray *in, const m4x4 t)
+{
+    vec3    p1, p2;
+
+    multiply_matrix_vector(t, in->orig, &p1);
+    multiply_matrix_vector(t, v_add(in->orig, in->dir), &p2);
+
+    return (ray){p1, v_sub(p2, p1)};
+}
 
 void inverse(const m4x4 in, m4x4 out) {
     double aug[4][8]; // Augmented matrix [in | I], where I is the 4x4 identity matrix
@@ -122,7 +126,7 @@ void inverse(const m4x4 in, m4x4 out) {
     // return 1; // Success
 }
 
-void    set_transform_matrix(const transform *t, m4x4 m, m4x4 m_bck)
+void    set_transform_matrix(const transform *t, m4x4 m_fwd, m4x4 m_bck)
 {
     m4x4    translation_matrix  = {};
     m4x4    rotation_matrix_x   = {};
@@ -168,12 +172,6 @@ void    set_transform_matrix(const transform *t, m4x4 m, m4x4 m_bck)
                 mm(rotation_matrix_z,
                 scale_matrix).mat).mat).mat);
     
-    set_m4(m, s_fwd.mat);
-    inverse(m, m_bck);
-
-    // Compute the backwards transform.
-	// m4x4 bcktfm = fwdtfm;
-	//m_bcktfm.Inverse();	
-
-    // item->bck = bcktfm;
+    set_m4(m_fwd, s_fwd.mat);
+    inverse(m_fwd, m_bck);
 }

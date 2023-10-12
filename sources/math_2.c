@@ -39,7 +39,7 @@ vec3    v_div(vec3 a, vec3 b)
 
 
 //defaults to 0
-vec3    v3_base(vec3 in)
+inline vec3    v3_base(vec3 in)
 {
     return (vec3){in.x, in.y, in.z};
 }

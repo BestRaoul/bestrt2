@@ -146,6 +146,8 @@ typedef struct s_texture	texture;
 
 typedef vec3 color;
 
+
+//row . collumn
 typedef double m4x4[4][4];
 
 typedef struct {
@@ -673,6 +675,7 @@ vec3	mult_point_matrix(vec3 in, m4x4 M);
 //6
 vec3    get_ray_direction(int i, int j);
 vec3	ray_at(const ray *r, double t);
+double	t_at(const ray *r, vec3 ray);
 vec3	lerp(double t, vec3 a, vec3 b);
 vec3    local_p(vec3 p, t_item item);
 //7
@@ -746,7 +749,7 @@ material	new_light		(texture emission, double emission_strength);
 
 material	new_lambertian_bump(texture t, texture bump);
 
-Bool	PBR_scatter(ray *ray_in, hit_record *rec, ray *scattered, Bool *was_specular);
+Bool	PBR_scatter(const ray *ray_in, hit_record *rec, ray *scattered, Bool *was_specular);
 
 // ------Textures
 //deepcopy
@@ -801,6 +804,10 @@ void create_transform_matrix(const transform* t, m4x4 result);
 void multiply_matrix_vector(const m4x4 mat, const vec3 in, vec3* out);
 void multiply_matrix_vector_2(const m4x4 M, const vec3 in, vec3* out);
 void print_mx4(m4x4 matrix);
+ray	 apply_ray(const ray *in, const m4x4 t);
+
+//TRASHHHHH
+void    simulate_rayzz();
 
 
 # define INTERVAL_EMPTY (interval){+INFINITY, -INFINITY}

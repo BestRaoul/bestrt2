@@ -248,6 +248,7 @@ Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_ite
 		
 	// Test for intersections with each plane (side of the box).
 	// Top and bottom.
+    //front back
 	if (!close_enough(kz))
 	{
 		t[0] = (az - 1.0) / -kz;
@@ -288,6 +289,7 @@ Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_ite
 	}
 	
 	// Front and back.
+    //top bot
 	if (!close_enough(ky))
 	{
 		t[4] = (ay + 1.0) / -ky;
@@ -347,6 +349,7 @@ Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_ite
     rec->p = ray_at(r, gt);
 
     vec3 outward_normal = get_cube_normal(final_index, rec);
+    outward_normal = rotate3(outward_normal, self->rot);
     set_face_normal(rec, r, outward_normal);
 
     rec->mat = self->mat;
@@ -401,58 +404,229 @@ Bool    hit_box_old(const ray *r, const interval ray_t, hit_record *rec, const t
 //FIX rotated cylinder
 Bool    hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
-    vec3 rayDir = r->dir;
-    vec3 rayStartToCylinder = v_sub(r->orig, self->pos);
+    ray local_r = apply_ray(r, self->bck);
+    
+    // Extract values of a.
+	double ax = local_r.orig.x;
+	double ay = local_r.orig.y;
+	double az = local_r.orig.z;
+	
+	double kx = local_r.dir.x;
+	double ky = local_r.dir.y;
+	double kz = local_r.dir.z;
 
-    double radius = self->scale.x;
-    double height = self->scale.y;
+    // Compute a, b and c.
+    double a = (kx * kx) + (kz * kz);
+    double b = 2.0 * (ax * kx + az * kz);
+    double c = ((ax * ax) + (az * az)) - 1.0;
 
-    double a = rayDir.x * rayDir.x + rayDir.y * rayDir.y;
-    double b = 2.0 * (rayDir.x * rayStartToCylinder.x + rayDir.y * rayStartToCylinder.y);
-    double c = rayStartToCylinder.x * rayStartToCylinder.x + rayStartToCylinder.y * rayStartToCylinder.y - radius * radius;
+	// Compute b^2 - 4ac.
+	double root = sqrt((b*b) - 4.0 * a * c);
 
-    double discriminant = b * b - 4 * a * c;
+	double t[4]; //local t's
+    double u[4];
+    double v[4];
+    
+    if (root > 0.0)
+    {
+		t[0] = (-b + root) / (2 * a);
+		t[1] = (-b - root) / (2 * a);
 
-    double root;
+        if (fabs(ay + ky * t[0]) > 1.0)
+            t[0] = 100e6;
+        if (fabs(ay + ky * t[1]) > 1.0)
+            t[1] = 100e6;
+    }
+    else
+    {
+        t[0] = 100e6;
+        t[1] = 100e6;
+    }
+    
+    // Top and bottom CAPS
+	if (!close_enough(ky))
+	{
+		t[2] = (ay - 1.0) / -ky;
+		t[3] = (ay + 1.0) / -ky;
+        u[2] = ax + kx * t[2];
+		v[2] = az + kz * t[2];
+        if (u[2]*u[2] + v[2]*v[2] > 1.0)
+            t[2] = 100e6;
+        u[3] = ax + kx * t[3];
+		v[3] = az + kz * t[3];
+        if (u[3]*u[3] + v[3]*v[3] > 1.0)
+            t[3] = 100e6;
+	}
+	else
+	{
+		t[2] = 100e6;
+		t[3] = 100e6;
+	}
 
-    if (discriminant < 0) {
-        // No intersection
-        return False;
-    } else {
-        double t1 = (-b - sqrt(discriminant)) / (2 * a);
-        double t2 = (-b + sqrt(discriminant)) / (2 * a);
-
-        double z1 = r->orig.z + t1 * rayDir.z;// ray_at(r, t1);
-        double z2 = r->orig.z + t2 * rayDir.z;
-
-        if ((z1 >= self->pos.z) && (z1 <= (self->pos.z + height)) &&
-            (t1 >= 0)) {
-            // Intersection at t1
-            root = t1;
-        } else if ((z2 >= self->pos.z) && (z2 <= (self->pos.z + height)) &&
-                   (t2 >= 0)) {
-            // Intersection at t2
-            root = t2;
-        } else {
-            // No intersection with the cylinder sides
-            return False;
+    double finalT = 100e6;
+    int final_index = 0;
+    Bool valid_intersection = False;
+    for (int i=0; i<4; i++)
+    {
+        if (t[i] < finalT && t[i] > 0.0)
+        {
+            finalT = t[i];
+            final_index = i;
+            valid_intersection = True;
         }
     }
+    if (!valid_intersection)
+        return False;
 
-    rec->t = root;
-    rec->p = ray_at(r, rec->t);
-    vec3 outward_normal = v_scal(v3(rec->p.x - self->pos.x, rec->p.y - self->pos.y, 0),  1.0 / radius);
+//----confirmed hit
+    double lt = t[final_index];
+    double lu = u[final_index];
+    double lv = v[final_index];
+
+    vec3 local_p = ray_at(&local_r, lt);
+
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt))
+        return False;
+
+    rec->t = gt;
+    rec->p = ray_at(r, gt);
+
+
+    vec3 outward_normal;
+    if (final_index <= 1) //cylinder hit
+    {
+        outward_normal = v3(local_p.x, 0, local_p.z);
+        outward_normal = rotate3(outward_normal, self->rot);
+        rec->u = (atan2(local_p.z, local_p.x) + MYPI)/(2*MYPI);
+        rec->v = local_p.y/2 + .5;
+    }
+    else //caps
+    {
+        outward_normal = v3(0, 1 * (final_index==2) - 1 * (final_index==3),0);
+        outward_normal = rotate3(outward_normal, self->rot);
+        rec->u = .5 - lu/2;
+        rec->v = .5 - lv/2;
+    }
     set_face_normal(rec, r, outward_normal);
-    // set_sphere_uv(outward_normal, rec, self->rot);
-    // rec->v += ((int)(self->rot.x * RAD2DEG) % 360) /360.0;
+
+    
+    //UV
+    
     rec->mat = self->mat;
 
     return True;
 }
 
+//hit CONE
 Bool    hit_pyramid(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
-    return hit_sphere(r, ray_t, rec, self);
+    ray local_r = apply_ray(r, self->bck);
+    
+    // Extract values of a.
+	double ax = local_r.orig.x;
+	double ay = local_r.orig.y;
+	double az = local_r.orig.z;
+	
+	double kx = local_r.dir.x;
+	double ky = local_r.dir.y;
+	double kz = local_r.dir.z;
+
+    //offset so center is center of cone
+    ay -= 1.0;
+
+	double a = (kx * kx) + (kz * kz) - (ky * ky);
+	double b = 2.0 * (ax * kx + az * kz - ay * ky);
+	double c = (ax * ax) + (az * az) - (ay * ay);
+
+	// Compute b^2 - 4ac.
+	double root = sqrt((b*b) - 4.0 * a * c);
+
+	double t[3]; //local t's
+    
+    if (root > 0.0)
+    {
+		t[0] = (-b + root) / (2 * a);
+		t[1] = (-b - root) / (2 * a);
+
+        double oi0 = ay + ky * t[0];
+        double oi1 = ay + ky * t[1];
+        
+        if (oi0 > 0.0 || oi0 < -1.0)
+            t[0] = 100e6;
+        if (oi1 > 0.0|| oi1 < -1.0)
+            t[1] = 100e6;
+    }
+    else
+    {
+        t[0] = 100e6;
+        t[1] = 100e6;
+    }
+    
+    // Top and bottom CAPS
+	if (!close_enough(ky))
+	{
+		t[2] = (ay + 1.0) / -ky;
+        double u = ax + kx * t[2];
+		double v = az + kz * t[2];
+        if (u*u + v*v > 1.0)
+            t[2] = 100e6;
+	}
+	else
+	{
+		t[2] = 100e6;
+	}
+
+    double finalT = 100e6;
+    int final_index = 0;
+    Bool valid_intersection = False;
+    for (int i=0; i<4; i++)
+    {
+        if (t[i] < finalT && t[i] > 0.0)
+        {
+            finalT = t[i];
+            final_index = i;
+            valid_intersection = True;
+        }
+    }
+    if (!valid_intersection)
+        return False;
+
+//----confirmed hit
+    double lt = t[final_index];
+
+    vec3 local_p = ray_at(&local_r, lt);
+
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt))
+        return False;
+
+    rec->t = gt;
+    rec->p = ray_at(r, gt);
+
+
+    vec3 outward_normal;
+    if (final_index <= 1) //cone hit
+    {
+        outward_normal = v3(local_p.x, 0, local_p.z);
+        outward_normal = rotate3(outward_normal, self->rot);
+        rec->u = (atan2(local_p.z, local_p.x) + MYPI)/(2*MYPI);
+        rec->v = local_p.y/2 + .5;
+    }
+    else //bot
+    {
+        outward_normal = v3(0, 1 * (final_index==2) - 1 * (final_index==3),0);
+        outward_normal = rotate3(outward_normal, self->rot);
+        rec->u = .5;// - lu/2;
+        rec->v = .5;// - lv/2;
+    }
+    set_face_normal(rec, r, outward_normal);
+
+    //UV
+    
+    rec->mat = self->mat;
+
+    return True;
 }
 
 Bool    hit_line(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
@@ -485,7 +659,7 @@ Bool	check_hit(const ray *r, const interval ray_t)
 
 	for (int i=0; i<v.item_count; i++)
 	{
-		if (v.items[i].hit(r, (interval){ray_t.min, ray_t.max}, &temp_rec, &(v.items[i])))
+		if (v.items[i].hit(r, ray_t, &temp_rec, &v.items[i]))
 		{
 			return True;
 		}

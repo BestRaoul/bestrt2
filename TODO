@@ -40,22 +40,22 @@ fix ambient bounces
 
 
 ----------- NOW ---------------
--1 . transformation matrices, unable to do box without
-0. cylinder + 2nd degree object + (box rotation)
+0. cylinder + 2nd degree object
 2. proper 8-bit read
-3. showoff scenes (materials)
+3. showoff scenes 6-7-8-9
 4. object selection
-6. add_item, add_tween (duration, loop, delay)
-98. (bump to normal conversion)
-99. UI (material debug, vec3's, color materials);
+97. (check sphere UV rotation)
+96. light flicker spinning quad + acne on tilted box
 -----------AT 42---------------
 0. normal map are fugged
 1. parsing
 2. no crash
 3. ptrs ALLL
 --- after
+//98. (bump to normal conversion)
+//6. add_item, add_tween (duration, loop, delay)
 3. tween, item, lights, sky, rendermovie CLEANUP
-4. UI
+4. UI (material debug, vec3's, color materials)
 5. plenty render modes
 6. ao
 -----------NEVER---------------

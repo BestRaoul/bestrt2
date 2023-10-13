@@ -38,15 +38,18 @@ Bool    check_obstruction(t_light *l, vec3 p)
         ray check;
         double max_t = INFINITY;
 
-        check.orig = p;
         if (l->is_dir)
-            check.dir = v_scal(l->dir, -1);
+        {
+            check.orig = v_add(p, v_scal(l->dir, -1000));
+            check.dir = l->dir;
+        }
         else //Point light
         {
-            check.dir = v_norm(v_sub(l->pos, p));
-            max_t = vec_dist(l->pos, p);
+            check.orig = l->pos;
+            check.dir = v_norm(from_to(l->pos, p));
+            max_t = vec_dist(l->pos, p) - 0.001;
         }
-        return check_hit(&check, (interval){0.001, max_t});
+        return check_hit(&check, (interval){0.0, max_t});
 }
 
 void   set_IBL(shader_end *se, hit_record *rec, ray *ray_in,

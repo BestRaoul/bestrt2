@@ -142,17 +142,18 @@ void    default_cam(void)
 
 void	test(void)
 {
-	showoff_5();
+	// showoff_5();
 	v.max_depth = 0;
 	v.max_samples = 1;
-	v.background_color = white_background;
-	return;
+	// v.light_count = 1;
+	v.background_color = black_background;
+	// return;
 	// v.render_mode = RAYTRACE_UVS;
 	default_cam();
     v.render_mode = RAYTRACE;
 	v.lookat_toggle = 1;
 	v.lookat = v3(0,0,0);
-	v.camera_pos = v3(0,0,4.5);
+	v.camera_pos = v3(0,1,4.5);
 	v.vfov = 50;
 	v.ambient = 0;
 	v.background_color = shit_sky_background;
@@ -166,15 +167,16 @@ void	test(void)
 
     material material_center = new_lambertian(c3(0.1, 0.2, 0.4));
     material material_left	 = new_dielectric(c3(1,1,1), 1.5);
-	material_left.transmission = 1.0;
+	// material_left.transmission = 1.0;
     material material_right  = new_metal(c3(0.8, 0.6, 0.2), 0.02);
 
-    add_item((t_item){v3( 0, -.5, 0),	v_3(1),	v3(0, MYPI/3), material_ground, PLANE});
+    // add_item((t_item){v3( 0, -.5, 0),	v_3(1),	v3(0, MYPI/3), material_ground, PLANE});
 
 	vec3 rr = v3(0);
-    add_item((t_item){v3( 0, 0, 0),		v3(1,.5,.5),	rr, material_center, BOX});
-	add_item((t_item){v3(-1.5, 0, 0),	v3(.5,.5,1),	rr, material_left, SPHERE});
-	add_item((t_item){v3( 1.5, 0, 0),	v3(.5,1,.5),	rr, material_right, SPHERE});
+    add_item((t_item){v3( 0, 0, 0),		v3(.5,.5,.5),	rr, material_center, PYRAMID});
+    // add_item((t_item){v3( 0, 0, 0),		v3(1,.5,.5),	rr, material_center, BOX});
+	// add_item((t_item){v3(-1.5, 0, 0),	v3(.5,.5,1),	rr, material_left, SPHERE});
+	// add_item((t_item){v3( 1.5, 0, 0),	v3(.5,1,.5),	rr, material_right, SPHERE});
 }
 
 //1 : green plane, 3 balls (gold, blue, hollow glass)
@@ -321,7 +323,7 @@ void	showoff_5(void)
 	
 	material box = new_lambertian(WHITE_MAP);
 	box.metalic = NO_MAP;
-	add_item((t_item){v3(-.4, -.6,.6),		v_3(.3),	v3(0), box, BOX});
+	add_item((t_item){v3(-.8, -.6,.6),		v_3(.3),	v3(MYPI/2), box, BOX});
 	
 	// material lit = new_lambertian(NO_MAP);
 	// lit.emission = WHITE_MAP;
@@ -332,11 +334,11 @@ void	showoff_5(void)
 	double *ry2 = &(v.items[v.item_count-1].rot.y);
 	add_motion(ry1, 0, MYPI*2, lerpd);
 	add_motion(ry2, 0, MYPI*2, lerpd);
-	v.animation_duration = 4;
-	v.animation_speed = 0.25;
+	v.animation_duration = 2;
+	v.animation_speed = 0.5;
 	v.animation_framerate = 24;
 	v.animation_loops = 1;
-	v.animation_render_mode = RAYTRACE;
+	v.animation_render_mode = RAYTRACE_MAT_DEBUG;
 
 	v.light_count = 2;
 	v.lights = malloc(sizeof(t_light)*v.light_count);
@@ -356,7 +358,9 @@ void	showoff_5(void)
 
 //7 : box with rough surface, sphere with rust, cylinder watery, ...
 
-//8 : ??? 
+//8 : shapes roitatin
+
+//9 : materials (rows of balls)
 
 
 //Historic

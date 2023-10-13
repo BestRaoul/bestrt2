@@ -129,27 +129,39 @@ void inverse(const m4x4 in, m4x4 out) {
 void    set_transform_matrix(const transform *t, m4x4 m_fwd, m4x4 m_bck)
 {
     m4x4    translation_matrix  = {};
-    m4x4    rotation_matrix_x   = {};
-    m4x4    rotation_matrix_y   = {};
-    m4x4    rotation_matrix_z   = {};
+    m4x4    rotation_matrix     = {};
     m4x4    scale_matrix        = {};
 
     //Set all to identity
     set_identity(translation_matrix);
-    set_identity(rotation_matrix_x);
-    set_identity(rotation_matrix_y);
-    set_identity(rotation_matrix_z);
+    set_identity(rotation_matrix);
     set_identity(scale_matrix);
 
     //Translation
     translation_matrix[0][3] = t->pos.x;
     translation_matrix[1][3] = t->pos.y;
     translation_matrix[2][3] = t->pos.z;
-    
+
+	// And the scale matrix.
+	scale_matrix[0][0] = t->scale.x;
+	scale_matrix[1][1] = t->scale.y;
+	scale_matrix[2][2] = t->scale.z;
+
+/*
+    m4x4    rotation_matrix_x   = {};
+    m4x4    rotation_matrix_y   = {};
+    m4x4    rotation_matrix_z   = {};
+
+    set_identity(rotation_matrix_x);
+    set_identity(rotation_matrix_y);
+    set_identity(rotation_matrix_z);
+
     //Rotations
 	rotation_matrix_z[0][0] = cos(t->rot.z);
 	rotation_matrix_z[0][1] = -sin(t->rot.z);
 	rotation_matrix_z[1][0] = sin(t->rot.z);
+	rotation_matrix_z[1][1] = cos(t->rot.z);
+
 	rotation_matrix_y[0][0] = cos(t->rot.y);
 	rotation_matrix_y[0][2] = sin(t->rot.y);
 	rotation_matrix_y[2][0] = -sin(t->rot.y);
@@ -159,18 +171,41 @@ void    set_transform_matrix(const transform *t, m4x4 m_fwd, m4x4 m_bck)
 	rotation_matrix_x[1][2] = -sin(t->rot.x);
 	rotation_matrix_x[2][1] = sin(t->rot.x);
 	rotation_matrix_x[2][2] = cos(t->rot.x);
-	
-	// And the scale matrix.
-	scale_matrix[0][0] = t->scale.x;
-	scale_matrix[1][1] = t->scale.y;
-	scale_matrix[2][2] = t->scale.z;
-	
 
-	s_m4 s_fwd =mm(translation_matrix,
-                mm(rotation_matrix_x,
-                mm(rotation_matrix_y,
-                mm(rotation_matrix_z,
-                scale_matrix).mat).mat).mat);
+    s_m4 temp = mm(rotation_matrix_y, mm(rotation_matrix_z, rotation_matrix_x).mat);
+    m4x4 rotation_matrix;
+    set_m4(rotation_matrix, temp.mat);
+    */
+	double _a = t->rot.x, _b = t->rot.y, _y = t->rot.z;
+    //cheating to avoid GIMBAL LOCK flattening, if you figure out how not to flatten with given angles feel free to correct
+    if (((fabs(fmod(fabs(_a), MYPI) - MYPI/2) < MYPI/100)
+       ||(fabs(fmod(fabs(_y), MYPI) - MYPI/2) < MYPI/100))
+       && fabs(fmod(fabs(_b), MYPI) - MYPI/2) < MYPI/100)
+    {
+        _b = _b - signd(_b)*MYPI/100;
+    }
+    double cosA = cos(_a), sinA = sin(_a);
+	double cosB = cos(_b), sinB = sin(_b);
+	double cosY = cos(_y), sinY = sin(_y);
+
+	rotation_matrix[0][0] = cosB*cosY;
+	rotation_matrix[0][1] = sinA*sinB*cosY - cosA*sinY;
+	rotation_matrix[0][2] = cosA*sinB*cosY + sinA*sinY;
+
+    rotation_matrix[1][0] = cosB*sinY;
+	rotation_matrix[1][1] = sinA*sinB*sinY + cosA*cosY;
+	rotation_matrix[1][2] = cosA*sinB*sinY - sinA*cosY;
+
+    rotation_matrix[2][0] = -sinB;
+	rotation_matrix[2][1] = sinA*cosB;
+	rotation_matrix[2][2] = cosA*cosB;
+	// return v3(v.x*(cosB*cosY) + v.y*(sinA*sinB*cosY - cosA*sinY) + v.z*(cosA*sinB*cosY + sinA*sinY),
+			//   v.x*(cosB*sinY) + v.y*(sinA*sinB*sinY + cosA*cosY) + v.z*(cosA*sinB*sinY - sinA*cosY),
+			//   v.x*(-sinB) 	  + v.y*(sinA*cosB) 				 + v.z*(cosA*cosB));
+	
+    s_m4 s_fwd =mm(translation_matrix,
+                mm(rotation_matrix,
+                scale_matrix).mat);
     
     set_m4(m_fwd, s_fwd.mat);
     inverse(m_fwd, m_bck);

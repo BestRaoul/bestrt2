@@ -13,7 +13,7 @@
 #include "fractol.h"
 
 //unused
-void	mm_(m4x4 a, m4x4 b, m4x4 c)
+void	mm_(const m4x4 a, const m4x4 b, m4x4 c)
 {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -25,7 +25,7 @@ void	mm_(m4x4 a, m4x4 b, m4x4 c)
     }
 }
 
-s_m4	mm(m4x4 a, m4x4 b)
+s_m4	mm(const m4x4 a, const m4x4 b)
 {
     s_m4    c;
     for (int i = 0; i < 4; i++) {
@@ -39,7 +39,7 @@ s_m4	mm(m4x4 a, m4x4 b)
     return c;
 }
 
-vec3	mult_point_matrix(vec3 in, m4x4 M)
+vec3	mult_point_matrix(const vec3 in, const m4x4 M)
 { 
 	vec3 out;
     //out = in * M;

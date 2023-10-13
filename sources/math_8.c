@@ -36,9 +36,18 @@ void create_transform_matrix(const transform* t, m4x4 result) {
 }
 
 void multiply_matrix_vector(const m4x4 mat, const vec3 in, vec3* out) {
-    out->x = mat[0][0] * in.x + mat[0][1] * in.y + mat[0][2] * in.z + mat[0][3];
-    out->y = mat[1][0] * in.x + mat[1][1] * in.y + mat[1][2] * in.z + mat[1][3];
-    out->z = mat[2][0] * in.x + mat[2][1] * in.y + mat[2][2] * in.z + mat[2][3];
+    out->x = mat[0][0] * in.x + mat[0][1] * in.y + mat[0][2] * in.z + /* 1 */ mat[0][3];
+    out->y = mat[1][0] * in.x + mat[1][1] * in.y + mat[1][2] * in.z + /* 1 */ mat[1][3];
+    out->z = mat[2][0] * in.x + mat[2][1] * in.y + mat[2][2] * in.z + /* 1 */ mat[2][3];
+return;
+    double w = mat[3][0] * in.x + mat[3][1] * in.y + mat[3][2] * in.z + /* 1 */ mat[3][3];
+ 
+    // normalize if w is different than 1 (convert from homogeneous to Cartesian coordinates)
+    if (w != 1) { 
+        out->x /= w; 
+        out->y /= w; 
+        out->z /= w; 
+    } 
 }
 
 //DEPRECATED

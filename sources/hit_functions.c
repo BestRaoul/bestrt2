@@ -46,6 +46,7 @@ double  t2global(const double lt, const ray *local_r, const ray *r, const m4x4 f
     return vec_dist(r->orig, temp);
 }
 
+//sphere normal based on local UV
 Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
     ray local_r = apply_ray(r, self->bck);
@@ -86,6 +87,40 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
     return True;
 }
 
+Bool	hit_sphere_old(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
+{
+    vec3 center = self->pos;
+    double radius = self->scale.x; //fix
+    
+    vec3 oc = v_sub(r->orig, center);
+    double a = v_dot(r->dir, r->dir);
+    double half_b = v_dot(oc, r->dir);
+    double c = v_dot(oc, oc) - radius*radius;
+    
+    double discriminant = half_b*half_b - a*c;
+    if (discriminant < 0) return False;
+    double sqrtd = sqrt(discriminant);
+
+    // Find the nearest root that lies in the acceptable range.
+    double root = (-half_b - sqrtd) / a;
+    if (!surrounds(ray_t, root))
+    {
+        root = (-half_b + sqrtd) / a;
+        if (!surrounds(ray_t, root))
+            return False;
+    }
+
+    rec->t = root;
+    rec->p = ray_at(r, rec->t);
+    vec3 outward_normal = v_scal(v_sub(rec->p, center),  1.0 / radius);
+    set_face_normal(rec, r, outward_normal);
+    set_sphere_uv(rec, outward_normal, self->rot);
+    rec->v += ((int)(self->rot.x * RAD2DEG) % 360) /360.0;
+    rec->mat = self->mat;
+
+    return True;
+}
+
 void    set_plane_uv(double alpha, double beta, hit_record *rec)
 {
     alpha-=(int)alpha/1;
@@ -102,53 +137,86 @@ Bool    hit_plane(const ray *r, const interval ray_t, hit_record *rec, const t_i
 {
     ray local_r = apply_ray(r, self->bck);
     
-    vec3 u = v3(1,0,0); //?
-    vec3 v = v3(0,0,1); //?
-
     const vec3 n = v3(0,1,0);
     
-    double denom = local_r.dir.y;
     //No hit if parallel
-    if (fabs(denom) < 0.001) return False;
+    if (fabs(local_r.dir.y) < 1e-8) return False;
 
     // Return false if the hit point parameter t is outside the ray interval.
-    double lt = (-local_r.orig.y) / denom;
+    double lt = local_r.orig.y / -local_r.dir.y;
     if (lt < 0.0) return False;
-    
+
     double gt = t2global(lt, &local_r, r, self->fwd);
     if (!contains(ray_t, gt)) return False;
 
+    vec3 localIntPoint = ray_at(&local_r, lt);
+    vec3 intPoint = ray_at(r, gt);
+    double alpha = localIntPoint.x;
+    double beta = localIntPoint.z;
+    alpha = .5 - alpha/2;
+    beta  = .5 - beta/2;
+
     rec->t = gt;
-    rec->p = ray_at(r, gt);
+    rec->p = intPoint;
 
     vec3 out_normal = rotate3(v3(0,1,0), self->rot);
     set_face_normal(rec, r, out_normal);
 
-    double alpha = rec->p.x;
-    double beta = -rec->p.z;
-    alpha = alpha/2 + .5;
-    beta = 1 - (beta/2 + .5);
-    set_plane_uv(alpha, beta, rec);
+
+    rec->u = alpha;
+    rec->v = beta;
+    //set_plane_uv(alpha, beta, rec);
     
     rec->mat = self->mat;
 
     return True;
 }
 
-Bool    is_interior(double a, double b, hit_record *rec)
+Bool    is_interior(const double a, const double b)
 {
-    // Given the hit point in plane coordinates, return false if it is outside the
-    // primitive, otherwise set the hit record UV coordinates and return true.
-
     if ((a < 0) || (1 < a) || (b < 0) || (1 < b))
         return False;
-
-    //rec.u = a;
-    //rec.v = b;
     return True;
 }
 
 Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
+{
+    ray local_r = apply_ray(r, self->bck);
+    
+    //No hit if parallel
+    if (fabs(local_r.dir.y) < 1e-8) return False;
+
+    // Return false if the hit point parameter t is outside the ray interval.
+    double lt = local_r.orig.y / -local_r.dir.y;
+    if (lt < 0.0) return False;
+
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt)) return False;
+
+    vec3 localIntPoint = ray_at(&local_r, lt);
+    vec3 intPoint = ray_at(r, gt);
+    double alpha = localIntPoint.x;
+    double beta = localIntPoint.z;
+    alpha = .5 - alpha/2;
+    beta  = .5 - beta/2;
+    
+    if (!is_interior(alpha, beta))
+        return False;
+
+    rec->u = alpha;
+    rec->v = beta;
+
+    rec->t = gt;
+    rec->p = intPoint;
+
+    set_face_normal(rec, r, rotate3(v3(0,1,0), self->rot));
+
+    rec->mat = self->mat;
+
+    return True;
+}
+
+Bool    hit_quad_old(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
     vec3 Q = self->pos;
     vec3 u = rotate3(v3(self->scale.x,0,0), self->rot);
@@ -177,7 +245,7 @@ Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_it
     alpha = alpha/2 + .5;
     beta = beta/2 + .5;
 
-    if (!is_interior(alpha, beta, rec))
+    if (!is_interior(alpha, beta))
         return False;
     rec->u = 1 - alpha;
     rec->v = 1 - beta;
@@ -193,45 +261,39 @@ Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_it
 
 Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
-    vec3 Q = self->pos;
-    vec3 u = rotate3(v3(self->scale.x,0,0), self->rot);
-    vec3 v = rotate3(v3(0,0,self->scale.z), self->rot);
-    vec3 n = v_cross(u, v);
-    vec3 normal = v_norm(n);
-    vec3 w = v_scal(n, 1.0/v_dot(n,n));
-    //vec3 normal = v_norm(rotate3(v3(0,1,0), self->rot));
-    double D = v_dot(normal, Q);
-
-    double denom = v_dot(normal, r->dir);
-
+    ray local_r = apply_ray(r, self->bck);
+    
     //No hit if parallel
-    if (fabs(denom) < 1e-8) return False;
+    if (fabs(local_r.dir.y) < 1e-8) return False;
     //No hit from the back
-    if (denom < 0) return False;
+    if (local_r.dir.y > 0) return False;
 
     // Return false if the hit point parameter t is outside the ray interval.
-    double t = (D - v_dot(normal, r->orig)) / denom;
-    if (!contains(ray_t, t)) return False;
+    double lt = local_r.orig.y / -local_r.dir.y;
+    if (lt < 0.0) return False;
 
-    // Determine the hit point lies within the planar shape using its plane coordinates.
-    vec3 intersection = ray_at(r, t);
-    vec3 planar_hitpt_vector = v_sub(intersection, Q);
-    double alpha = v_dot(w, v_cross(planar_hitpt_vector, v));
-    double beta = v_dot(w, v_cross(u, planar_hitpt_vector));
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt)) return False;
 
-    alpha = alpha/2 + .5;
-    beta = beta/2 + .5;
-
-    if (!is_interior(alpha, beta, rec))
+    vec3 localIntPoint = ray_at(&local_r, lt);
+    vec3 intPoint = ray_at(r, gt);
+    double alpha = localIntPoint.x;
+    double beta = localIntPoint.z;
+    alpha = .5 - alpha/2;
+    beta  = .5 - beta/2;
+    
+    if (!is_interior(alpha, beta))
         return False;
-    rec->u = 1 - alpha;
-    rec->v = 1 - beta;
 
-    // Ray hits the 2D shape; set the rest of the hit record and return true.
-    rec->t = t;
-    rec->p = intersection;
+    rec->u = alpha;
+    rec->v = beta;
+
+    rec->t = gt;
+    rec->p = intPoint;
+
+    set_face_normal(rec, r, rotate3(v3(0,1,0), self->rot));
+
     rec->mat = self->mat;
-    set_face_normal(rec, r, normal);
 
     return True;
 }
@@ -239,6 +301,43 @@ Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t
 //--NOT IMPLEMENTED YET
 
 Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
+{
+    ray local_r = apply_ray(r, self->bck);
+    
+    //No hit if parallel
+    if (fabs(local_r.dir.y) < 1e-8) return False;
+
+    // Return false if the hit point parameter t is outside the ray interval.
+    double lt = local_r.orig.y / -local_r.dir.y;
+    if (lt < 0.0) return False;
+
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt)) return False;
+
+    vec3 localIntPoint = ray_at(&local_r, lt);
+    vec3 intPoint = ray_at(r, gt);
+    double alpha = localIntPoint.x;
+    double beta = localIntPoint.z;
+    alpha = .5 - alpha/2;
+    beta  = .5 - beta/2;
+    
+    if (!is_interior(alpha, beta))
+        return False;
+
+    rec->u = alpha;
+    rec->v = beta;
+
+    rec->t = gt;
+    rec->p = intPoint;
+
+    set_face_normal(rec, r, rotate3(v3(0,1,0), self->rot));
+
+    rec->mat = self->mat;
+
+    return True;
+}
+
+Bool    hit_box_old(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
     t_item side = (t_item){};
     side.mat = self->mat;

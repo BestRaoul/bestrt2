@@ -76,7 +76,6 @@ vec3	rotate3(vec3 v, vec3 r)
 	double cosB = cos(_b), sinB = sin(_b);
 	double cosY = cos(_y), sinY = sin(_y);
 
-	
 	return v3(v.x*(cosB*cosY) + v.y*(sinA*sinB*cosY - cosA*sinY) + v.z*(cosA*sinB*cosY + sinA*sinY),
 			  v.x*(cosB*sinY) + v.y*(sinA*sinB*sinY + cosA*cosY) + v.z*(cosA*sinB*sinY - sinA*cosY),
 			  v.x*(-sinB) 	  + v.y*(sinA*cosB) 				 + v.z*(cosA*cosB));

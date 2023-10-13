@@ -142,9 +142,15 @@ void    default_cam(void)
 
 void	test(void)
 {
+	// showoff_5();
+	v.max_depth = 3;
+	v.max_samples = 1;
+	v.background_color = white_background;
+	// return;
+	// v.render_mode = RAYTRACE_UVS;
 	default_cam();
     v.render_mode = RAYTRACE;
-	v.lookat_toggle = 0;
+	v.lookat_toggle = 1;
 	v.lookat = v3(0,0,0);
 	v.camera_pos = v3(0,0,4.5);
 	v.vfov = 50;
@@ -157,16 +163,18 @@ void	test(void)
 	v.upscale = 1;
 
     material material_ground = new_lambertian(checkerboard(.5, c3(.2,.3,.1), c3(.9, .9, .9)));
-    // material material_center = new_lambertian(c3(0.1, 0.2, 0.4));
-    // material material_left	 = new_dielectric(c3(1,1,1), 1.5);
-	// material_left.transmission = 1.0;
-    // material material_right  = new_metal(c3(0.8, 0.6, 0.2), 0.02);
 
-    add_item((t_item){v3( 0, -.5, 0),	v_3(1),	v3(), material_ground, PLANE});
-    
-    // add_item((t_item){v3( 0, 0, 0),		v3(1,.5,.5),	v3(0), material_center, SPHERE});
-	// add_item((t_item){v3(-1.5, 0, 0),	v3(.5,.5,1),	v3(), material_left, SPHERE});
-	// add_item((t_item){v3( 1.5, 0, 0),	v3(.5,1,.5),	v3(), material_right, SPHERE});
+    material material_center = new_lambertian(c3(0.1, 0.2, 0.4));
+    material material_left	 = new_dielectric(c3(1,1,1), 1.5);
+	material_left.transmission = 1.0;
+    material material_right  = new_metal(c3(0.8, 0.6, 0.2), 0.02);
+
+    add_item((t_item){v3( 0, -.5, 0),	v_3(1),	v3(0, MYPI/3), material_ground, PLANE});
+
+	vec3 rr = v3(0);
+    add_item((t_item){v3( 0, 0, 0),		v3(1,.5,.5),	rr, material_center, BOX});
+	add_item((t_item){v3(-1.5, 0, 0),	v3(.5,.5,1),	rr, material_left, SPHERE});
+	add_item((t_item){v3( 1.5, 0, 0),	v3(.5,1,.5),	rr, material_right, SPHERE});
 }
 
 //1 : green plane, 3 balls (gold, blue, hollow glass)
@@ -426,7 +434,7 @@ void    quads(void)
 	v.camera_pos = v3(0, 0, 2.8);
 	v.vfov = 80;
 
-    material material_wall_top   = new_lambertian(c3(10.0, 0.5, 0.0));
+    material material_wall_top   = new_lambertian(c3(1.0, 0.5, 0.0));
     material material_wall_back  = new_lambertian(c3(0.2, 1.0, 0.2));
 	
 	material material_wall_left  = new_lambertian(c3(1.0, 0.2, 0.2));
@@ -439,12 +447,12 @@ void    quads(void)
 	
 	double s = 0.4;
 
-	add_item((t_item){v3( 0, _h+s, 0),	v3(_w, 1, _d),	v3(MYPI,0,0), 	material_wall_top,	SS_QUAD});
-	add_item((t_item){v3( 0, 0,-_d-s),	v3(_w, 1, _h),	v3(MYPI/2,0,0), material_wall_back,	SS_QUAD});
+	add_item((t_item){v3( 0, _h+s, 0),	v3(_w, 1, _d),	v3(MYPI,0,0), 	material_wall_top,	QUAD});
+	add_item((t_item){v3( 0, 0,-_d-s),	v3(_w, 1, _h),	v3(MYPI/2,0,0), material_wall_back,	QUAD});
 	
-	add_item((t_item){v3( _w+s, 0, 0),	v3(_h, 1, _d),	v3(0,0,MYPI/2),	material_wall_left,	SS_QUAD});
-	add_item((t_item){v3( 0,-_h-s, 0),	v3(_w, 1, _d),	v3(0,0,0), 		material_wall_bot, 	SS_QUAD});
-	add_item((t_item){v3(-_w-s, 0, 0),	v3(_h, 1, _d),	v3(0,0,-MYPI/2),material_wall_right,SS_QUAD});
+	add_item((t_item){v3( _w+s, 0, 0),	v3(_h, 1, _d),	v3(0,0,MYPI/2),	material_wall_left,	QUAD});
+	add_item((t_item){v3( 0,-_h-s, 0),	v3(_w, 1, _d),	v3(0,0,0), 		material_wall_bot, 	QUAD});
+	add_item((t_item){v3(-_w-s, 0, 0),	v3(_h, 1, _d),	v3(0,0,-MYPI/2),material_wall_right,QUAD});
 }
 
 void	lights0(void)

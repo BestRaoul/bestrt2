@@ -164,18 +164,18 @@ color   checkeboard_return(double _u, double _v, const texture *self)
 		self->checker_0->value(_u,_v, self->checker_0);
 }
 
+//ADD repeat, mirror patterns
 color   image_return(double _u, double _v, const texture *self)
 {
     // If we have no texture data, then return solid cyan as a debugging aid.
     if (self->image_height <= 0) return v3(0,1,1);
 
     // Clamp input texture coordinates to [0,1] x [1,0]
-    interval oy = (interval){0, 1};
-    _u = clamp(oy, _u);
-    _v = 1.0 - clamp(oy, _v);  // Flip V to image coordinates
+    _u = clamp_(_u);
+    _v = 1.0 - clamp_(_v);  // Flip V to image coordinates
 
-    int x = _u * self->image_width;
-    int y = _v * self->image_height;
+    int x = _u * (self->image_width - 1);
+    int y = _v * (self->image_height - 1);
     color pixel = self->image[x + y * self->image_width];
 
     return pixel;

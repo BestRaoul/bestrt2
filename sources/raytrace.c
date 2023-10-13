@@ -245,7 +245,7 @@ color	trace(ray *r, int max_depth)
 	return light;
 }
 
-# define HALF 0
+# define HALF 1
 # define SPEEDUP 0
 void    render_pixel(int x, int y)
 {
@@ -357,11 +357,7 @@ void    raytrace(void)
 		{
 			item = &v.items[i];
 			transform t = (transform){item->pos, item->rot, item->scale};
-			// create_transform_matrix(&t, item->fwd);
 			set_transform_matrix(&t, item->fwd, item->bck);
-
-			print_mx4(item->fwd);
-			print_mx4(item->bck);
 		}
 	}
 

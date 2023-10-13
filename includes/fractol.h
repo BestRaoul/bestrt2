@@ -126,7 +126,7 @@
 #include <X11/extensions/XInput2.h>
 //--temp end
 
-#define v3(...) v3_base((vec3){__VA_ARGS__})
+#define v3(...) (vec3){__VA_ARGS__}
 #define c3(...) solid_color(v3(__VA_ARGS__))
 
 # define CENTER v3(v.w/2, v.h/2)
@@ -668,10 +668,10 @@ double	length_squared(vec3 a);
 vec3	line_intersection(vec3 A, vec3 B, vec3 C, vec3 D);
 vec3	project_onto_screen_limits(vec3 p, vec3 dir);
 //5
-void	mm_(m4x4 a, m4x4 b, m4x4 c);
-s_m4	mm(m4x4 a, m4x4 b);
-void	matrix_multiplication(m4x4 a, m4x4 b, m4x4 c);
-vec3	mult_point_matrix(vec3 in, m4x4 M);
+void	mm_(const m4x4 a, const m4x4 b, m4x4 c);
+s_m4	mm(const m4x4 a, const m4x4 b);
+void	matrix_multiplicationconst (m4x4 a, const m4x4 b, m4x4 c);
+vec3	mult_point_matrix(const vec3 in, const m4x4 M);
 //6
 vec3    get_ray_direction(int i, int j);
 vec3	ray_at(const ray *r, double t);

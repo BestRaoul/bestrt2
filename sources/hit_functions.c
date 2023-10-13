@@ -156,16 +156,15 @@ Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_it
     double lt = local_r.orig.y / -local_r.dir.y;
     if (lt < 0.0) return False;
 
-    double gt = t2global(lt, &local_r, r, self->fwd);
-    if (!contains(ray_t, gt)) return False;
-
     vec3 localIntPoint = ray_at(&local_r, lt);
-    vec3 intPoint = ray_at(r, gt);
     double alpha = localIntPoint.x;
     double beta = localIntPoint.z;
     alpha = .5 - alpha/2;
     beta  = .5 - beta/2;
-    
+
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt)) return False;
+
     if (!is_interior(alpha, beta))
         return False;
 
@@ -173,7 +172,7 @@ Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_it
     rec->v = beta;
 
     rec->t = gt;
-    rec->p = intPoint;
+    rec->p = ray_at(r, gt);
 
     set_face_normal(rec, r, rotate3(v3(0,1,0), self->rot));
 
@@ -195,11 +194,7 @@ Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t
     double lt = local_r.orig.y / -local_r.dir.y;
     if (lt < 0.0) return False;
 
-    double gt = t2global(lt, &local_r, r, self->fwd);
-    if (!contains(ray_t, gt)) return False;
-
     vec3 localIntPoint = ray_at(&local_r, lt);
-    vec3 intPoint = ray_at(r, gt);
     double alpha = localIntPoint.x;
     double beta = localIntPoint.z;
     alpha = .5 - alpha/2;
@@ -208,11 +203,14 @@ Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t
     if (!is_interior(alpha, beta))
         return False;
 
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt)) return False;
+
     rec->u = alpha;
     rec->v = beta;
 
     rec->t = gt;
-    rec->p = intPoint;
+    rec->p = ray_at(r, gt);
 
     set_face_normal(rec, r, rotate3(v3(0,1,0), self->rot));
 
@@ -223,37 +221,133 @@ Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t
 
 //--NOT IMPLEMENTED YET
 
+vec3    get_cube_normal(const int id, hit_record *rec)
+{
+    return v3(1 * (id==3) - 1 * (id==2),
+              1 * (id==5) - 1 * (id==4),
+              1 * (id==0) - 1 * (id==1));
+}
+
 Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
     ray local_r = apply_ray(r, self->bck);
     
-    //No hit if parallel
-    if (fabs(local_r.dir.y) < 1e-8) return False;
+    // Moved these here from the header file.
+	double t[6]; //local t's
+	double u[6];
+	double v[6];
+	
+	// Extract values of a.
+	double ax = local_r.orig.x;
+	double ay = local_r.orig.y;
+	double az = local_r.orig.z;
+	
+	double kx = local_r.dir.x;
+	double ky = local_r.dir.y;
+	double kz = local_r.dir.z;
+		
+	// Test for intersections with each plane (side of the box).
+	// Top and bottom.
+	if (!close_enough(kz))
+	{
+		t[0] = (az - 1.0) / -kz;
+		t[1] = (az + 1.0) / -kz;
+		u[0] = ax + kx * t[0];
+		v[0] = ay + ky * t[0];
+		u[1] = ax + kx * t[1];
+		v[1] = ay + ky * t[1];
+	}
+	else
+	{
+		t[0] = 100e6;
+		t[1] = 100e6;
+		u[0] = 0.0;
+		v[0] = 0.0;
+		u[1] = 0.0;
+		v[1] = 0.0;
+	}
+	
+	// Left and right.
+	if (!close_enough(kx))
+	{
+		t[2] = (ax + 1.0) / -kx;
+		t[3] = (ax - 1.0) / -kx;
+		u[2] = az + kz * t[2];
+		v[2] = ay + ky * t[2];
+		u[3] = az + kz * t[3];
+		v[3] = ay + ky * t[3];
+	}
+	else
+	{
+		t[2] = 100e6;
+		t[3] = 100e6;
+		u[2] = 0.0;
+		v[2] = 0.0;
+		u[3] = 0.0;
+		v[3] = 0.0;		
+	}
+	
+	// Front and back.
+	if (!close_enough(ky))
+	{
+		t[4] = (ay + 1.0) / -ky;
+		t[5] = (ay - 1.0) / -ky;
+		u[4] = ax + kx * t[4];
+		v[4] = az + kz * t[4];
+		u[5] = ax + kx * t[5];
+		v[5] = az + kz * t[5];
+	}
+	else
+	{
+		t[4] = 100e6;
+		t[5] = 100e6;
+		u[4] = 0.0;
+		v[4] = 0.0;
+		u[5] = 0.0;
+		v[5] = 0.0;		
+	}
 
-    // Return false if the hit point parameter t is outside the ray interval.
-    double lt = local_r.orig.y / -local_r.dir.y;
-    if (lt < 0.0) return False;
+    double finalT = 100e6;
+    int final_index = 0;
+    Bool valid_intersection = False;
+    for (int i=0; i<6; i++)
+    {
+        if (t[i] < finalT && t[i] > 0.0)
+        {
+            double alpha = u[i];
+            double beta = v[i];
+            alpha = .5 - alpha/2;
+            beta  = .5 - beta/2;
+            
+            if (is_interior(alpha, beta))
+            {
+                finalT = t[i];
+                final_index = i;
+                valid_intersection = True;
+            }
+        }
+    }
+    if (!valid_intersection)
+        return False;
 
-    double gt = t2global(lt, &local_r, r, self->fwd);
-    if (!contains(ray_t, gt)) return False;
-
-    vec3 localIntPoint = ray_at(&local_r, lt);
-    vec3 intPoint = ray_at(r, gt);
-    double alpha = localIntPoint.x;
-    double beta = localIntPoint.z;
+    double lt = t[final_index];
+    double alpha = u[final_index];
+    double beta  = v[final_index];
     alpha = .5 - alpha/2;
     beta  = .5 - beta/2;
-    
-    if (!is_interior(alpha, beta))
+
+    double gt = t2global(lt, &local_r, r, self->fwd);
+    if (!contains(ray_t, gt))
         return False;
 
     rec->u = alpha;
     rec->v = beta;
 
     rec->t = gt;
-    rec->p = intPoint;
+    rec->p = ray_at(r, gt);
 
-    set_face_normal(rec, r, rotate3(v3(0,1,0), self->rot));
+    vec3 outward_normal = get_cube_normal(final_index, rec);
+    set_face_normal(rec, r, outward_normal);
 
     rec->mat = self->mat;
 

@@ -142,11 +142,11 @@ void    default_cam(void)
 
 void	test(void)
 {
-	// showoff_5();
-	v.max_depth = 3;
+	showoff_5();
+	v.max_depth = 0;
 	v.max_samples = 1;
 	v.background_color = white_background;
-	// return;
+	return;
 	// v.render_mode = RAYTRACE_UVS;
 	default_cam();
     v.render_mode = RAYTRACE;
@@ -328,17 +328,27 @@ void	showoff_5(void)
 	// lit.emission_strength = 2.0;
 	// add_item((t_item){v3( 0, .99, 0),	v_3(.8),	v3(MYPI), lit, SS_QUAD});
 
+	double *ry1 = &(v.items[v.item_count-2].rot.y);
+	double *ry2 = &(v.items[v.item_count-1].rot.y);
+	add_motion(ry1, 0, MYPI*2, lerpd);
+	add_motion(ry2, 0, MYPI*2, lerpd);
+	v.animation_duration = 4;
+	v.animation_speed = 0.25;
+	v.animation_framerate = 24;
+	v.animation_loops = 1;
+	v.animation_render_mode = RAYTRACE;
+
 	v.light_count = 2;
 	v.lights = malloc(sizeof(t_light)*v.light_count);
 	v.lights[0] = (t_light){WHITE,
 						v3(.99,.99,.99),
 						v3(),
-						15.0,
+						5.0,
 						False};
 	v.lights[1] = (t_light){WHITE,
 						v3(-.99,-.99,-.99),
 						v3(),
-						15.0,
+						5.0,
 						False};
 }
 

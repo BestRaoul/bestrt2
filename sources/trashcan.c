@@ -145,7 +145,7 @@ vec3	world_to_screenpos(vec3 pos)
 
 void	print_pos(vec3 pos, char *msg)
 {
-	printf("%s (%f, %f, %f)\n", msg, pos.x, pos.y, pos.z);
+	printf("%s (%.4f, %.4f, %.4f)\n", msg, pos.x, pos.y, pos.z);
 }
 
 //you gotta guarantee pos is in bounds
@@ -241,6 +241,12 @@ Bool	near_zero(vec3 e)
 	double s = 1e-8;
 	return (fabs(e.x) < s) && (fabs(e.y) < s) && (fabs(e.z) < s);
 }
+
+inline Bool	close_enough(double __x)
+{
+	return fabs(__x) < 1e-8;
+}
+
 
 vec3	reflect(vec3 v, vec3 n)
 {

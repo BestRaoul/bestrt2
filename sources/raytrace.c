@@ -245,7 +245,7 @@ color	trace(ray *r, int max_depth)
 	return light;
 }
 
-# define HALF 1
+# define HALF 0
 # define SPEEDUP 0
 void    render_pixel(int x, int y)
 {
@@ -324,8 +324,8 @@ void    raytrace(void)
 	//static ;
 	if (v._rerender)
 	{
-		printf("RERENDER ---\n");
-		printf("see : %d\n", (int)v.vfov);
+		// printf("RERENDER ---\n");
+		// printf("see : %d\n", (int)v.vfov);
 		print_pos(v.camera_pos, "from: ");
 		print_pos(v.camera_rot, "rot : ");
 		_split = 0;

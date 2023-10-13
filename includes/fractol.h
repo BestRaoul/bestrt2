@@ -720,6 +720,7 @@ vec3	rotate_ly(vec3 position, vec3 rotation);
 double	linear_to_gamma(double linear_component);
 
 Bool	near_zero(vec3 e);
+Bool	close_enough(double __x);
 vec3	reflect(vec3 v, vec3 n);
 vec3	reflect_safe(vec3 v, vec3 n, vec3 old_n);
 vec3	refract(vec3 uv, vec3 n, double etai_over_etat);

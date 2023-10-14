@@ -219,8 +219,6 @@ Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t
     return True;
 }
 
-//--NOT IMPLEMENTED YET
-
 vec3    get_cube_normal(const int id, hit_record *rec)
 {
     return v3(1 * (id==3) - 1 * (id==2),
@@ -518,22 +516,21 @@ Bool    hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const 
     return True;
 }
 
-//hit CONE
-Bool    hit_pyramid(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
+Bool    hit_cone(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
     ray local_r = apply_ray(r, self->bck);
     
-    // Extract values of a.
-	double ax = local_r.orig.x;
-	double ay = local_r.orig.y;
-	double az = local_r.orig.z;
-	
-	double kx = local_r.dir.x;
-	double ky = local_r.dir.y;
-	double kz = local_r.dir.z;
+    const double h_offset = 1.0;
+    const double r_factor = 2.0;
 
-    //offset so center is center of cone
-    ay -= 1.0;
+    // Extract values of a.
+	double ax = local_r.orig.x * r_factor;
+	double ay = local_r.orig.y - h_offset;
+	double az = local_r.orig.z * r_factor;
+	
+	double kx = local_r.dir.x * r_factor;
+	double ky = local_r.dir.y;
+	double kz = local_r.dir.z * r_factor;
 
 	double a = (kx * kx) + (kz * kz) - (ky * ky);
 	double b = 2.0 * (ax * kx + az * kz - ay * ky);
@@ -551,10 +548,10 @@ Bool    hit_pyramid(const ray *r, const interval ray_t, hit_record *rec, const t
 
         double oi0 = ay + ky * t[0];
         double oi1 = ay + ky * t[1];
-        
-        if (oi0 > 0.0 || oi0 < -1.0)
+
+        if (oi0 > 0.0 || oi0 < -1.0 * r_factor)
             t[0] = 100e6;
-        if (oi1 > 0.0|| oi1 < -1.0)
+        if (oi1 > 0.0|| oi1 < -1.0 * r_factor)
             t[1] = 100e6;
     }
     else
@@ -566,10 +563,10 @@ Bool    hit_pyramid(const ray *r, const interval ray_t, hit_record *rec, const t
     // Top and bottom CAPS
 	if (!close_enough(ky))
 	{
-		t[2] = (ay + 1.0) / -ky;
+		t[2] = (ay + 1.0 * r_factor) / -ky;
         double u = ax + kx * t[2];
 		double v = az + kz * t[2];
-        if (u*u + v*v > 1.0)
+        if (u*u + v*v > 1.0 * (r_factor * r_factor))
             t[2] = 100e6;
 	}
 	else
@@ -580,7 +577,7 @@ Bool    hit_pyramid(const ray *r, const interval ray_t, hit_record *rec, const t
     double finalT = 100e6;
     int final_index = 0;
     Bool valid_intersection = False;
-    for (int i=0; i<4; i++)
+    for (int i=0; i<3; i++)
     {
         if (t[i] < finalT && t[i] > 0.0)
         {
@@ -604,23 +601,24 @@ Bool    hit_pyramid(const ray *r, const interval ray_t, hit_record *rec, const t
     rec->t = gt;
     rec->p = ray_at(r, gt);
 
-
     vec3 outward_normal;
     if (final_index <= 1) //cone hit
     {
-        outward_normal = v3(local_p.x, 0, local_p.z);
-        outward_normal = rotate3(outward_normal, self->rot);
+        outward_normal.x = local_p.x;
+        outward_normal.z = local_p.z;
+		outward_normal.y = sqrtf((local_p.x*local_p.x) + (local_p.z*local_p.z)) / r_factor;
         rec->u = (atan2(local_p.z, local_p.x) + MYPI)/(2*MYPI);
         rec->v = local_p.y/2 + .5;
     }
     else //bot
     {
-        outward_normal = v3(0, 1 * (final_index==2) - 1 * (final_index==3),0);
-        outward_normal = rotate3(outward_normal, self->rot);
-        rec->u = .5;// - lu/2;
-        rec->v = .5;// - lv/2;
+        outward_normal = v3(0, -1, 0);
+        rec->u = .5 - local_p.x/2;
+        rec->v = .5 - local_p.z/2;
     }
-    set_face_normal(rec, r, outward_normal);
+    // outward_normal = rotate3(outward_normal, self->rot);
+    rec->normal = outward_normal;
+    //set_face_normal(rec, r, outward_normal);
 
     //UV
     
@@ -628,6 +626,10 @@ Bool    hit_pyramid(const ray *r, const interval ray_t, hit_record *rec, const t
 
     return True;
 }
+
+//--NOT IMPLEMENTED YET
+
+// -----------------------------------------------------------
 
 Bool    hit_line(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {

@@ -579,7 +579,7 @@ t_item	get_item_default();
 # define SPHERE		raster_sphere,	hit_sphere
 # define BOX		raster_box,		hit_box
 # define CYLINDER	raster_cylinder,hit_cylinder
-# define PYRAMID	raster_pyramid,	hit_pyramid
+# define CONE		raster_pyramid,	hit_cone
 # define LINE		raster_line,	hit_line
 # define PLANE		raster_plane,	hit_plane
 # define QUAD		raster_quad,	hit_quad
@@ -605,7 +605,7 @@ Bool	hit			(const ray *r, const interval ray_t, hit_record *rec);
 Bool	hit_sphere	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
 Bool	hit_box		(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
 Bool	hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-Bool	hit_pyramid	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
+Bool	hit_cone	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
 Bool	hit_line	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
 Bool    hit_plane	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
 Bool    hit_quad	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);

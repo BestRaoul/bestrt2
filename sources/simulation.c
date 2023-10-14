@@ -47,7 +47,6 @@ void	simulate_ray(ray *r, sim_hit *hits, int depth)
 
 void    simulate_rayzz()
 {
-    return;
 	int depth = v.max_depth+2;
 	static sim_hit hits[10];
 
@@ -62,7 +61,7 @@ void    simulate_rayzz()
         sim_hit *h = &(hits[i]);
         draw_projected_dot(h->p, h->c);
         // if (i+1<depth && hits[i+1].simd) draw_projected_line(h->p, hits[i+1].p, h->c);
-
+		draw_projected_line(h->p, v_add(h->p, v_scal(h->rec.normal, .4)), h->rec.normal);
 		if (v.light_count > 0)
 		{
 			t_light *l = &(v.lights[0]);

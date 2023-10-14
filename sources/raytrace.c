@@ -240,8 +240,8 @@ color	trace(ray *r, int max_depth)
 			*/
 		}
 	}
-	//light = hdr_tone(light);
-	//light = gamma_correct(light);
+	// light = hdr_tone(light);
+	// light = gamma_correct(light);
 	return light;
 }
 

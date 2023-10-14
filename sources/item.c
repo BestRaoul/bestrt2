@@ -41,7 +41,9 @@ t_item	get_item_default()
 						v3(0),
 						new_lambertian(c3(0,0,0)),
 						NULL,  //*raster
-						NULL}; //*hit
+						NULL,
+						{},
+						{}}; //*hit
 	if (v._1)
 	{
 		get.mat.base_color = c3(0, 1, 0);
@@ -55,7 +57,7 @@ t_item	get_item_default()
 	else if (v._3)
 	{
 		get.mat.base_color = c3(1, .8, .1);
-		get.raster = raster_pyramid, get.hit = hit_pyramid;
+		get.raster = raster_pyramid, get.hit = hit_cone;
 	}
 	else if (v._4)
 	{

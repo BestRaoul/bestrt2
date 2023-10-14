@@ -142,26 +142,19 @@ void    default_cam(void)
 
 void	test(void)
 {
-	// showoff_5();
-	v.max_depth = 0;
-	v.max_samples = 1;
-	// v.light_count = 1;
-	v.background_color = black_background;
-	// return;
-	// v.render_mode = RAYTRACE_UVS;
 	default_cam();
     v.render_mode = RAYTRACE;
 	v.lookat_toggle = 1;
 	v.lookat = v3(0,0,0);
-	v.camera_pos = v3(0,1,4.5);
+	v.camera_pos = v3(0,1.4,2.8);
 	v.vfov = 50;
 	v.ambient = 0;
 	v.background_color = shit_sky_background;
 	v.irradiance_map = NO_MAP;
 	v.max_samples = 1;
-	v.max_depth = 4;
+	v.max_depth = 0;
 	v.w =  500; v.h = 500;
-	v.upscale = 1;
+	v.upscale = 3;
 
     material material_ground = new_lambertian(checkerboard(.5, c3(.2,.3,.1), c3(.9, .9, .9)));
 
@@ -172,11 +165,21 @@ void	test(void)
 
     // add_item((t_item){v3( 0, -.5, 0),	v_3(1),	v3(0, MYPI/3), material_ground, PLANE});
 
-	vec3 rr = v3(0);
-    add_item((t_item){v3( 0, 0, 0),		v3(.5,.5,.5),	rr, material_center, PYRAMID});
+
     // add_item((t_item){v3( 0, 0, 0),		v3(1,.5,.5),	rr, material_center, BOX});
 	// add_item((t_item){v3(-1.5, 0, 0),	v3(.5,.5,1),	rr, material_left, SPHERE});
 	// add_item((t_item){v3( 1.5, 0, 0),	v3(.5,1,.5),	rr, material_right, SPHERE});
+
+	vec3 rr = v3(0);
+    add_item((t_item){v3( 0, 0, 0),		v3(1,2,1),	rr, material_center, CONE});
+
+	v.light_count = 1;
+	v.lights = malloc(sizeof(t_light)*v.light_count);
+	v.lights[0] = (t_light){v3(1, 1, 1),
+						v3(0,0,2), //pos
+						v3(), //dir
+						15.0,
+						False};
 }
 
 //1 : green plane, 3 balls (gold, blue, hollow glass)
@@ -1120,7 +1123,7 @@ void    shapes(void)
     
 	add_item((t_item){	v3(3, 3), v_3(1), 	v3(), new_lambertian(c3(.2, 0, 1)),		SPHERE});
 	add_item((t_item){	v3(3, 0), v_3(1), 	v3(), new_lambertian(c3(.2, 1, .4)),	CYLINDER});
-	add_item((t_item){	v3(-3, 3), v_3(1),	v3(), new_lambertian(c3(0, .6, .9)),	PYRAMID});
+	add_item((t_item){	v3(-3, 3), v_3(1),	v3(), new_lambertian(c3(0, .6, .9)),	CONE});
     add_item((t_item){	v3(-3, 0), v_3(1),	v3(), new_lambertian(c3(1, .35, .1)),	BOX});
 	add_item((t_item){	v3(-6, 0),v3(1.5,1,1), v3(), new_lambertian(c3(.6, .8, .2)),BOX});
 }

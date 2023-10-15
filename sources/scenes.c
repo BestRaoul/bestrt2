@@ -44,6 +44,8 @@ void	showoff_4();
 void	showoff_5();
 void	showoff_6();
 void	showoff_7();
+void	showoff_8();
+void	showoff_9();
 
 void    init_scene(void)
 {
@@ -53,7 +55,7 @@ void    init_scene(void)
 	v.motion_count = 0;
 	v.motions = NULL;
 
-    switch (109)
+    switch (100)
     {
         case 1 : balls(); break;
         case 2 : tweens(); break;
@@ -85,10 +87,12 @@ void    init_scene(void)
 		case 103: showoff_3(); break;
 		case 104: showoff_4(); break;
 		case 105: showoff_5(); break;
-		case 106: showoff_2(); break;
-		case 107: showoff_2(); break;
+		case 106: ; break;
+		case 107: ; break;
+		case 108: showoff_8(); break;
+		case 109: ; break;
 
-		case 109: test(); break;
+		case 100: test(); break;
     }
 }
 
@@ -97,7 +101,7 @@ void    default_cam(void)
 	v.w = 16 * (2*2*3*5);
 	v.h = 9 * (2*2*3*5);
 	v.upscale = 3;
-
+	
 	v.camera_pos = v3(0, 0, 3);
 	v.camera_rot = v3(0, MYPI, 0);
 	v.lookat_toggle = 0;
@@ -106,20 +110,17 @@ void    default_cam(void)
 	v.near_plane = 0.2;
 	v.far_plane = 1000;
 	v.vfov = 50;
-
-	v.orthographic_toggle = 0;
 	v.render_mode = RAYTRACE_STEPS;
+	v.orthographic_toggle = 0;
 
-	v.background_color = sky_background;
 	v.time_speed = 1;
 
+	//Sampling & depth
 	v.max_depth = 6;
-
-	v.uv_debug = from_bmp("uv_check.bmp");
-
 	v.max_samples = 10;
 	v.samples_per_step = 5;
 
+	//Animation rendering stats
 	v.animation_duration = 1.0;
 	v.animation_framerate = 24;
 	v.animation_speed = 1.0;
@@ -127,21 +128,24 @@ void    default_cam(void)
 	v.animation_loops = 0;
 	v.rendering_movie = False;
 
-	v.skyColorZenith = v3(0.3, 0.3, 0.9);
-	v.skyColorHorizon = WHITE;
-	v.groundColor = v3(0.3, 0.3, 0.3);
+	//Global Textures
+	v.use_background = True;
+	v.background = cc3(WHITE);
+	
+	v.use_IBL = False;
+	v.irradiance_map = NO_MAP;
+	v.blurry_irradiance_map = NO_MAP;
 
-	v.sunFocus = 10;
-	v.sunIntensity = 1.0;
-	v.sunDirection = v_norm(v3(1, 1, 1));
-
-	v.irradiance_map = BW_MAP(.03);
+	v.uv_debug = from_bmp("uv_check.bmp");
 }
 
 //SHOWOFF
 
 void	test(void)
 {
+	showoff_8();
+	return;
+	
 	default_cam();
     v.render_mode = RAYTRACE;
 	v.lookat_toggle = 1;
@@ -149,7 +153,7 @@ void	test(void)
 	v.camera_pos = v3(0,1.4,2.8);
 	v.vfov = 50;
 	v.ambient = 0;
-	v.background_color = shit_sky_background;
+	v.background = from_func(shit_sky_background);
 	v.irradiance_map = NO_MAP;
 	v.max_samples = 1;
 	v.max_depth = 0;
@@ -171,7 +175,7 @@ void	test(void)
 	// add_item((t_item){v3( 1.5, 0, 0),	v3(.5,1,.5),	rr, material_right, SPHERE});
 
 	vec3 rr = v3(0);
-    add_item((t_item){v3( 0, 0, 0),		v3(1,2,1),	rr, material_center, CONE});
+    add_item((t_item){v3( 0, 0, 0),		v3(1,1,1),	rr, material_center, CONE});
 
 	v.light_count = 1;
 	v.lights = malloc(sizeof(t_light)*v.light_count);
@@ -193,7 +197,7 @@ void	showoff_1(void)
 	v.camera_pos = v3(0.850230, 0.779302, 2.851645);
 	v.vfov = 50;
 	v.ambient = 0;
-	v.background_color = white_background;
+	v.background = cc3(WHITE);
 	v.irradiance_map = NO_MAP;
 	v.max_samples = 10;
 	v.max_depth = 3;
@@ -218,7 +222,7 @@ void	showoff_1(void)
 void	showoff_2(void)
 {
 	default_cam();
-	v.background_color = black_background;
+	v.background = cc3(BLACK);
 	v.irradiance_map = NO_MAP;
 	v.lookat = v3(0, 1, 0);
 	v.lookat_toggle = 1;
@@ -362,6 +366,33 @@ void	showoff_5(void)
 //7 : box with rough surface, sphere with rust, cylinder watery, ...
 
 //8 : shapes roitatin
+void	showoff_8(void)
+{
+	default_cam();
+	v.w = v.h = 500;
+	v.camera_pos = v3(0,3,8);
+	v.lookat_toggle = 1;
+	v.max_samples = 1;
+	v.background = cc3(vrgb(254, 250, 224));
+
+	double s = 1.5;
+
+	add_item((t_item){v3( s,-s),		v_3(1),	v3(), new_m_rgb(v3(96, 108, 56)), BOX});
+	add_item((t_item){v3( s, s),		v_3(1),	v3(), new_m_rgb(v3(40, 54, 24)), SPHERE});
+	add_item((t_item){v3(-s,-s),		v_3(1),	v3(), new_m_rgb(v3(221, 161, 94)), CYLINDER});
+	add_item((t_item){v3(-s, s),		v_3(1),	v3(), new_m_rgb(v3(188, 108, 37)), CONE});
+
+	for (int i=0; i<4; i++)
+	{
+		double *ry = &(v.items[i].rot.y);
+		add_motion(ry, 0, 2*MYPI, lerpd);
+	}
+	v.animation_duration = 2;
+	v.animation_speed = 0.5;
+	v.animation_framerate = 30;
+	v.animation_render_mode = RAYTRACE_UVS;
+	v.animation_loops = 1;
+}
 
 //9 : materials (rows of balls)
 
@@ -480,7 +511,7 @@ void	lights0(void)
 	v.camera_rot = v3(15.523259, 97.909557, 0.000000);
 	v.camera_rot = v_scal(v.camera_rot, DEG2RAD);
 	v.vfov = 30;
-	v.background_color = black_background;
+	v.background = cc3(BLACK);
 
     material material_ground = new_lambertian(c3(0.2, 0.3, 1.0));
     material material_center = new_lambertian(c3(1.0,   0, 1.0));
@@ -498,7 +529,7 @@ void	lights(void)
 	default_cam();
 	v.camera_pos = v3(11.099445, 1.100155, 4.864002);
 	v.camera_rot = v_scal(v3(0.000000, 135.000000, 0.000000), DEG2RAD);
-	v.background_color = shit_sky_background;
+	v.background = from_func(shit_sky_background);
 
 	material	b0 = new_lambertian(c3(.4, .1, .8));
 	material	b1 = new_lambertian(c3(.1, .1, .1));
@@ -526,7 +557,7 @@ void	lights2(void)
 	v.camera_pos = v3(-1.518677, 1.338787, 2.834727);
 	v.lookat_toggle = 1;
 	v.lookat = v3(0, 1, 0);
-	v.background_color = black_background;
+	v.background = cc3(BLACK);
 
     material material_ground = new_lambertian(c3(.7,.8,.9));
     add_item((t_item){v3(0), v_3(100),	v3(), material_ground, PLANE});
@@ -560,7 +591,7 @@ void    cornell(vec3 dimensions)
 {
     default_cam();
 	v.camera_pos = v3(0, 0, MYPI);
-	v.background_color = black_background;
+	v.background = cc3(BLACK);
 	v.irradiance_map = NO_MAP;
 	v.lookat = v3(0, 0, 0);
 	v.lookat_toggle = 1;
@@ -667,7 +698,7 @@ void	first_animation(void)
 void    colored_lights(void)
 {
     default_cam();
-	v.background_color = black_background;
+	v.background = cc3(BLACK);
 	v.lookat = v3(0, 1, 0);
 	v.lookat_toggle = 1;
 	v.camera_pos = v3(4.191477, 5.022816, 4.439668);
@@ -760,7 +791,7 @@ void	mirrors(void)
 	default_cam();
     v.render_mode = RAYTRACE_STEPS;
 	v.camera_pos = v3(-1.211402, 0.165707, 2.180947);
-	v.background_color = black_background;
+	v.background = cc3(BLACK);
 	v.lookat_toggle = 1;
 	v.lookat = v3(0, 0, 0);
 	v.upscale = 2;
@@ -870,7 +901,7 @@ void	earth(void)
 	v.h = 500;
 	v.upscale = 1;
 	v.lookat_toggle = 1;
-	v.background_color = white_background;
+	v.background = cc3(WHITE);
 	v.irradiance_map = WHITE_MAP;//from_bmp("emptyroom1k.bmp");
 	v.max_depth = 0;
 
@@ -913,7 +944,7 @@ void	bumpy(void)
 	v.upscale = 1;
 	v.w = 300;
 	v.h = 300;
-	v.background_color = black_background;
+	v.background = cc3(BLACK);
 	v.max_samples = 1;
 
 	// material light = new_light(c3(0,1,1), 2.0);
@@ -966,11 +997,7 @@ void	normal_reflection(void)
 	v.w = 600;
 	v.h = 400;
 	v.upscale = 1;
-	v.background_color = shit_sky_background;
-	v.sunIntensity = .2;
-	v.sunFocus = 30;
-	v.sunDirection = v3(.5, .5, -1);
-	v.skyColorZenith = v3(.4, .9, .9);
+	v.background = from_func(shit_sky_background);
 
 	material ground = new_lambertian(checkerboard(.5,
 		c3(.9, .5, .1),//checkerboard(1, c3(.1,.1,.1), c3(.9, .9, .9)),
@@ -1020,7 +1047,7 @@ void	normal_reflection(void)
 void	pbr_balls(void)
 {
 	default_cam();
-	v.background_color = black_background;
+	v.background = cc3(BLACK);
 	v.camera_pos = v3(0, 0, 600);
 	v.vfov = 1;
 	v.lookat_toggle = 1;

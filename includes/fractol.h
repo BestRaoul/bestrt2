@@ -127,7 +127,9 @@
 //--temp end
 
 #define v3(...) (vec3){__VA_ARGS__}
-#define c3(...) solid_color(v3(__VA_ARGS__))
+#define vrgb(r,g,b) (color){r/256.0, g/256.0, b/256.0}
+#define c3(...) solid_color((color){__VA_ARGS__})
+#define cc3(x)	solid_color(x)
 
 # define CENTER v3(v.w/2, v.h/2)
 # define CORNER v3(v.w, v.h)
@@ -190,6 +192,8 @@ typedef struct s_texture {
 	int		image_width;
 	int		image_height;
 	color	*image;
+	//func
+	color	(*uv_func)(vec3);
 } texture;
 
 typedef struct s_material {
@@ -427,7 +431,6 @@ typedef struct s_vars {
 	vec3		pixel_delta_u;
 	vec3		pixel_delta_v;
 	vec3		camera_center;
-	color		(*background_color)(vec3 uvw);
 
 	double		near_plane;
 	double		far_plane;
@@ -467,17 +470,12 @@ typedef struct s_vars {
 
 	Bool		cam_flipp;
 
+	Bool		use_background;
+	Bool		use_IBL;
+	texture		background;
 	texture		uv_debug;
 	texture		irradiance_map;
 	texture		blurry_irradiance_map;
-
-	color		skyColorZenith;
-	color		skyColorHorizon;
-	color		groundColor;
-
-	double		sunFocus;
-	double		sunIntensity;
-	vec3		sunDirection;
 
 	double		ambient;
 
@@ -527,7 +525,8 @@ color	rgb2color(int rgb);
 #define BW_MAP(w)		c3(w,w,w)
 #define NO_MAP			BW_MAP(0.0)
 #define FULL_MAP		BW_MAP(1.0)
-#define WHITE_MAP		BW_MAP(1.0)
+#define WHITE_MAP		cc3(WHITE)
+#define BLACK_MAP		cc3(BLACK)
 
 //int		new_trgb(int t, int r, int g, int b);
 //int		get_r(int trgb);
@@ -694,7 +693,6 @@ vec3	random_on_hemisphere(vec3 normal);
 //.
 //trashcan.c
 void	update_delta_time(void);
-void	move_player(void);
 vec3	plane_alligned_add(vec3 base, vec3 add);
 int		get_elapsed(struct timeval event);
 vec3	*get_npoints(int n, double r_offset);
@@ -743,6 +741,8 @@ double	clamp(interval _t, double x);
 double	clamp_(double x);
 
 // ------Materials
+material	new_m(vec3 color);
+material	new_m_rgb(vec3 rgbs);
 material	new_lambertian	(texture base_color);
 material	new_metal		(texture base_color, double fuzz);
 material	new_dielectric	(texture base_color, double refraction);
@@ -759,10 +759,12 @@ texture		*t_deep_copy(texture *t);
 texture		solid_color(color c);
 texture		checkerboard(double scale, texture even, texture odd);
 texture		from_bmp(const char *filename);
+texture		from_func(color (*uv_func)(vec3));
 color  		evaluate(texture *t, double u, double v);
 double   	evaluate_bw(texture *t, double u, double v);
 color   	evaluate_spread(texture *t, double _u, double _v, double _spread);
 color		getGaussianBlur(int x, int y, const texture *self);
+
 // ------Tweens
 void	add_motion(double *value, double start_value, double end_value, double (*tween)(double, double , double));
 double	lerpd(double a, double b, double t);

@@ -63,7 +63,7 @@ void   set_IBL(shader_end *se, hit_record *rec, ray *ray_in,
     color spec_tint = lerp(rec->mat.specular_tint, WHITE, v_len(albedo)>0?v_norm(albedo):WHITE);
     spec_tint = lerp(F.x, spec_tint, WHITE);
     se->specular_color = v_add(v_mult(F, spec_tint), v_scal(albedo, metalic));
-    if (v.background_color != NULL) return;
+    if (!v.use_IBL) return;
 
     vec3 L = reflect_safe(ray_in->dir, v_add(rec->normal, v_scal(random_unit_vector(), roughness)), rec->old_normal);
     t_light IBL; IBL.is_dir = 1; IBL.dir = v_scal(L, -1);

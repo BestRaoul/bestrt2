@@ -23,8 +23,6 @@ void    set_face_normal(hit_record *rec, const ray *r, const vec3 outward_normal
 
 void    set_sphere_uv(hit_record *rec, const vec3 p, const vec3 sphere_rot)
 {
-    //p = rotate3(p, sphere_rot);
-
     double theta = acos(-p.y);
     double phi = atan2(-p.z, p.x) + MYPI;
 
@@ -32,9 +30,6 @@ void    set_sphere_uv(hit_record *rec, const vec3 p, const vec3 sphere_rot)
     rec->v = theta / MYPI;
 
     rec->u = 1 - rec->u;
-
-    //temporary fix to texture not rotating properly
-    rec->v += ((int)(sphere_rot.x * RAD2DEG) % 360) /360.0;
 }
 
 //If you find a better quicker way to go from local_t to global
@@ -81,7 +76,12 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
     rec->t = gt;
     rec->p = ray_at(r, gt);
     set_face_normal(rec, &local_r, ray_at(&local_r, lt));
-    set_sphere_uv(rec, rec->normal, self->rot);
+    //set_sphere_uv(rec, rec->normal, self->rot);
+    
+    vec3 local_p = ray_at(&local_r, lt);
+    rec->u = (atan2(local_p.z, local_p.x) + MYPI)/(2*MYPI);
+    rec->v = local_p.y/2 + .5;
+
     rec->mat = self->mat;
     
     return True;
@@ -399,7 +399,6 @@ Bool    hit_box_old(const ray *r, const interval ray_t, hit_record *rec, const t
     return got_hit;
 }
 
-//FIX rotated cylinder
 Bool    hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
     ray local_r = apply_ray(r, self->bck);

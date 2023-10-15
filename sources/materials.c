@@ -99,6 +99,17 @@ Bool	PBR_scatter(const ray *ray_in, hit_record *rec, ray *scattered, Bool *was_s
     (void) ray_in;
 }
 
+material new_m(vec3 color)
+{
+	return new_lambertian(solid_color(color));
+}
+
+material new_m_rgb(vec3 rgbs)
+{
+	return new_lambertian(solid_color(v_scal(rgbs, 1.0 / 256.0)));
+}
+
+
 material new_lambertian(texture t)
 {
 	material m = default_material();

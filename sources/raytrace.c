@@ -222,22 +222,14 @@ color	trace(ray *r, int max_depth)
 		{
 			if (v.render_mode != RAYTRACE_MAT_DEBUG)
 			{
-				if (bounce==0 && v.background_color == NULL)return paint_env(r->dir);
+				if (bounce==0 && !v.use_background)return paint_env(r->dir);
 
 				vec3 uv = v_scal(v_add(r->dir, v_3(1)), 0.5);
-				vec3 bg_light = v_mult(v.background_color(uv), contribution);
+				vec3 bg_light = v_mult(evaluate(&v.background, uv.x, uv.y), contribution);
 				light = v_add(light, bg_light);
 				break;
 			}		
 			else return v.mat_debugmode==COMBINED?paint_env(r->dir):BLACK;
-			/*
-			if (v.render_mode == RAYTRACE_STEPS) break;
-			break;
-	
-			vec3 bg_light = v_mult(paint_env(r->dir), contribution);//v.background_color(uv), contribution);
-			light = v_add(light, bg_light); 	
-			break;
-			*/
 		}
 	}
 	// light = hdr_tone(light);
@@ -332,9 +324,7 @@ void    raytrace(void)
 		_x = 0; _y = 0;
 		v._rerender = 0;
 		clear_img(v.img);
-		if (v.render_mode == RAYTRACE
-		 || v.render_mode == RAYTRACE_UVS
-		 || v.render_mode == RAYTRACE_DIST)
+		if (!v.rendering_movie)
 		{
 			reset_heatmap();
 			raster_items();

@@ -15,6 +15,9 @@
 color   solid_color_return(double u, double v, const texture *self);
 color   checkeboard_return(double u, double v, const texture *self);
 color   image_return(double u, double v, const texture *self);
+color   func_return(double _u, double _v, const texture *self);
+
+
 
 color getGaussianBlur(int x, int y, const texture *self) {
     float kernel[5][5] = {
@@ -60,7 +63,6 @@ color   evaluate_spread(texture *t, double _u, double _v, double _spread)
     return v_scal(lo, 1.0 / (s*s));
 }
 
-
 color   evaluate(texture *t, double _u, double _v)
 {
     return t->value(_u, _v, t);
@@ -71,6 +73,8 @@ double   evaluate_bw(texture *t, double _u, double _v)
     color get = t->value(_u, _v, t);
     return (get.x + get.y + get.z) / 3.0;
 }
+
+// --HELPRES
 
 texture *t_shallow_copy(texture *t)
 {
@@ -87,6 +91,8 @@ texture *t_deep_copy(texture *t)
     memcpy(copy_t->image, t->image, sizeof(color)*t->image_height*t->image_width);
     return copy_t;
 }
+
+// -- TEXTURES
 
 texture solid_color(color c)
 {
@@ -111,6 +117,7 @@ texture checkerboard(double scale, texture even, texture odd)
 texture from_bmp(const char *filename)
 {
     texture t = (texture){};
+    t.color_value = ERROR_CYAN;
 
     // READ BMP HERE
     bmp_read r = (bmp_read){0, 0, 0};
@@ -133,6 +140,16 @@ texture from_bmp(const char *filename)
     t.image_height = r.height;
     t.image = image;
     t.value = image_return;
+
+    return t;
+}
+
+texture from_func(color (*uv_func)(vec3))
+{
+    texture t = (texture){};
+    t.color_value = ERROR_CYAN;
+    t.value = func_return;
+    t.uv_func = uv_func;
 
     return t;
 }
@@ -179,4 +196,9 @@ color   image_return(double _u, double _v, const texture *self)
     color pixel = self->image[x + y * self->image_width];
 
     return pixel;
+}
+
+color   func_return(double _u, double _v, const texture *self)
+{
+    return self->uv_func(v3(_u, _v));
 }

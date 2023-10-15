@@ -40,14 +40,14 @@ fix ambient bounces
 
 
 ----------- NOW ---------------
-0. cylinder + 2nd degree object
 2. proper 8-bit read
 3. showoff scenes 6-7-8-9
 4. object selection
-97. (check sphere UV rotation)
+97. (check UV rotation, normal rotation)
 96. light flicker spinning quad + acne on tilted box
 -----------AT 42---------------
-0. normal map are fugged
+0. normal map are fugged ??
+0. normal dont respond to scaling
 1. parsing
 2. no crash
 3. ptrs ALLL

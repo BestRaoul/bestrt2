@@ -48,7 +48,7 @@ void	init_ray(double x, double y, ray *r)
 color	paint_dist(Bool did_hit, double d)
 {
 	if (d < 0 || !did_hit)
-		d = v.far_plane;
+		d = v.far;
 	
 	//Linear fog
 	//double f = (MAX_DIST - d) / (MAX_DIST);

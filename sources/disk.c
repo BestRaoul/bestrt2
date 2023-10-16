@@ -214,7 +214,7 @@ int readBMP(const char* filename, bmp_read *r) {
     fread(&reserved1, sizeof(uint16_t), 1, file);
     fread(&reserved2, sizeof(uint16_t), 1, file);
     fread(&dataOffset, sizeof(uint32_t), 1, file);
-    fread(&headerSize, sizeof(uint32_t), 1, file);
+    fread(&headerSize, sizeof(uint32_t), 1, file); // does not have to be here, pixels could already be here
 
     // Check if the file is actually a BMP file
     if (signature != 0x4D42) {
@@ -281,6 +281,26 @@ int readBMP(const char* filename, bmp_read *r) {
         fread(&planes, sizeof(uint16_t), 1, file);
         fread(&bitsPerPixel, sizeof(uint16_t), 1, file);
 
+        // compression type (0=none, 1=RLE-8, 2=RLE-4)
+        // size of image data in bytes (including padding)
+        // horizontal resolution in pixels per meter (unreliable)
+        // vertical resolution in pixels per meter (unreliable)
+        // number of colors in image, or zero
+        // number of important colors, or zero
+        uint32_t compression_type, size_of_img_data, h_resolution, v_resolution, num_colors, num_important_colors;
+        fread(&compression_type, sizeof(uint32_t), 1, file);
+        fread(&size_of_img_data, sizeof(uint32_t), 1, file);
+        fread(&h_resolution, sizeof(uint32_t), 1, file);
+        fread(&v_resolution, sizeof(uint32_t), 1, file);
+        fread(&num_colors, sizeof(uint32_t), 1, file);
+        fread(&num_important_colors, sizeof(uint32_t), 1, file);
+
+        printf("compression type %d\n", compression_type);
+        printf("size %d\n", size_of_img_data);
+        printf("res %d x %d\n", h_resolution, v_resolution);
+
+        printf("N colors: %d / %d\n", num_colors, num_important_colors);
+
         bytes_till_pixels -= 12;
     }
     else
@@ -288,11 +308,29 @@ int readBMP(const char* filename, bmp_read *r) {
         fprintf(stderr, "Error: %u wrong HEADER size\n", headerSize);
         return 0;
     }
+    
+    int palette[256];
+    if (bitsPerPixel == 8)
+    {
+        for (int i=0; i<256; i++)
+        {
+            uint8_t r, g, b, RESERVED;
+            fread(&r, 1, 1, file);
+            fread(&g, 1, 1, file);
+            fread(&b, 1, 1, file);
+            fread(&RESERVED, 1, 1, file);
 
+            palette[i] = new_rgb(r, g, b);
+
+            bytes_till_pixels -= 4;
+        }
+    }
+    printf("bytes left: %d\n", bytes_till_pixels);
+    
     //Read till pixel data start
-    char _c;
+    char _;
     while (bytes_till_pixels-- > 0)
-        fread(&_c, 1, 1, file);
+        fread(&_, 1, 1, file);
 
     // Check if the BMP format is supported (usually 24 bits per pixel)
     if (bitsPerPixel == 1 || bitsPerPixel == 4)
@@ -304,7 +342,10 @@ int readBMP(const char* filename, bmp_read *r) {
     else if (bitsPerPixel == 8 || bitsPerPixel == 24)
     { 
         if (bitsPerPixel == 8)
+        {
             NOT_IMPLEMENTED("add 8-bit bmp read from palette");
+            return False;
+        }
     }
     else {
         fprintf(stderr, "Error: Unsupported BMP format (bits per pixel %u != 24)\n", bitsPerPixel);
@@ -321,6 +362,7 @@ int readBMP(const char* filename, bmp_read *r) {
         (r->pixels)[i] = (int*)malloc(sizeof(int) * r->widht);// * 3); // 3 bytes per pixel
     }
 
+    int oii = 0;
     // Read pixel data
     for (int i = r->height - 1; i >= 0; i--) {
         for (int j = 0; j < r->widht; j++) {
@@ -337,21 +379,18 @@ int readBMP(const char* filename, bmp_read *r) {
             else if (bitsPerPixel == 8)
             {
                 uint8_t bw;
-
                 fread(&bw, 1, 1, file);
-                
-                (r->pixels)[i][j] = new_rgb(bw, bw, bw);
+                // sleep(1);
+                (r->pixels)[i][j] = palette[bw];
             }
             else
                 NOT_IMPLEMENTED("how did you even get here");
-            //(r->pixels)[i][j * 3] = (int)red;
-            //(r->pixels)[i][j * 3 + 1] = (int)green;
-            //(r->pixels)[i][j * 3 + 2] = (int)blue;
         }
         // Skip any padding bytes
         fseek(file, (4 - (r->widht * 3) % 4) % 4, SEEK_CUR);
     }
 
     fclose(file);
+
     return 1;
 }

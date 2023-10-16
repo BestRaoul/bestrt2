@@ -156,6 +156,16 @@ texture from_func(color (*uv_func)(vec3))
 
 // -- RETURNS
 
+void    repeat(double *_u, double *_v)
+{
+    *_u-=(int)*_u/1;
+    *_v-=(int)*_v/1;
+    if (*_u<0)
+        *_u = 1 - fabs(*_u);
+    if (*_v<0)
+        *_v = 1 - fabs(*_v);
+}
+
 color   solid_color_return(double _u, double _v, const texture *self)
 {
     return self->color_value;
@@ -163,8 +173,8 @@ color   solid_color_return(double _u, double _v, const texture *self)
 
 color   checkeboard_return(double _u, double _v, const texture *self)
 {
-	if (_u < 0) _u = -_u;
-	if (_v < 0) _v = -_v;
+	repeat(&_u, &_v);
+
 	//printf("B - u: %f and v: %f\n", u, v);
 	_u /= self->inv_scale;
 	//0-1 / .1

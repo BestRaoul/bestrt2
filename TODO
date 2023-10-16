@@ -14,40 +14,28 @@ item:
 	?color picker
 	shift + XZY
 
-
-
-1: do fake 3d
- FIX draw_line Z linear shift but it aint always that
-2. do actuall render bs
- add bonuses (lights, specular, ..)
-3. do fake generation
-	shift + _p
-	save to disk
-	use motions (frames, time_duration) -> ffmpeg -> ntfy
+3. -> ntfy
 4. do threading
 
 ----- Things i dont want to do, but have to be done
 
-//make add, move the pointers so that add_item does not break previous add_motions
-//remove mallocs for static size arrays
-//rotate default cylinder
 //linux -> CAMERA MOVEMENT - mouse
 //cam add CAMERA FLIPP
 
-NdotV inside scatter specular reflection???
 
 fix ambient bounces
 
-
 ----------- NOW ---------------
-2. proper 8-bit read
-3. showoff scenes 6-7-8-9
+3. showoff scenes 6-7-9
+	//1 needs focal length
+	//2-5 LAMP distance is not cummulative
+	//3-4 needs speed
+	//...
 4. object selection
-97. (check UV rotation, normal rotation)
+97. (check normal rotation, fix normal scaling)
 96. light flicker spinning quad + acne on tilted box
 -----------AT 42---------------
 0. normal map are fugged ??
-0. normal dont respond to scaling
 1. parsing
 2. no crash
 3. ptrs ALLL
@@ -60,10 +48,12 @@ fix ambient bounces
 6. ao
 -----------NEVER---------------
 IGNORED - 2. directional light/IBL (roughness)
+IGNORED - '. smoothshadows on lamps
 IGNORED - 3. window resizing
 IGNORED - 0. ZOOM
 IGNORED - 7. proper hdri map to cube idk
 IGNORED - ?. specular TINT
+IGNORED - ?? proper 8-bit read
 
 //TODO
 2. focus blur
@@ -77,7 +67,6 @@ IGNORED - ?. specular TINT
 	//loop, at exit, ...
 5. tris
 	//read from obj
-11. instance translation with matrix
 22. MIS
 33. shaders 
 44. bidiractional path tracing

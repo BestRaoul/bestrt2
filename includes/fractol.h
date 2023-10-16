@@ -432,9 +432,6 @@ typedef struct s_vars {
 	vec3		pixel_delta_v;
 	vec3		camera_center;
 
-	double		near_plane;
-	double		far_plane;
-
 	t_item		*items;
 	int			item_count;
 

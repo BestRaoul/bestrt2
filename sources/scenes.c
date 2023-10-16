@@ -107,8 +107,8 @@ void    default_cam(void)
 	v.lookat_toggle = 0;
 	v.lookat = v3(0, 0, 0);
 	v.vup = v3(0,1,0);
-	v.near_plane = 0.2;
-	v.far_plane = 1000;
+	v.near = 0.2;
+	v.far = 1000;
 	v.vfov = 50;
 	v.render_mode = RAYTRACE_STEPS;
 	v.orthographic_toggle = 0;
@@ -143,9 +143,8 @@ void    default_cam(void)
 
 void	test(void)
 {
-	showoff_8();
+	showoff_4();
 	return;
-	
 	default_cam();
     v.render_mode = RAYTRACE;
 	v.lookat_toggle = 1;
@@ -160,30 +159,30 @@ void	test(void)
 	v.w =  500; v.h = 500;
 	v.upscale = 3;
 
+/*
     material material_ground = new_lambertian(checkerboard(.5, c3(.2,.3,.1), c3(.9, .9, .9)));
-
     material material_center = new_lambertian(c3(0.1, 0.2, 0.4));
     material material_left	 = new_dielectric(c3(1,1,1), 1.5);
-	// material_left.transmission = 1.0;
+	material_left.transmission = 1.0;
     material material_right  = new_metal(c3(0.8, 0.6, 0.2), 0.02);
 
-    // add_item((t_item){v3( 0, -.5, 0),	v_3(1),	v3(0, MYPI/3), material_ground, PLANE});
+    add_item((t_item){v3( 0, -.5, 0),	v_3(1),	v3(0, MYPI/3), material_ground, PLANE});
+    add_item((t_item){v3( 0, 0, 0),		v3(1,.5,.5),	rr, material_center, BOX});
+	add_item((t_item){v3(-1.5, 0, 0),	v3(.5,.5,1),	rr, material_left, SPHERE});
+	add_item((t_item){v3( 1.5, 0, 0),	v3(.5,1,.5),	rr, material_right, SPHERE});
+*/
 
+	texture bit8_test = from_bmp("earthspec1k.bmp");
+    add_item((t_item){v3( 0, 0, 0),		v3(1,1,1),	v3(MYPI/2), new_lambertian(bit8_test), QUAD});
 
-    // add_item((t_item){v3( 0, 0, 0),		v3(1,.5,.5),	rr, material_center, BOX});
-	// add_item((t_item){v3(-1.5, 0, 0),	v3(.5,.5,1),	rr, material_left, SPHERE});
-	// add_item((t_item){v3( 1.5, 0, 0),	v3(.5,1,.5),	rr, material_right, SPHERE});
-
-	vec3 rr = v3(0);
-    add_item((t_item){v3( 0, 0, 0),		v3(1,1,1),	rr, material_center, CONE});
 
 	v.light_count = 1;
 	v.lights = malloc(sizeof(t_light)*v.light_count);
 	v.lights[0] = (t_light){v3(1, 1, 1),
 						v3(0,0,2), //pos
-						v3(), //dir
-						15.0,
-						False};
+						v_norm(v3(-1,-1,-1)), //dir
+						3.0,
+						True};
 }
 
 //1 : green plane, 3 balls (gold, blue, hollow glass)
@@ -217,7 +216,7 @@ void	showoff_1(void)
 	add_item((t_item){v3( 1, 0, 0),		v_3(0.5),	v3(), material_right, SPHERE});
 }
 
-//2 : ball 3 point lights, checkplane
+//!2 : ball 3 point lights, checkplane
 //good, 1 noise
 void	showoff_2(void)
 {
@@ -228,7 +227,7 @@ void	showoff_2(void)
 	v.lookat_toggle = 1;
 	v.camera_pos = v3(0, 1.0, 3.5);
 	v.upscale = 3;
-	v.samples_per_step = 3;
+	v.samples_per_step = 1;
 	
 	material check = new_lambertian(checkerboard(.5,
 		c3(.1, .1, .1),
@@ -312,52 +311,36 @@ void	showoff_4(void)
 	add_item((t_item){v3(-15.9/9.0,  0, 0),	v_3(.4),	v3(0, 0, -MYPI/2), 	light,	SS_QUAD});
 }
 
-//5 : cornell, glass cylinder, mirror box
+//!5 : cornell, glass cylinder, mirror box
+//no lamp -> converges slow but steady
+//w	 lamp -> ?dik yet
 void	showoff_5(void)
 {
 	cornell(v3(1,1,1));
-	v.w = 900; v.h = 900;
+	v.w = v.h = 900;
 	v.upscale = 3;
-	v.max_depth = 0;
-	v.samples_per_step = 1;
-	v.max_samples = 1;
-	v.render_mode = RAYTRACE;
+	v.max_depth = 6;
+	v.max_samples = 10;
+	v.samples_per_step = 2;
+	v.render_mode = RAYTRACE_STEPS;
 
-	material cylinder = new_lambertian(c3(1,1,0));
-	cylinder.transmission = 0.8;
-	cylinder.ior = 1.45;
+	material cylinder = new_lambertian(WHITE_MAP);
+	cylinder.transmission = 0.8; cylinder.ior = 1.45;
 	add_item((t_item){v3(.5, -.3,-.4),	v3(.4,.7,.4),	v3(), cylinder, CYLINDER});
 	
 	material box = new_lambertian(WHITE_MAP);
-	box.metalic = NO_MAP;
-	add_item((t_item){v3(-.8, -.6,.6),		v_3(.3),	v3(MYPI/2), box, BOX});
+	box.metalic = FULL_MAP;
+	add_item((t_item){v3(-.5, -.7,.6),		v_3(.3),	v3(0,-MYPI/10), box, BOX});
 	
-	// material lit = new_lambertian(NO_MAP);
-	// lit.emission = WHITE_MAP;
-	// lit.emission_strength = 2.0;
+	// material lit = new_light(WHITE_MAP, 2.0);
 	// add_item((t_item){v3( 0, .99, 0),	v_3(.8),	v3(MYPI), lit, SS_QUAD});
 
-	double *ry1 = &(v.items[v.item_count-2].rot.y);
-	double *ry2 = &(v.items[v.item_count-1].rot.y);
-	add_motion(ry1, 0, MYPI*2, lerpd);
-	add_motion(ry2, 0, MYPI*2, lerpd);
-	v.animation_duration = 2;
-	v.animation_speed = 0.5;
-	v.animation_framerate = 24;
-	v.animation_loops = 1;
-	v.animation_render_mode = RAYTRACE_MAT_DEBUG;
-
-	v.light_count = 2;
+	v.light_count = 1;
 	v.lights = malloc(sizeof(t_light)*v.light_count);
 	v.lights[0] = (t_light){WHITE,
-						v3(.99,.99,.99),
+						v3(.9,.9,.9),
 						v3(),
-						5.0,
-						False};
-	v.lights[1] = (t_light){WHITE,
-						v3(-.99,-.99,-.99),
-						v3(),
-						5.0,
+						1.0,
 						False};
 }
 
@@ -365,7 +348,8 @@ void	showoff_5(void)
 
 //7 : box with rough surface, sphere with rust, cylinder watery, ...
 
-//8 : shapes roitatin
+//!8 : shapes roitatin
+//clean and small noise
 void	showoff_8(void)
 {
 	default_cam();
@@ -373,6 +357,7 @@ void	showoff_8(void)
 	v.camera_pos = v3(0,3,8);
 	v.lookat_toggle = 1;
 	v.max_samples = 1;
+	v.samples_per_step = 2;
 	v.background = cc3(vrgb(254, 250, 224));
 
 	double s = 1.5;
@@ -384,8 +369,9 @@ void	showoff_8(void)
 
 	for (int i=0; i<4; i++)
 	{
-		double *ry = &(v.items[i].rot.y);
-		add_motion(ry, 0, 2*MYPI, lerpd);
+		add_motion(&(v.items[i].rot.x), 0, 2*MYPI, lerpd);
+		add_motion(&(v.items[i].rot.y), 0, 2*MYPI, lerpd);
+		add_motion(&(v.items[i].rot.z), 0, 2*MYPI, lerpd);
 	}
 	v.animation_duration = 2;
 	v.animation_speed = 0.5;

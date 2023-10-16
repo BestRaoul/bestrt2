@@ -87,18 +87,6 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
     return True;
 }
 
-void    set_plane_uv(double alpha, double beta, hit_record *rec)
-{
-    alpha-=(int)alpha/1;
-    beta-=(int)beta/1;
-    if (alpha<0)
-        alpha = 1 - fabs(alpha);
-    if (beta<0)
-        beta = 1 - fabs(beta);
-    rec->u = 1 - alpha;
-    rec->v = beta;
-}
-
 Bool    hit_plane(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
     ray local_r = apply_ray(r, self->bck);

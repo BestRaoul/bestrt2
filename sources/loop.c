@@ -44,9 +44,10 @@ static void	_update(void)
 	
 	apply_motions();
 
-	maybe_add_item();
-
 	update_camera();
+
+	maybe_add_item();
+	manage_selection();
 
 	//if (_rerender)
 	//set_all_transform_matrices()

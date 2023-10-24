@@ -13,11 +13,11 @@
 #include "fractol.h"
 
 //parent V to the ITEM
-vec3	parent_to(vec3 v, const t_item *item)
+vec3	parent_to(vec3 v, const tfm *transform)
 {
-	v = v_mult(v, item->scale);
-	v = rotate3(v, item->rot);
-	v = v_add(v, item->pos);
+	v = v_mult(v, transform->scale);
+	v = rotate3(v, transform->rot);
+	v = v_add(v, transform->pos);
 	return (v);
 }
 
@@ -47,8 +47,8 @@ void	raster_cylinder(t_item *item)
 	for (int j=0; j<=v_splits; j++) l1[j] = v_add(l1[j], v3(0,  1, 0));
 	for (int j=0; j<=v_splits; j++) l2[j] = v_add(l2[j], v3(0, -1, 0));
 
-	for (int j=0; j<=v_splits; j++) l1[j] = parent_to(l1[j], item);
-	for (int j=0; j<=v_splits; j++) l2[j] = parent_to(l2[j], item);
+	for (int j=0; j<=v_splits; j++) l1[j] = parent_to(l1[j], &item->transform);
+	for (int j=0; j<=v_splits; j++) l2[j] = parent_to(l2[j], &item->transform);
 
 //TOP & BOT
 	for (int j=0; j<v_splits; j++) draw_projected_line(l1[j], l1[j+1], item->mat.base_color.color_value);
@@ -69,8 +69,8 @@ void	raster_sphere(t_item *item)
 	vec3	north_pole = v3(0,  1, 0);
 	vec3	south_pole = v3(0, -1, 0);
 
-	north_pole = parent_to(north_pole, item);
-	south_pole = parent_to(south_pole, item);
+	north_pole = parent_to(north_pole, &item->transform);
+	south_pole = parent_to(south_pole, &item->transform);
 
 	vec3	*ring_scale = get_npoints(2*v_splits, 0);
 	for (int j=0; j<=2*v_splits; j++) ring_scale[j] = swap_yz(ring_scale[j]);
@@ -82,10 +82,10 @@ void	raster_sphere(t_item *item)
 		rings[j-1] = get_npoints(h_splits, 0);
 		for (int k=0; k<=h_splits; k++) {rings[j-1][k].z = 1; rings[j-1][k] = swap_yz(rings[j-1][k]); }
 		
-		vec3 new_scale = v3(item->scale.x * ring_scale[j].x,
-							item->scale.y * ring_scale[j].z,
-							item->scale.z * ring_scale[j].x);//= v_mult(item->scale, ring_scale[j]);
-		for (int k=0; k<=h_splits; k++) rings[j-1][k] = parent_to_virtual(rings[j-1][k], item->pos, item->rot, new_scale);
+		vec3 new_scale = v3(item->transform.scale.x * ring_scale[j].x,
+							item->transform.scale.y * ring_scale[j].z,
+							item->transform.scale.z * ring_scale[j].x);//= v_mult(item->transform.scale, ring_scale[j]);
+		for (int k=0; k<=h_splits; k++) rings[j-1][k] = parent_to_virtual(rings[j-1][k], item->transform.pos, item->transform.rot, new_scale);
 		//circle
 		for (int k=0; k<h_splits; k++)  draw_projected_line(rings[j-1][k], rings[j-1][k+1], item->mat.base_color.color_value);
 		//joints
@@ -115,10 +115,10 @@ void	raster_pyramid(t_item *item)
 	c3 = v3( sin(MYPI*2/3), -1, cos(MYPI*2/3));
 	c4 = v3( sin(MYPI*4/3), -1, cos(MYPI*4/3));
 
-	c1 = parent_to(c1, item);
-	c2 = parent_to(c2, item);
-	c3 = parent_to(c3, item);
-	c4 = parent_to(c4, item);
+	c1 = parent_to(c1, &item->transform);
+	c2 = parent_to(c2, &item->transform);
+	c3 = parent_to(c3, &item->transform);
+	c4 = parent_to(c4, &item->transform);
 
 //top
 	draw_projected_line(c1, c2, item->mat.base_color.color_value);
@@ -142,14 +142,14 @@ void	raster_box(t_item *item)
 {
 	vec3 c1, c2, c3, c4, c5, c6, c7, c8;
 	
-	c1 = parent_to(v3( 1,  1,  1), item);
-	c2 = parent_to(v3( 1,  1, -1), item);
-	c3 = parent_to(v3( 1, -1, -1), item);
-	c4 = parent_to(v3( 1, -1,  1), item);
-	c5 = parent_to(v3(-1,  1,  1), item);
-	c6 = parent_to(v3(-1,  1, -1), item);
-	c7 = parent_to(v3(-1, -1, -1), item);
-	c8 = parent_to(v3(-1, -1,  1), item);
+	c1 = parent_to(v3( 1,  1,  1), &item->transform);
+	c2 = parent_to(v3( 1,  1, -1), &item->transform);
+	c3 = parent_to(v3( 1, -1, -1), &item->transform);
+	c4 = parent_to(v3( 1, -1,  1), &item->transform);
+	c5 = parent_to(v3(-1,  1,  1), &item->transform);
+	c6 = parent_to(v3(-1,  1, -1), &item->transform);
+	c7 = parent_to(v3(-1, -1, -1), &item->transform);
+	c8 = parent_to(v3(-1, -1,  1), &item->transform);
 
 //top
 	draw_projected_line(c1, c2, item->mat.base_color.color_value);
@@ -183,10 +183,10 @@ void	raster_box(t_item *item)
 
 void	raster_quad(t_item *item)
 {
-	vec3 c1 = parent_to(v3( 1, 0, 1), item);
-	vec3 c2 = parent_to(v3( 1, 0,-1), item);
-	vec3 c3 = parent_to(v3(-1, 0, 1), item);
-	vec3 c4 = parent_to(v3(-1, 0,-1), item);
+	vec3 c1 = parent_to(v3( 1, 0, 1), &item->transform);
+	vec3 c2 = parent_to(v3( 1, 0,-1), &item->transform);
+	vec3 c3 = parent_to(v3(-1, 0, 1), &item->transform);
+	vec3 c4 = parent_to(v3(-1, 0,-1), &item->transform);
 
 	draw_projected_line(c1, c2, item->mat.base_color.color_value);
 	draw_projected_line(c2, c4, item->mat.base_color.color_value);
@@ -195,18 +195,18 @@ void	raster_quad(t_item *item)
 
 	if (1 || v._debug)
 	{
-		vec3 normal = rotate3(v3(0,.5,0), item->rot);
-		draw_projected_line(v_add(item->pos, normal), item->pos, item->mat.base_color.color_value);
-		draw_projected_dot(v_add(item->pos, normal), item->mat.base_color.color_value);
+		vec3 normal = rotate3(v3(0,.5,0), item->transform.rot);
+		draw_projected_line(v_add(item->transform.pos, normal), item->transform.pos, item->mat.base_color.color_value);
+		draw_projected_dot(v_add(item->transform.pos, normal), item->mat.base_color.color_value);
 	}
 }
 
 void	raster_plane(t_item *item)
 {
-	vec3 c1 = parent_to(v3( 1, 0, 1), item);
-	vec3 c2 = parent_to(v3( 1, 0,-1), item);
-	vec3 c3 = parent_to(v3(-1, 0, 1), item);
-	vec3 c4 = parent_to(v3(-1, 0,-1), item);
+	vec3 c1 = parent_to(v3( 1, 0, 1), &item->transform);
+	vec3 c2 = parent_to(v3( 1, 0,-1), &item->transform);
+	vec3 c3 = parent_to(v3(-1, 0, 1), &item->transform);
+	vec3 c4 = parent_to(v3(-1, 0,-1), &item->transform);
 
 	draw_projected_line(c1, c2, item->mat.base_color.color_value);
 	draw_projected_line(c2, c4, item->mat.base_color.color_value);
@@ -217,9 +217,9 @@ void	raster_plane(t_item *item)
 
 	if (1 || v._debug)
 	{
-		vec3 normal = rotate3(v3(0,.5,0), item->rot);
-		draw_projected_line(v_add(item->pos, normal), item->pos, item->mat.base_color.color_value);
-		draw_projected_dot(v_add(item->pos, normal), item->mat.base_color.color_value);
+		vec3 normal = rotate3(v3(0,.5,0), item->transform.rot);
+		draw_projected_line(v_add(item->transform.pos, normal), item->transform.pos, item->mat.base_color.color_value);
+		draw_projected_dot(v_add(item->transform.pos, normal), item->mat.base_color.color_value);
 	}
 }
 
@@ -230,10 +230,10 @@ void	raster_square(t_item *item)
 {
 	vec3 c1, c2, c3, c4;
 	
-	c1 = parent_to(v3( 1,  1), item);
-	c2 = parent_to(v3( 1, -1), item);
-	c3 = parent_to(v3(-1,  1), item);
-	c4 = parent_to(v3(-1, -1), item);
+	c1 = parent_to(v3( 1,  1), &item->transform);
+	c2 = parent_to(v3( 1, -1), &item->transform);
+	c3 = parent_to(v3(-1,  1), &item->transform);
+	c4 = parent_to(v3(-1, -1), &item->transform);
 
 	gizmo_line(c1, c2, item->mat.base_color.color_value);
 	gizmo_line(c2, c3, item->mat.base_color.color_value);
@@ -243,20 +243,20 @@ void	raster_square(t_item *item)
 //CIRCLE - 2
 void	raster_circle(t_item *item)
 {
-	gizmo_nshape(max(item->scale.x*2.0/50.0, 10), item->pos, item->rot, item->scale, 0, item->mat.base_color.color_value);
+	gizmo_nshape(max(item->transform.scale.x*2.0/50.0, 10), item->transform.pos, item->transform.rot, item->transform.scale, 0, item->mat.base_color.color_value);
 }
 //TRI.. 3,4,0
 void	raster_tri(t_item *item)
 {
-	gizmo_nshape(3, item->pos, item->rot, item->scale, MYPI, item->mat.base_color.color_value);
+	gizmo_nshape(3, item->transform.pos, item->transform.rot, item->transform.scale, MYPI, item->mat.base_color.color_value);
 }
 void	raster_hex(t_item *item)
 {
-	gizmo_nshape(6, item->pos, item->rot, item->scale, MYPI/6, item->mat.base_color.color_value);
+	gizmo_nshape(6, item->transform.pos, item->transform.rot, item->transform.scale, MYPI/6, item->mat.base_color.color_value);
 }
 void	raster_line(t_item *item)
 {
-	gizmo_line(item->pos,
-		v3(item->pos.x+sin(item->rot.x)*item->scale.x,
-			item->pos.y+cos(item->rot.x)*item->scale.x), item->mat.base_color.color_value);
+	gizmo_line(item->transform.pos,
+		v3(item->transform.pos.x+sin(item->transform.rot.x)*item->transform.scale.x,
+			item->transform.pos.y+cos(item->transform.rot.x)*item->transform.scale.x), item->mat.base_color.color_value);
 }

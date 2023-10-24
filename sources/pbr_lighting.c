@@ -35,20 +35,24 @@ vec3 fresnel_shlick(double HdotV, double R0)
 //1 on failure OBSTRUCTED
 Bool    check_obstruction(t_light *l, vec3 p)
 {
-        ray check;
-        double max_t = INFINITY;
+    if (v.solo_lighting) return 0; // should be hit with self
+    
+    ray check;
+    interval check_interval = (interval){0, INFINITY};
 
-        if (l->is_dir)
-        {
-            check.dir = l->dir;
-            check.orig = v_add(p, v_scal(l->dir, -v.far));
-        }
-        else //Point light
-        {
-            check.orig = l->pos;
-            check.dir = v_norm(from_to(l->pos, p));
-        }
-        return check_hit(&check, (interval){0.0, vec_dist(check.orig , p) - 0.001});
+    if (l->is_dir)
+    {
+        check.orig = v_sub(p, v_scal(l->dir, 100));
+        check.dir = v_norm(from_to(check.orig, p));
+        check_interval.max = vec_dist(check.orig , p) - 0.001;
+    }
+    else //Point light
+    {
+        check.orig = l->transform.pos;
+        check.dir = v_norm(from_to(l->transform.pos, p));
+        check_interval.max = vec_dist(check.orig , p) - 0.001;
+    }
+    return check_hit(&check, check_interval);
 }
 
 void   set_IBL(shader_end *se, hit_record *rec, ray *ray_in,
@@ -87,9 +91,9 @@ shader_end CalcTotalPBRLighting(hit_record *rec, ray *ray_in)
     double  metalic     = evaluate_bw(&rec->mat.metalic, rec->u, rec->v);
     double  roughness   = evaluate_bw(&rec->mat.roughness, rec->u, rec->v);
     double  specularity = evaluate_bw(&rec->mat.specular, rec->u, rec->v);
-    double  transmission = rec->mat.transmission;
+    double  transmission= evaluate_bw(&rec->mat.transmission, rec->u, rec->v);
     vec3    albedo      = evaluate(&rec->mat.base_color, rec->u, rec->v);
-    double  R0 = specularity * 0.16;
+    double  R0 = specularity * 0.16 + (transmission) * 0.16;
 
     vec3 N = rec->normal;
     vec3 V = v_scal(ray_in->dir, -1);
@@ -103,10 +107,10 @@ shader_end CalcTotalPBRLighting(hit_record *rec, ray *ray_in)
         t_light *l = &v.lights[i];
         if (check_obstruction(l, rec->p)) continue;
 
-        vec3 L = l->is_dir ? v_scal(l->dir, -1) : v_norm(from_to(rec->p, l->pos));
+        vec3 L = l->is_dir ? v_scal(l->dir, -1) : v_norm(from_to(rec->p, l->transform.pos));
         vec3 H = v_norm(v_add(V, L));
-        double distance = v_len(v_sub(l->pos, rec->p));
-        double attenuation = l->is_dir?1.0  :  1.0 / (distance * distance);
+        double distance = v_len(v_sub(l->transform.pos, rec->p));
+        double attenuation = l->is_dir?1.0  :  1.0 / (1.0 + distance * distance);
         vec3 radiance = v_scal(l->col, attenuation * l->intensity);
 
         //Cook-Torrence BRDF
@@ -126,7 +130,7 @@ shader_end CalcTotalPBRLighting(hit_record *rec, ray *ray_in)
 
         //combine
         se.diffuse_light = v_add(se.diffuse_light, 
-                        v_mult(kd, v_scal(radiance, NdotL)));
+                        v_mult(kd, v_scal(radiance, NdotL * (1.0 - transmission))));
         se.specular_color = v_add(se.specular_color, specular);
         se.specular_light = v_add(se.specular_light, v_scal(radiance, NdotL));
     }

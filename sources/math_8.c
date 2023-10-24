@@ -1,33 +1,33 @@
 #include "fractol.h"
 
-void create_transform_matrix(const transform* t, m4x4 result) {
-    float sx = t->scale.x;
-    float sy = t->scale.y;
-    float sz = t->scale.z;
+void create_transform_matrix(const tfm *transform, m4x4 result) {
+    float sx = transform->scale.x;
+    float sy = transform->scale.y;
+    float sz = transform->scale.z;
     
-    float cx = cosf(t->rot.x);
-    float cy = cosf(t->rot.y);
-    float cz = cosf(t->rot.z);
+    float cx = cosf(transform->rot.x);
+    float cy = cosf(transform->rot.y);
+    float cz = cosf(transform->rot.z);
     
-    float sxz = sinf(t->rot.x) * sinf(t->rot.z);
-    float sxy = sinf(t->rot.x) * sinf(t->rot.y);
-    float syz = sinf(t->rot.y) * sinf(t->rot.z);
+    float sxz = sinf(transform->rot.x) * sinf(transform->rot.z);
+    float sxy = sinf(transform->rot.x) * sinf(transform->rot.y);
+    float syz = sinf(transform->rot.y) * sinf(transform->rot.z);
     
     // Set the transformation matrix elements
     result[0][0] = sx * (cy * cz);
     result[0][1] = sx * (-cy * sz);
     result[0][2] = sx * sy;
-    result[0][3] = t->pos.x;
+    result[0][3] = transform->pos.x;
     
     result[1][0] = syz * sx;
     result[1][1] = sx * (cx * cz + sxz);
     result[1][2] = sx * (-cx * sz + sxy);
-    result[1][3] = t->pos.y;
+    result[1][3] = transform->pos.y;
     
     result[2][0] = -sxy * sx;
     result[2][1] = sx * (cx * sz + syz);
     result[2][2] = sx * (-cx * cz + sxz);
-    result[2][3] = t->pos.z;
+    result[2][3] = transform->pos.z;
     
     result[3][0] = 0.0f;
     result[3][1] = 0.0f;

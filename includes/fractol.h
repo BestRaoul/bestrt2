@@ -13,6 +13,9 @@
 #ifndef FRACTOL_H
 # define FRACTOL_H
 
+# define MAX_ITEM_COUNT 100
+# define MAX_LIGHT_COUNT 100
+
 # define MYPI 3.1415
 # define DEG2RAD MYPI/180.0
 # define RAD2DEG 180.0/MYPI
@@ -35,6 +38,7 @@
 #  define K_SPACE 32
 #  define K_SHIFT 65505
 #  define K_CTRL 65507
+#  define K_ENTER 65293
 #  define K_0 48
 #  define K_1 49
 #  define K_2 50
@@ -55,15 +59,32 @@
 #  define K_NP_7 65429
 #  define K_NP_8 65431
 #  define K_NP_9 65434
+#  define K_A 97
+#  define K_B 98
+#  define K_C 99
 #  define K_D 100
-#  define K_X 120
-#  define K_Y 122
-#  define K_Z 121
+#  define K_E 101
+#  define K_F 102
+#  define K_G 103
 #  define K_H 104
-#  define K_P 112
+#  define K_I 105
+#  define K_J 106
+#  define K_K 107
 #  define K_L 108
 #  define K_M 109
+#  define K_N 110
+#  define K_O 111
+#  define K_P 112
+#  define K_Q 113
+#  define K_R 114
+#  define K_S 115
 #  define K_T 116
+#  define K_U 117
+#  define K_V 118
+#  define K_W 119
+#  define K_X 120
+#  define K_Y 121
+#  define K_Z 122
 # else
 #  define K_ESC 53
 #  define K_UP 126
@@ -101,6 +122,23 @@
 #  define K_P 35
 #  define K_Y 16
 # endif
+
+# define K_MOVE K_M
+# define K_ROTATE K_R
+# define K_SCALE K_S
+
+# define K_RENDERMODE K_O
+# define K_MATMODE K_P
+
+# define K_PLANE_X K_X
+# define K_PLANE_Y K_Z
+# define K_PLANE_Z K_Y
+
+# define K_MOTION K_I
+# define K_LOCKON K_L
+# define K_HELPON K_H
+
+# define K_REPRINT K_ENTER
 
 # include <libft.h>
 # include <math.h>
@@ -148,7 +186,6 @@ typedef struct s_texture	texture;
 
 typedef vec3 color;
 
-
 //row . collumn
 typedef double m4x4[4][4];
 
@@ -164,11 +201,11 @@ typedef struct s_point {
 	double	x, y, z;
 }	vec3;
 
-typedef struct {
+typedef struct t_transform {
 	vec3	pos;
 	vec3	rot;
 	vec3	scale;
-} transform;
+} tfm;
 
 typedef struct s_ray {
 	vec3	orig;
@@ -213,7 +250,7 @@ typedef struct s_material {
 	//[clearcoat]
 
 	double	ior;
-	double	transmission;			//(dielectric probability)
+	texture	transmission;			//(dielectric probability)
 	texture	transmission_roughness;	//(BW)
 
 	texture	emission;				//(color)
@@ -221,7 +258,10 @@ typedef struct s_material {
 	//texture	emission_strength;  	//(BW)
 
 	texture	normal;
-	double	normal_strength;
+	vec3	normal_strength;
+	int		normal_mode;
+
+	texture alpha;
 
 } material;
 
@@ -234,6 +274,7 @@ typedef struct s_hit_record {
 	material mat;
 	double	u;
 	double	v;
+	t_item	*item;
 } hit_record;
 
 typedef struct s_interval {
@@ -241,18 +282,6 @@ typedef struct s_interval {
 	double max;
 } interval;
 
-typedef struct s_item {
-	vec3	pos;
-	vec3	scale;
-	vec3	rot;
-
-	material mat;
-	void 	(*raster)(t_item *);
-	Bool	(*hit)(const ray *, const interval, hit_record *, const t_item *);
-
-	m4x4	fwd;
-	m4x4	bck;
-}	t_item;
 
 enum e_plne {
 	XYZ,
@@ -265,10 +294,16 @@ enum e_plne {
 };
 
 enum e_slct {
-	NONE,
-	MOVE,
-	SCALE,
-	ROTATE
+	NONE	= 0,
+	MOVE	= 1,
+	ROTATE	= 2,
+	SCALE	= 3
+};
+
+enum e_nmode {
+	OPENGL,
+	DIRECTX
+	//idk
 };
 
 enum e_render_mode {
@@ -319,21 +354,34 @@ typedef struct s_motion {
 	double	(*tween)(double, double, double);
 } motion;
 
-typedef struct s_light
-{
-	vec3	col;
-	vec3	pos;
-	vec3	dir;
-	double	intensity;
-	Bool	is_dir; //whether is a directional light or positional
-} t_light;
-
 typedef struct s_shader_end {
 	vec3	diffuse_light;
 	color	diffuse_color;
 	vec3	specular_light;
 	color	specular_color;
 } shader_end;
+
+typedef struct s_light
+{
+	tfm		transform;
+
+	vec3	col;
+	vec3	dir; //(0, -1, 0) rot3(rot)
+	double	intensity; //v_len(scale)
+	Bool	is_dir; //whether is a directional light or positional
+} t_light;
+
+typedef struct s_item {
+	tfm			transform;
+
+	material	mat;
+	void 		(*raster)(t_item *);
+	Bool		(*hit)(const ray *, const interval, hit_record *, const t_item *);
+
+	m4x4		fwd;
+	m4x4		bck;
+}	t_item;
+
 
 typedef struct s_vars {
 	int			w;
@@ -416,6 +464,9 @@ typedef struct s_vars {
 	quat		camera_quat;
 	m4x4 		rotation_matrix;
 
+    double		defocus_angle;
+    double		focus_dist;
+
 	int			upscale;
 	int			max_depth;
 
@@ -431,18 +482,23 @@ typedef struct s_vars {
 	vec3		pixel_delta_u;
 	vec3		pixel_delta_v;
 	vec3		camera_center;
+	vec3		defocus_disk_u;
+    vec3		defocus_disk_v;
+	Bool		camera_change;
+	double		camera_dist_lookat;
 
-	t_item		*items;
+	t_item		items[MAX_ITEM_COUNT];
 	int			item_count;
 
-	t_light		*lights;
+	t_light		lights[MAX_LIGHT_COUNT];
 	int			light_count;
 
 	int			frame;
 
 	enum e_plne	plane;
 	enum e_slct selection_mode;
-	vec3		selection_pos;
+	tfm			*selected;
+	Bool		selection_is_item_lamp;
 
 	motion		*motions;
 	int			motion_count;
@@ -477,6 +533,8 @@ typedef struct s_vars {
 	double		ambient;
 
 	int			mat_debugmode;
+
+	Bool		solo_lighting;
 
 }	t_vars;
 
@@ -557,7 +615,6 @@ vec3	rotate_z(vec3 v, double gamma);
 vec3	rotate3(vec3 v, vec3 r);
 vec3	rotate_around(vec3 v, vec3 p, vec3 axis, double angle);
 
-
 //event_hanlers.c
 int		handle_mouse_move(int x, int y);
 int		handle_mouse_press(int button, int x, int y);
@@ -567,10 +624,18 @@ int		handle_key_release(int k);
 void	_reset_consumable_clicks(void);
 
 
-//item.c
-t_item	*add_item(t_item t);
+//item_lamps.c
+t_item	*add_item_(t_item t);
+t_item	*add_item(vec3 position, vec3 scale, vec3 rotation, material m,
+	void (*raster)(t_item *),
+	Bool (*hit)(const ray *, const interval, hit_record *, const t_item *));
 void	remove_item(t_item *t_ptr);
 t_item	get_item_default();
+
+t_light	*add_lamp_(t_light l);
+t_light	*add_lamp(color col, vec3 pos_dir, double intensity, Bool is_dir);
+void	remove_lamp(t_light *l_ptr);
+t_light	get_lamp_default();
 
 # define SPHERE		raster_sphere,	hit_sphere
 # define BOX		raster_box,		hit_box
@@ -611,6 +676,7 @@ Bool	hit_ss_quad	(const ray *r, const interval ray_t, hit_record *rec, const t_i
 //cylinder
 //cone
 Bool	check_hit(const ray *r, const interval ray_t);
+Bool	info_hit(const ray *r, const interval ray_t, hit_record *rec);
 
 //raytrace.c
 //		--Pixels
@@ -629,7 +695,11 @@ void	debug_ui(void);
 void	update_delta_time(void);
 void	move_player(void);
 //		--Item
+void	move_transform(tfm *t, Bool set);
+void	rotate_transform(tfm *t, Bool set);
+void	scale_transform(tfm *t, Bool set);
 void	maybe_add_item(void);
+void	manage_selection(void);
 //		--Camera
 void    update_camera(void);
 
@@ -673,11 +743,12 @@ vec3    get_ray_direction(int i, int j);
 vec3	ray_at(const ray *r, double t);
 double	t_at(const ray *r, vec3 ray);
 vec3	lerp(double t, vec3 a, vec3 b);
-vec3    local_p(vec3 p, t_item item);
+vec3    local_p(vec3 p, tfm *transform);
 //7
 double	random_double_l(double min, double max);
 double	random_double();
 vec3	pixel_sample_square(void);
+vec3	defocus_disk_sample(void);
 vec3	random_v3();
 vec3	random_v3_l(double min, double max);
 //a lot of random vector shit
@@ -705,7 +776,7 @@ void	draw_grid_and_cardinals(void);
 void	raster_items(void);
 void	reset_heatmap(void);
 
-void	set_cursor(t_xvar *xvar, t_win_list *win, unsigned int xc);
+void	set_cursor(unsigned int xc);
 
 quat	euler_to_quaternion(vec3 euler);
 vec3	quaternion_to_euler(quat q);
@@ -727,7 +798,7 @@ vec3	look_at(vec3 lookfrom, vec3 lookat, vec3 up);
 double	smoothstep (double edge0, double edge1, double x);
 double	realistic_specular(double ior);
 
-vec3	parent_to(vec3 v, const t_item *item);
+vec3	parent_to(vec3 v, const tfm *transform);
 
 double	ACES(double x);
 
@@ -799,8 +870,8 @@ color	aces_tone(color c);
 color	gamma_correct(color c);
 
 // -----Transformation Mx4
-void set_transform_matrix(const transform *t, m4x4 m, m4x4 m_bck);
-void create_transform_matrix(const transform* t, m4x4 result);
+void set_transform_matrix(const tfm *t, m4x4 m, m4x4 m_bck);
+void create_transform_matrix(const tfm* t, m4x4 result);
 void multiply_matrix_vector(const m4x4 mat, const vec3 in, vec3* out);
 void multiply_matrix_vector_2(const m4x4 M, const vec3 in, vec3* out);
 void print_mx4(m4x4 matrix);

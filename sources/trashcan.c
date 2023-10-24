@@ -140,6 +140,13 @@ vec3	world_to_screenpos(vec3 pos)
 	p.x *= v.w;
 	p.y *= v.h;
 	p.y = v.h - p.y;
+
+	if (v.cam_flipp)
+	{
+		p.x = v.w - p.x;
+		p.y = v.h - p.y;
+	}
+
 	return p;
 }
 

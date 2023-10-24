@@ -54,14 +54,14 @@ vec3	lerp(double t, vec3 a, vec3 b)
 	};
 }
 
-vec3    local_p(vec3 p, t_item item)
+vec3    local_p(vec3 p, tfm *transform)
 {
-    vec3 relative_p = v_sub(p, item.pos);
-    vec3 rotated_p = rotate3(relative_p, item.rot);
+    vec3 relative_p = v_sub(p, transform->pos);
+    vec3 rotated_p = rotate3(relative_p, transform->rot);
     vec3 scaled_p = v3(
-        rotated_p.x / item.scale.x,
-        rotated_p.y / item.scale.y,
-        rotated_p.z / item.scale.z,
+        rotated_p.x / transform->scale.x,
+        rotated_p.y / transform->scale.y,
+        rotated_p.z / transform->scale.z,
     );
     return scaled_p;
 }

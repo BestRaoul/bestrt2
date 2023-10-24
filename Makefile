@@ -54,7 +54,7 @@ SOURCES_LIST			:=	main.c\
 							draw_scribe.c\
 							event_handlers.c\
 							img.c\
-							item.c\
+							item_lamps.c\
 							raster_functions.c\
 							raster.c\
 							raytrace.c\
@@ -70,7 +70,6 @@ SOURCES_LIST			:=	main.c\
 							math_7.c\
 							math_8.c\
 							materials.c\
-							envelope.c\
 							hit_functions.c\
 							update_camera.c\
 							tweens.c\

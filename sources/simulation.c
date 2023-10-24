@@ -10,7 +10,7 @@ typedef struct s_sim_hit {
 
 void	simulate_ray(ray *r, sim_hit *hits, int depth)
 {
-    hits[0] = (sim_hit){1, r->orig, WHITE};
+    hits[0] = (sim_hit){True, r->orig, WHITE};
 
 
     for (int bounce=1; bounce<depth; bounce++) { hits[bounce].simd = False; }
@@ -25,7 +25,7 @@ void	simulate_ray(ray *r, sim_hit *hits, int depth)
 
         if (did_hit)
         {
-            ray scattered;
+			ray scattered;
             Bool _;
 	        PBR_scatter(r, &rec, &scattered, &_);
             hits[bounce].p = scattered.orig;
@@ -36,7 +36,8 @@ void	simulate_ray(ray *r, sim_hit *hits, int depth)
         }
         else
         {
-            hits[bounce].p = v_add(r->orig, v_scal(r->dir, .2));
+            hits[bounce].simd = False;
+			hits[bounce].p = v_add(r->orig, v_scal(r->dir, .2));
             hits[bounce].c = ERROR_CYAN;
             hits[bounce].rec = rec;
             break;
@@ -47,7 +48,7 @@ void	simulate_ray(ray *r, sim_hit *hits, int depth)
 
 void    simulate_rayzz()
 {
-	int depth = v.max_depth+2;
+	int depth = 2;
 	static sim_hit hits[10];
 
     if (v._ctrl) {
@@ -56,18 +57,23 @@ void    simulate_rayzz()
         simulate_ray(&r, hits, depth);
     }
 
-    for (int i=0; i<depth && hits[i].simd; i++)
+	vec3 pp = hits[0].p;
+	color pc = hits[0].c;
+    for (int bounce=1; bounce<depth && hits[bounce].simd; bounce++)
     {
-        sim_hit *h = &(hits[i]);
+        sim_hit *h = &(hits[bounce]);
         draw_projected_dot(h->p, h->c);
+		draw_projected_line(pp, h->p, pc);
+		pp = h->p; pc = h->c;
         // if (i+1<depth && hits[i+1].simd) draw_projected_line(h->p, hits[i+1].p, h->c);
 		draw_projected_line(h->p, v_add(h->p, v_scal(h->rec.normal, .4)), h->rec.normal);
+		continue;
 		if (v.light_count > 0)
 		{
 			t_light *l = &(v.lights[0]);
-			ray to_light = (ray){h->p, v_norm(from_to(h->p, l->pos))};
+			ray to_light = (ray){h->p, v_norm(from_to(h->p, l->transform.pos))};
 			hit_record rec;
-			Bool did_hit = hit(&to_light, (interval){0.0001, vec_dist(l->pos, h->p)}, &rec);
+			Bool did_hit = hit(&to_light, (interval){0.0001, vec_dist(l->transform.pos, h->p)}, &rec);
 
 			vec3 oi = h->p;
 			if (did_hit)
@@ -76,7 +82,7 @@ void    simulate_rayzz()
         		draw_projected_line(h->p, rec.p, RED);
 				oi = rec.p;
 			}
-			draw_projected_line(oi, l->pos, WHITE);
+			draw_projected_line(oi, l->transform.pos, WHITE);
 		}
     }
 }

@@ -21,17 +21,6 @@ void    set_face_normal(hit_record *rec, const ray *r, const vec3 outward_normal
     rec->normal = rec->front_face ? outward_normal : v_scal(outward_normal, -1);
 }
 
-void    set_sphere_uv(hit_record *rec, const vec3 p, const vec3 sphere_rot)
-{
-    double theta = acos(-p.y);
-    double phi = atan2(-p.z, p.x) + MYPI;
-
-    rec->u = phi / (2*MYPI);
-    rec->v = theta / MYPI;
-
-    rec->u = 1 - rec->u;
-}
-
 //If you find a better quicker way to go from local_t to global
 //tell me.
 double  t2global(const double lt, const ray *local_r, const ray *r, const m4x4 fwd)
@@ -60,10 +49,8 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
     double t1 = (-b + sqrtd) / 2.0;
     double t2 = (-b - sqrtd) / 2.0;
     //If inside, ignore
-    if ((t1 < 0.0) || (t2 < 0.0))
-    {
-        return False;
-    }
+    if (t1 < 0.0) t1 = ray_t.max;
+    if (t2 < 0.0) t2 = ray_t.max;
 
     double lt, gt;
     // Determine which point of intersection was closest to the camera.
@@ -75,15 +62,19 @@ Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_ite
 
     rec->t = gt;
     rec->p = ray_at(r, gt);
-    set_face_normal(rec, &local_r, ray_at(&local_r, lt));
-    //set_sphere_uv(rec, rec->normal, self->rot);
     
     vec3 local_p = ray_at(&local_r, lt);
+    //set_sphere_uv(rec, rec->normal, self->transform.rot);
+    
     rec->u = (atan2(local_p.z, local_p.x) + MYPI)/(2*MYPI);
     rec->v = local_p.y/2 + .5;
 
     rec->mat = self->mat;
-    
+
+    set_face_normal(rec, &local_r, local_p);
+    maybe_apply_perturb(rec);
+    rec->normal = rotate3(rec->normal, self->transform.rot);
+
     return True;
 }
 
@@ -113,15 +104,14 @@ Bool    hit_plane(const ray *r, const interval ray_t, hit_record *rec, const t_i
     rec->t = gt;
     rec->p = intPoint;
 
-    vec3 out_normal = rotate3(v3(0,1,0), self->rot);
-    set_face_normal(rec, r, out_normal);
-
-
     rec->u = alpha;
     rec->v = beta;
-    //set_plane_uv(alpha, beta, rec);
     
     rec->mat = self->mat;
+
+    set_face_normal(rec, &local_r, v3(0,1,0));
+    maybe_apply_perturb(rec);
+    rec->normal = rotate3(rec->normal, self->transform.rot);
 
     return True;
 }
@@ -162,9 +152,11 @@ Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_it
     rec->t = gt;
     rec->p = ray_at(r, gt);
 
-    set_face_normal(rec, r, rotate3(v3(0,1,0), self->rot));
-
     rec->mat = self->mat;
+
+    set_face_normal(rec, &local_r, v3(0,1,0));
+    maybe_apply_perturb(rec);
+    rec->normal = rotate3(rec->normal, self->transform.rot);
 
     return True;
 }
@@ -200,9 +192,11 @@ Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t
     rec->t = gt;
     rec->p = ray_at(r, gt);
 
-    set_face_normal(rec, r, rotate3(v3(0,1,0), self->rot));
-
     rec->mat = self->mat;
+
+    set_face_normal(rec, &local_r, v3(0,1,0));
+    maybe_apply_perturb(rec);
+    rec->normal = rotate3(rec->normal, self->transform.rot);
 
     return True;
 }
@@ -334,57 +328,13 @@ Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_ite
     rec->t = gt;
     rec->p = ray_at(r, gt);
 
-    vec3 outward_normal = get_cube_normal(final_index, rec);
-    outward_normal = rotate3(outward_normal, self->rot);
-    set_face_normal(rec, r, outward_normal);
-
     rec->mat = self->mat;
 
+    set_face_normal(rec, &local_r, get_cube_normal(final_index, rec));
+    maybe_apply_perturb(rec);
+    rec->normal = rotate3(rec->normal, self->transform.rot);
+
     return True;
-}
-
-Bool    hit_box_old(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
-{
-    t_item side = (t_item){};
-    side.mat = self->mat;
-
-    double _w = self->scale.x;
-    double _h = self->scale.y;
-    double _d = self->scale.z;
-
-    Bool got_hit = False;
-
-    //Front
-    side.pos = parent_to(v3(0,0,1), self);
-    side.rot = v_add(v3(MYPI/2), self->rot);
-    side.scale = v3(_w, 0, _h);
-    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
-    //back
-    side.pos = parent_to(v3(0,0,-1), self);
-    side.rot = v_add(v3(-MYPI/2), self->rot);
-    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
-
-    //Top
-    side.pos = parent_to(v3(0,1,0), self);
-    side.rot = self->rot;
-    side.scale = v3(_w, 0, _d);
-    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
-    //Bot
-    side.pos = parent_to(v3(0,-1,0), self);
-    side.rot = v_add(v3(MYPI), self->rot);
-    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
-
-    //Right
-    side.pos = parent_to(v3(-1,0,0), self);
-    side.rot = v3(0,0,MYPI/2);
-    side.scale = v3(_h, 0, _d);
-    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
-    //Left
-    side.pos = parent_to(v3(1,0,0), self);
-    side.rot = v3(0,0,-MYPI/2);
-    got_hit |= hit_ss_quad(r, ray_t, rec, &side);
-
-    return got_hit;
 }
 
 Bool    hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
@@ -482,23 +432,21 @@ Bool    hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const 
     if (final_index <= 1) //cylinder hit
     {
         outward_normal = v3(local_p.x, 0, local_p.z);
-        outward_normal = rotate3(outward_normal, self->rot);
         rec->u = (atan2(local_p.z, local_p.x) + MYPI)/(2*MYPI);
         rec->v = local_p.y/2 + .5;
     }
     else //caps
     {
         outward_normal = v3(0, 1 * (final_index==2) - 1 * (final_index==3),0);
-        outward_normal = rotate3(outward_normal, self->rot);
         rec->u = .5 - lu/2;
         rec->v = .5 - lv/2;
     }
-    set_face_normal(rec, r, outward_normal);
-
-    
-    //UV
     
     rec->mat = self->mat;
+
+    set_face_normal(rec, &local_r, outward_normal);
+    maybe_apply_perturb(rec);
+    rec->normal = rotate3(rec->normal, self->transform.rot);
 
     return True;
 }
@@ -603,20 +551,19 @@ Bool    hit_cone(const ray *r, const interval ray_t, hit_record *rec, const t_it
         rec->u = .5 - local_p.x/2;
         rec->v = .5 - local_p.z/2;
     }
-    // outward_normal = rotate3(outward_normal, self->rot);
-    rec->normal = outward_normal;
-    //set_face_normal(rec, r, outward_normal);
-
-    //UV
     
     rec->mat = self->mat;
+
+    set_face_normal(rec, &local_r, outward_normal);
+    maybe_apply_perturb(rec);
+    rec->normal = rotate3(rec->normal, self->transform.rot);
 
     return True;
 }
 
-//--NOT IMPLEMENTED YET
 
-// -----------------------------------------------------------
+// --------  NOT IMPLEMENTED YET  ---------------------------------------------------
+
 
 Bool    hit_line(const ray *r, const interval ray_t, hit_record *rec, const t_item *self)
 {
@@ -625,19 +572,43 @@ Bool    hit_line(const ray *r, const interval ray_t, hit_record *rec, const t_it
 
 Bool	hit(const ray *r, const interval ray_t, hit_record *rec)
 {
-	hit_record	temp_rec;
 	Bool		hit_anything = False;
 	double		closest_so_far = ray_t.max;
 
 	for (int i=0; i<v.item_count; i++)
 	{
+	    hit_record	temp_rec;
 		if (v.items[i].hit(r, (interval){ray_t.min, closest_so_far}, &temp_rec, &v.items[i]))
 		{
-			hit_anything = True;
+			int alpha = .5 + evaluate_bw(&(temp_rec.mat.alpha), temp_rec.u, temp_rec.v);
+            if (alpha == 0) continue;
+            hit_anything = True;
 			closest_so_far = temp_rec.t;
+            *rec = temp_rec;
 		}
 	}
-    *rec = temp_rec;
+
+	return hit_anything;
+}
+
+Bool	info_hit(const ray *r, const interval ray_t, hit_record *rec)
+{
+	Bool		hit_anything = False;
+	double		closest_so_far = ray_t.max;
+
+	for (int i=0; i<v.item_count; i++)
+	{
+	    hit_record	temp_rec;
+		if (v.items[i].hit(r, (interval){ray_t.min, closest_so_far}, &temp_rec, &v.items[i]))
+		{
+			int alpha = .5 + evaluate_bw(&(temp_rec.mat.alpha), temp_rec.u, temp_rec.v);
+            if (alpha == 0) continue;
+            hit_anything = True;
+			closest_so_far = temp_rec.t;
+            temp_rec.item = &(v.items[i]);
+            *rec = temp_rec;
+		}
+	}
 
 	return hit_anything;
 }
@@ -650,7 +621,9 @@ Bool	check_hit(const ray *r, const interval ray_t)
 	{
 		if (v.items[i].hit(r, ray_t, &temp_rec, &v.items[i]))
 		{
-			return True;
+            int alpha = .5 + evaluate_bw(&(temp_rec.mat.alpha), temp_rec.u, temp_rec.v);
+            if (alpha == 0) continue;
+            return True;
 		}
 	}
 

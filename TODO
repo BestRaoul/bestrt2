@@ -14,39 +14,22 @@ item:
 	?color picker
 	shift + XZY
 
-3. -> ntfy
-4. do threading
-
 ----- Things i dont want to do, but have to be done
 
 //linux -> CAMERA MOVEMENT - mouse
 //cam add CAMERA FLIPP
 
-
 fix ambient bounces
 
 ----------- NOW ---------------
-3. showoff scenes 6-7-9
-	//1 needs focal length
-	//2-5 LAMP distance is not cummulative
-	//3-4 needs speed
-	//...
-4. object selection
-97. (check normal rotation, fix normal scaling)
-96. light flicker spinning quad + acne on tilted box
+4. onject modif SMART
+94. fix UV map read a bit too late 5 pixels
 -----------AT 42---------------
-0. normal map are fugged ??
 1. parsing
 2. no crash
 3. ptrs ALLL
---- after
-//98. (bump to normal conversion)
-//6. add_item, add_tween (duration, loop, delay)
-3. tween, item, lights, sky, rendermovie CLEANUP
-4. UI (material debug, vec3's, color materials)
-5. plenty render modes
-6. ao
------------NEVER---------------
+4. speed
+----------- NEVER ---------------
 IGNORED - 2. directional light/IBL (roughness)
 IGNORED - '. smoothshadows on lamps
 IGNORED - 3. window resizing
@@ -54,9 +37,20 @@ IGNORED - 0. ZOOM
 IGNORED - 7. proper hdri map to cube idk
 IGNORED - ?. specular TINT
 IGNORED - ?? proper 8-bit read
+IGNORED - F. focal length does not work
+IGNORED - L. dir light check does not work
+IGNORED - N. normal self shadowing is bugged
+IGNORED - N. normal scaling fix
+IGNORED - IBL. proper cubemap, proper HDR-s values
+--- after
+//98. (bump to normal conversion)
+//6. add_item, add_tween (duration, loop, delay)
+3. tween, item, lights, sky, rendermovie CLEANUP
+4. UI (material debug, vec3's, color materials)
+5. plenty render modes
+6. ao
 
 //TODO
-2. focus blur
 3. ntfy
 	//cloudflare ->cronjob -> always notify
 3.1 better tweening

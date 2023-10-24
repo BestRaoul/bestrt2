@@ -240,7 +240,7 @@ int readBMP(const char* filename, bmp_read *r) {
 
     if (headerSize == 12)
     {
-        fprintf(stderr, "headsize: 12\n");
+        fprintf(stderr, "READING headsize: 12..");
         int16_t temp_width;
         int16_t temp_height;
         fread(&temp_width, sizeof(int16_t), 1, file);
@@ -256,7 +256,7 @@ int readBMP(const char* filename, bmp_read *r) {
     }
     else if (headerSize == 40)
     {
-        fprintf(stderr, "headsize: 40\n");
+        fprintf(stderr, "READING headsize: 40..");
 
         fread(&width, sizeof(int32_t), 1, file);
         fread(&height, sizeof(int32_t), 1, file);
@@ -275,7 +275,8 @@ int readBMP(const char* filename, bmp_read *r) {
     }
     else if (headerSize <= 124)
     {
-        fprintf(stderr, "Warning: yolo reading bmp file with weird head size %u\n", headerSize);
+        fprintf(stderr, "READING headsize: 124..");
+        // fprintf(stderr, "Warning: yolo reading bmp file with weird head size %u\n", headerSize);
         fread(&width, sizeof(int32_t), 1, file);
         fread(&height, sizeof(int32_t), 1, file);
         fread(&planes, sizeof(uint16_t), 1, file);
@@ -295,11 +296,11 @@ int readBMP(const char* filename, bmp_read *r) {
         fread(&num_colors, sizeof(uint32_t), 1, file);
         fread(&num_important_colors, sizeof(uint32_t), 1, file);
 
-        printf("compression type %d\n", compression_type);
-        printf("size %d\n", size_of_img_data);
-        printf("res %d x %d\n", h_resolution, v_resolution);
+        // printf("compression type %d\n", compression_type);
+        // printf("size %d\n", size_of_img_data);
+        // printf("res %d x %d\n", h_resolution, v_resolution);
 
-        printf("N colors: %d / %d\n", num_colors, num_important_colors);
+        // printf("N colors: %d / %d\n", num_colors, num_important_colors);
 
         bytes_till_pixels -= 12;
     }
@@ -325,7 +326,7 @@ int readBMP(const char* filename, bmp_read *r) {
             bytes_till_pixels -= 4;
         }
     }
-    printf("bytes left: %d\n", bytes_till_pixels);
+    // printf("bytes left: %d\n", bytes_till_pixels);
     
     //Read till pixel data start
     char _;
@@ -391,6 +392,9 @@ int readBMP(const char* filename, bmp_read *r) {
     }
 
     fclose(file);
+	
+    write(1, "\33[2K\r", ft_strlen("\33[2K\r"));
+    fprintf(stderr, "READ %s: done!\n", filename);
 
     return 1;
 }

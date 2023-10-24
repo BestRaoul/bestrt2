@@ -32,7 +32,7 @@ void	init_ray(double x, double y, ray *r)
 		return;
 	}
 
-	r->orig = v.camera_center;
+	r->orig = (v.defocus_angle <= 0) ? v.camera_center : defocus_disk_sample();
 	r->dir = v_norm(ray_direction);
 	return;
 
@@ -118,7 +118,6 @@ color	paint_mat_debug_unlit(Bool did_hit, hit_record *rec, ray *r)
 	if (v.mat_debugmode==NORMAL)
 	{
 		if (!did_hit) return BLACK;
-		maybe_apply_perturb(rec);
 		double r = -rec->normal.x;
 		double g = -rec->normal.z;
 		double b = rec->normal.y;
@@ -169,12 +168,11 @@ color	paint_mat_debug_lit(shader_end *se, hit_record *rec)
 	return ERROR_CYAN;
 }
 
-
 void	maybe_apply_perturb(hit_record *rec)
 {
 	vec3 normalRGB = evaluate(&rec->mat.normal, rec->u, rec->v);
 	vec3 perturbation = v3(normalRGB.x*2 -1, normalRGB.y*2 -1, normalRGB.z);
-	perturbation = v_scal(perturbation, rec->mat.normal_strength);
+	perturbation = v_mult(perturbation, rec->mat.normal_strength);
 	perturbation.z = fabs(perturbation.z);
 	vec3 new_normal = perturb_normal(rec->normal, perturbation);
 	rec->old_normal = rec->normal;
@@ -204,8 +202,6 @@ color	trace(ray *r, int max_depth)
 			emitted_light = v_scal(emitted_light, rec.mat.emission_strength);
 			light = v_add(light, v_mult(emitted_light, contribution));
 			
-			maybe_apply_perturb(&rec);
-    		
 			shader_end se = CalcTotalPBRLighting(&rec, r);
 			if (v.render_mode == RAYTRACE_MAT_DEBUG) return paint_mat_debug_lit(&se, &rec);
 			
@@ -346,8 +342,14 @@ void    raytrace(void)
 		for (int i=0; i<v.item_count; i++)
 		{
 			item = &v.items[i];
-			transform t = (transform){item->pos, item->rot, item->scale};
-			set_transform_matrix(&t, item->fwd, item->bck);
+			set_transform_matrix(&item->transform, item->fwd, item->bck);
+		}
+		t_light *lamp;
+		for (int i=0; i<v.light_count; i++)
+		{
+			lamp = &v.lights[i];
+			lamp->intensity = v_len(lamp->transform.scale);
+			lamp->dir = rotate3(v3(1,0,0), lamp->transform.rot);
 		}
 	}
 

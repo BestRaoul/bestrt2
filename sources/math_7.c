@@ -45,6 +45,22 @@ vec3	pixel_sample_square(void)
 	return v_add(v_scal(v.pixel_delta_u, px), v_scal(v.pixel_delta_v, py));
 }
 
+vec3 random_in_unit_disk(void) {
+    for (int i=0; i<1000; i++)
+    {
+        vec3 p = v3(random_double()*2 -1, random_double()*2 -1, 0);
+        if (length_squared(p) < 1)
+            return p;
+    }
+    return v3(0,0,0);
+}
+
+vec3 defocus_disk_sample() {
+    // Returns a random point in the camera defocus disk.
+    vec3 p = random_in_unit_disk();
+    return v_add(v_add(v.camera_pos, v_scal(v.defocus_disk_u, p.x)), v_scal(v.defocus_disk_v, p.y));
+}
+
 vec3 random_v3()
 {
     return v3(random_double(), random_double(), random_double());

@@ -12,31 +12,97 @@
 
 #include "fractol.h"
 
+#define X_ENABLED (v.plane != YZ && v.plane != Y && v.plane != Z)
+#define Y_ENABLED (v.plane != XZ && v.plane != X && v.plane != Z)
+#define Z_ENABLED (v.plane != XY && v.plane != X && v.plane != Y)
+
 void	rotation_indicator(void)
 {
-	vec3	x = v3(40);
-	vec3	y = v3(0,-40);
-	vec3	z = v3(0,0,40);
+	double dist_to = 1;
+	double d = 0.06;
+	color	line_color = WHITE;
 
-	vec3	show = v3(v.w - 100, 100);
-	x = rotate3(x, v.camera_rot);
-	y = rotate3(y, v.camera_rot);
-	z = rotate3(z, v.camera_rot);
-	gizmo_line(show, v_add(show, x), RED);
-	gizmo_line(show, v_add(show, y), GREEN);
-	gizmo_line(show, v_add(show, z), BLUE);
-	gizmo_dot(v_add(show, x), RED);
-	gizmo_dot(v_add(show, y), GREEN);
-	gizmo_dot(v_add(show, z), BLUE);
+	vec3 anchor = v_add(v.camera_pos, rotate3(v3(0,0,1), v.camera_rot));
+	vec3 anchor_p = world_to_screenpos(anchor);
+	vec3 r_top = world_to_screenpos(v_add(anchor, v3( d)));
+	vec3 r_bot = world_to_screenpos(v_add(anchor, v3(-d)));
+	vec3 g_top = world_to_screenpos(v_add(anchor, v3(0, d)));
+	vec3 g_bot = world_to_screenpos(v_add(anchor, v3(0,-d)));
+	vec3 b_top = world_to_screenpos(v_add(anchor, v3(0,0, d)));
+	vec3 b_bot = world_to_screenpos(v_add(anchor, v3(0,0,-d)));
 
-	gizmo_dot(v_add(show, v_scal(x, -1)), new_color(1, .2, .2));
-	gizmo_dot(v_add(show, v_scal(y, -1)), new_color(.2, 1, .2));
-	gizmo_dot(v_add(show, v_scal(z, -1)), new_color(.2, .2, 1));
+	const vec3 end = v3(v.w - 75, 75);
+	vec3 move = v_sub(end, anchor_p);
+	anchor_p = v_add(anchor_p, move);
+	r_top = v_add(r_top, move);
+	r_bot = v_add(r_bot, move);
+	g_top = v_add(g_top, move);
+	g_bot = v_add(g_bot, move);
+	b_top = v_add(b_top, move);
+	b_bot = v_add(b_bot, move);
+
+	gizmo_dot(anchor_p, v3(.8, .6, .1));
+	if (X_ENABLED)
+	{
+		gizmo_line(r_top, anchor_p, RED);
+		gizmo_dot(r_top, RED);
+		gizmo_dot(r_bot, v3(1, .2, .2));
+		scribe("X", r_top.x+5, r_top.y-5, WHITE);
+	// scribe("-X", r_bot.x+0, r_bot.y-5, WHITE);
+	}
+	if (Y_ENABLED)
+	{
+		gizmo_line(g_top, anchor_p, GREEN);
+		gizmo_dot(g_top, GREEN);
+		gizmo_dot(g_bot, v3(.2, 1, .2));
+		scribe("Y", g_top.x+5, g_top.y-5, WHITE);
+	// scribe("-Y", g_bot.x+0, g_bot.y-5, WHITE);
+	}
+	if (Z_ENABLED)
+	{
+		gizmo_line(b_top, anchor_p, BLUE);
+		gizmo_dot(b_top, BLUE);
+		gizmo_dot(b_bot, v3(.2, .2, 1));
+		scribe("Z", b_top.x+5, b_top.y-5, WHITE);
+	// scribe("-Z", b_bot.x+0, b_bot.y-5, WHITE);
+	}
+}
+
+char	*mat_debugmode_names[9] = {
+	"-- MAT (normal) --",
+	"-- MAT (mist) --",
+
+	"-- MAT (diffuse light) --",
+	"-- MAT (diffuse color) --",
+	"-- MAT (specular light) --",
+	"-- MAT (specular color) --",
+
+	"-- MAT (emission) --",
+	"-- MAT (environement) --",
+	"-- MAT (combined) --",
+};
+
+void	mode_name(void)
+{
+	double px = v.w/2.0 - 50, py = 20;
+	switch (v.render_mode)	{
+	case RASTER: scribe("-- Raster --", px, py, GREEN); break;
+	case RAYTRACE: scribe("-- RAYz --", px, py, GREEN); break;
+	case RAYTRACE_STEPS: scribe("-- step by step --", px, py, GREEN); break;
+	case RAYTRACE_STEPS_2: scribe("-- step by step 2 --", px, py, GREEN); break;
+	case RAYTRACE_STEPS_3: scribe("-- step by step 3 --", px, py, GREEN); break;
+	case RAYTRACE_UVS: scribe("-- UVs --", px, py, GREEN); break;
+	case RAYTRACE_DIST: scribe("-- DIST --", px, py, GREEN); break;
+	case RAYTRACE_MAT_DEBUG: scribe(mat_debugmode_names[v.mat_debugmode], px, py, GREEN); break;
+	default: scribe("-- wtf?!! --", px, py, GREEN); break;
+	}
 }
 
 void	help_ui(void)
 {
-	//rotation_indicator();
+	mode_name();
+	rotation_indicator();
+
 	if (!v._help)
 		return ;
 
@@ -69,76 +135,23 @@ void	help_ui(void)
 	
 }
 
-void	draw_light_gizmo(t_light *l)
-{
-	if (l->is_dir)
-	{
-		vec3 p = v3(0, 3, 0);
-		vec3 p2 = v_add(p, l->dir);
-		p = world_to_screenpos(p);
-		p2 = world_to_screenpos(p2);
-		draw_debug_dot(p2, l->col);
-		draw_debug_line(p, p2, l->col);
-	}
-	else
-	{
-		vec3 p = world_to_screenpos(l->pos);
-		draw_debug_dot(p, l->col);
-	}
-}
-
-char	*mat_debugmode_names[9] = {
-	"-- MAT (normal) --",
-	"-- MAT (mist) --",
-
-	"-- MAT (diffuse light) --",
-	"-- MAT (diffuse color) --",
-	"-- MAT (specular light) --",
-	"-- MAT (specular color) --",
-
-	"-- MAT (emission) --",
-	"-- MAT (environement) --",
-	"-- MAT (combined) --",
-};
-
 void	debug_ui(void)
 {
 	if (!v._debug)
 		return ;
 
-	for (int i=0; i<v.light_count; i++)
-		draw_light_gizmo(&v.lights[i]);
-
 	int _x = v.w - 200;
 	int _h = 50;
 
-	scribe("DEBUG MODE", _x, _h+=16, GREEN);
-	scribe_num("fov=%d", v.vfov, _x, _h+=16, GREEN);
+	// scribe("DEBUG MODE", _x, _h+=16, GREEN);
+	scribe_num("fov = %d", v.vfov, _x, _h+=16, GREEN);
 	scribe_v3d("CAMERA", v.camera_pos, _x, _h+=16, GREEN);
-	scribe_v3d("ROTAT", v.camera_rot, _x, _h+=16, GREEN);
+	scribe_v3d("ROTATION", v.camera_rot, _x, _h+=16, GREEN);
 	scribe(v.lookat_toggle?"LOCK - ON":"LOCK - OFF", _x, _h+=16, GREEN);
-
-	switch (v.render_mode)	{
-	case RASTER: scribe("-- Raster --", _x, _h+=16, GREEN); break;
-	case RAYTRACE: scribe("-- RAYz --", _x, _h+=16, GREEN); break;
-	case RAYTRACE_STEPS: scribe("-- step by step --", _x, _h+=16, GREEN); break;
-	case RAYTRACE_STEPS_2: scribe("-- step by step 2 --", _x, _h+=16, GREEN); break;
-	case RAYTRACE_STEPS_3: scribe("-- step by step 3 --", _x, _h+=16, GREEN); break;
-	case RAYTRACE_UVS: scribe("-- UVs --", _x, _h+=16, GREEN); break;
-	case RAYTRACE_DIST: scribe("-- DIST --", _x, _h+=16, GREEN); break;
-	case RAYTRACE_MAT_DEBUG: scribe(mat_debugmode_names[v.mat_debugmode], _x, _h+=16, GREEN); break;
-	default: scribe("-- wtf?!! --", _x, _h+=16, GREEN); break;
-	}
 
 	_h+=16;
 	color at_moose = rgb2color(get_pixel(v.mouse_pos.x, v.mouse_pos.y));
 	scribe_v3d("col:   ",at_moose, _x, _h+=16, v_norm(at_moose));
-
-	//plane draw
-//	if (v.plane == XY || v.plane == X)
-//		draw_debug_line(v3(0,v.h/2),v3(v.w,v.h/2), color(200, 0, 50));
-//	if (v.plane == XY || v.plane == Y)
-//		draw_debug_line(v3(v.w/2,0),v3(v.w/2,v.h), color(0, 200, 50));
 	
 	//mouse drag
 	if (v._lmouse) gizmo_drag(v.lm_start_pos, v.mouse_pos, GREEN);

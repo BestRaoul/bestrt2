@@ -14,6 +14,15 @@
 
 t_vars	v = {};
 
+void	**alloc_2d(int size, int w, int h)
+{
+	void *mem_start = malloc(size * w * h);
+	void **ptr_ptr = malloc(sizeof(void *) * w);
+	for (int i=0; i<w; i++)
+		ptr_ptr[i] = (mem_start + i * h * size);
+	return ptr_ptr;
+}
+
 void	vars_init(void)
 {
 	init_scene();
@@ -30,15 +39,19 @@ void	vars_init(void)
 	v.img.mlx_img = mlx_new_image(v.mlx, v.w, v.h);
 	v.img.addr = mlx_get_data_addr(v.img.mlx_img, &v.img.bpp,
 			&v.img.line_len, &v.img.endian);
-	double *heatmap = malloc(sizeof(double) * v.w * v.h);
-	v.dist_heatmap = malloc(sizeof(double *) * v.w);
-	for (int i=0; i<v.w; i++)
-		v.dist_heatmap[i] = &(heatmap[i * v.h]);
+	
+	v.dist_heatmap   = (double **)alloc_2d(sizeof(double), v.w, v.h);
+	v.accumulate_img = (vec3 **)alloc_2d(sizeof(vec3), v.w, v.h);
+	
+	// double *heatmap = malloc(sizeof(double) * v.w * v.h);
+	// v.dist_heatmap = malloc(sizeof(double *) * v.w);
+	// for (int i=0; i<v.w; i++)
+	// 	v.dist_heatmap[i] = &(heatmap[i * v.h]);
 
-	vec3 *accumlates = malloc(sizeof(vec3) * v.w * v.h);
-	v.accumulate_img = malloc(sizeof(vec3 *) * v.w);
-	for (int i=0; i<v.w; i++)
-		v.accumulate_img[i] = &(accumlates[i * v.h]);
+	// vec3 *accumlates = malloc(sizeof(vec3) * v.w * v.h);
+	// v.accumulate_img = malloc(sizeof(vec3 *) * v.w);
+	// for (int i=0; i<v.w; i++)
+	// 	v.accumulate_img[i] = &(accumlates[i * v.h]);
 
 	//DATA
 	gettimeofday(&v.last_update, 0);
@@ -71,8 +84,10 @@ void	hooks(void)
 	mlx_hook(v.win, ConfigureNotify, 0, handle_window_resize, NULL);
 }
 
-void	set_cursor(t_xvar *xvar, t_win_list *win, unsigned int xc)
+void	set_cursor( unsigned int xc)
 {
+	t_xvar *xvar = (t_xvar *)v.mlx;
+	t_win_list *win = (t_win_list *)v.win;
 	xc %= 154;
 
 	printf("xc: %u\n",xc);
@@ -91,7 +106,7 @@ int	main(void)
 	
 	srand (time ( NULL));
 
-	set_cursor(v.mlx, v.win, XC_crosshair);
+	set_cursor(XC_crosshair);
 	hooks();
 	mlx_loop(v.mlx);
 	return (0);

@@ -32,17 +32,20 @@ material	default_material(void)
 	m.roughness = NO_MAP;
 
 	m.ior = 1.0;
-	m.transmission = 0.0;
+	m.transmission = NO_MAP;
 	m.transmission_roughness = NO_MAP;
 
 	m.emission = NO_MAP;
 	m.emission_strength = 0.0;
 
 	m.normal = c3(0.5, 0.5, 1.0);
-	m.normal_strength = 1.0;
+	m.normal_strength = v3(1, 1, 1);
+	m.normal_mode = OPENGL;
+
+	m.alpha = FULL_MAP;
+
 	return m;
 }
-
 Bool	PBR_scatter(const ray *ray_in, hit_record *rec, ray *scattered, Bool *was_specular)
 {
 	material *self = &rec->mat;
@@ -50,6 +53,7 @@ Bool	PBR_scatter(const ray *ray_in, hit_record *rec, ray *scattered, Bool *was_s
 	double	metalic = evaluate_bw(&(self->metalic), rec->u, rec->v);
 	double	specular = evaluate_bw(&(self->specular), rec->u, rec->v);
 	double	roughness = evaluate_bw(&(self->roughness), rec->u, rec->v);
+	double	transmission = evaluate_bw(&(self->transmission), rec->u, rec->v);
 	double	t_roughness = evaluate_bw(&(self->transmission_roughness), rec->u, rec->v);
 
 	vec3	scatter_dir;
@@ -70,8 +74,8 @@ Bool	PBR_scatter(const ray *ray_in, hit_record *rec, ray *scattered, Bool *was_s
 		double	smoothness = 1.0 - roughness;
 		scatter_dir = lerp(smoothness, diffuse_dir, reflection_dir);
 	}
-	else if (self->transmission > random_double())
-	{
+	else if (transmission > random_double())
+	{		
 		double refraction_ratio = rec->front_face ? (1.0/self->ior) : self->ior;
 
 		double cos_theta = fmin(v_dot(v_scal(ray_in->dir, -1.0), rec->normal), 1.0);
@@ -81,8 +85,8 @@ Bool	PBR_scatter(const ray *ray_in, hit_record *rec, ray *scattered, Bool *was_s
 
 		if (cannot_refract || reflectance(cos_theta, refraction_ratio) > random_double())
 		{
-			scatter_dir = reflect(ray_in->dir, v_add(rec->normal,
-					v_scal(random_unit_vector(), roughness)));
+			scatter_dir = reflect_safe(ray_in->dir, v_add(rec->normal,
+					v_scal(random_unit_vector(), roughness)), rec->old_normal);
 			isSpecularBounce = True;
 		}
 		else
@@ -140,7 +144,7 @@ material new_dielectric(texture t, double ior)
     material m = default_material();
 	m.base_color = t;
 	m.ior = ior;
-	m.transmission = 0.8;
+	m.transmission = BW_MAP(.8);
 	NOT_IMPLEMENTED("dielectric custom transmission values");
 	m.transmission_roughness = NO_MAP;
 	NOT_IMPLEMENTED("transmission roughness map");
@@ -157,7 +161,7 @@ material new_light(texture t, double emission_strength)
 }
 
 //  ----- Scatters
-
+/*
 Bool    no_scatter(ray *ray_in, hit_record *rec, color *attenuation, ray *scattered, material *self)
 {
     return False;
@@ -205,4 +209,4 @@ Bool    dielectric_scatter(ray *ray_in, hit_record *rec, color *attenuation, ray
 	*scattered = (ray){rec->p, direction};
 	return True;
 }
-
+*/

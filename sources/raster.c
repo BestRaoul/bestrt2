@@ -82,19 +82,41 @@ void	raster_items(void)
 	}
 }
 
+void	draw_light_gizmo(t_light *l)
+{
+	if (l->is_dir)
+	{
+		vec3 p = v3(0, 3, 0);
+		vec3 p2 = v_add(p, l->dir);
+		p = world_to_screenpos(p);
+		p2 = world_to_screenpos(p2);
+		draw_debug_dot(p2, l->col);
+		draw_debug_line(p, p2, l->col);
+	}
+	else
+	{
+		vec3 p = world_to_screenpos(l->transform.pos);
+		draw_debug_dot(p, l->col);
+	}
+}
+
+void	raster_lamps(void)
+{
+	for (int i=0; i<v.light_count; i++)
+		draw_light_gizmo(&v.lights[i]);
+}
+
 void	raster_selection(void)
 {
-	if (v.selection_mode == NONE) return;
+	if (v.selected == NULL) return;
 
 	static int rrot = 0; 
 	rrot++;
 
-	vec3 spot = world_to_screenpos(v.selection_pos);
+	vec3 spot = world_to_screenpos(v.selected->pos);
 
 	if (!v_in_bounds(spot)) return;
 
-	gizmo_nshape(6, spot, v3(0, 0, rrot/360.0*MYPI), v3(14, 14), 0, new_color(.8, .4, 0));
+	gizmo_nshape(8, spot, v3(0, 0, rrot/360.0*MYPI), v3(14, 14), 0, new_color(.8, .4, 0));
 	gizmo_dot(spot, new_color(1, .2, .2));
-	if (v.selection_mode == SCALE || v.selection_mode == ROTATE)
-		gizmo_line(spot, v.mouse_pos, new_color(.8, .4, 0));
 }

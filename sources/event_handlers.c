@@ -52,7 +52,7 @@ int	handle_mouse_press(int button, int x, int y)
 		v._scroll -= 1;
 
 	if (v._shift && (button == ZOOM_IN || button == ZOOM_OUT))
-		set_cursor(v.mlx, v.win, v._scroll);
+		set_cursor(v._scroll);
 	return (0);
 	(void) button;
 	(void) x;
@@ -94,17 +94,20 @@ int	handle_key_press(int k)
 			if (v._shift) render_movie();
 			else write_img();
 			clear_img(v.img); break;
-		
-		case K_R: v._rerender = 1; v._R = !v._R;
-			v.render_mode = (v.render_mode+1) % RENDERMODES_MAX; break;
-		case K_T: v._rerender = 1; v.mat_debugmode = (v.mat_debugmode+1) % MAT_DEBUGMODES_MAX; break;
-		//^toggles
-		case K_H: v._H = !v._H;
-			if (v._shift) {v._debug = !v._debug;}
-			else {v._help = !v._help;} break;
-		case K_L: v.lookat_toggle = !v.lookat_toggle; break;
-		case K_M: v.motion_enabled = !v.motion_enabled; break;
 
+		case K_MOVE: if (v.selected) move_transform(v.selected, 0); break;
+		case K_ROTATE: if (v.selected) rotate_transform(v.selected, 0); break;
+		case K_SCALE: if (v.selected) scale_transform(v.selected, 0); break;
+		
+		case K_RENDERMODE: v._rerender = 1; v._R = !v._R; v.render_mode = (v.render_mode+1) % RENDERMODES_MAX; break;
+		case K_MATMODE:	if (v.render_mode==RAYTRACE_MAT_DEBUG) {v._rerender = 1; v.mat_debugmode = (v.mat_debugmode+1) % MAT_DEBUGMODES_MAX;} break;
+		
+		//toggles
+		case K_LOCKON: v.lookat_toggle = !v.lookat_toggle; break;
+		case K_MOTION: v.motion_enabled = !v.motion_enabled; break;
+		case K_HELPON: v._H = !v._H; if (v._shift) {v._debug = !v._debug;} else {v._help = !v._help;} break;
+
+		//events
 		case K_0: v._0 = 1; break;
 		case K_1: v._1 = 1; break;
 		case K_2: v._2 = 1; break;
@@ -127,14 +130,15 @@ int	handle_key_press(int k)
 		case K_NP_8: v._np8 = 1; break;
 		case K_NP_9: v._np9 = 1; break;
 
-		case K_P: v._p = 1; break;
+		case K_REPRINT: v._p = 1; break;
+		//--end--//
 
 		//holds
 		case K_UP: v._up = 1; break;
 		case K_DOWN: v._down = 1; break;
 		case K_LEFT: v._left = 1; break;
 		case K_RIGHT: v._right = 1; break;
-		/*[wasd]*/
+
 		case K_SPACE: v._space = 1; break;
 		case K_SHIFT: v._shift = 1; break;
 		case K_CTRL: v._ctrl = 1; break;
@@ -172,7 +176,7 @@ void	_reset_consumable_clicks(void)
 {
 	v._lclick = 0; v._llift = 0;
 	v._rclick = 0; v._rlift = 0;
-	v._0 = 0, v._1 = 0, v._2 = 0, v._3 = 0, v._4 = 0, v._5 = 0, v._6 = 0, v._7 = 0; //v._8 = 0;//, v._9 = 0;
+	v._0 = 0, v._1 = 0, v._2 = 0, v._3 = 0, v._4 = 0, v._5 = 0, v._6 = 0, //v._7 = 0; v._8 = 0;//, v._9 = 0;
 	v._np0 = 0, v._np1 = 0, v._np2 = 0, v._np3 = 0, v._np4 = 0, v._np5 = 0, v._np6 = 0, v._np7 = 0, v._np8 = 0, v._np9 = 0;
 	v._p = 0;
 }

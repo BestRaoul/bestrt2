@@ -34,6 +34,7 @@ void    update_camera(void)
 	change |= !v_eq(prev_pos, v.camera_pos);
 	change |= !v_eq(prev_rot, v.camera_rot);
 	change |= prev_fov != v.vfov;
+	change |= v.camera_change; v.camera_change = 0;
     
 	if (change || v._p)
 	{
@@ -108,7 +109,7 @@ static void set_camera_vup()
 	if (v.cam_flipp)
 	{
 		NOT_IMPLEMENTED("CAMERA FLIPP");
-		//v.vup = v_scal(v.vup, -1);
+		v.vup = v_scal(v.vup, -1);
 	}
 
 	static vec3 prev_pos = (vec3){};
@@ -150,10 +151,9 @@ static void set_raytrace_values()
 
 	//initialize
 	v.camera_center = v.lookfrom;
-	double focal_length = vec_dist(v.lookfrom, temp_lookat);
 	double theta = v.vfov * DEG2RAD;
 	double h = tan(theta/2);
-	double viewport_height = 2 * h * focal_length;
+	double viewport_height = 2 * h * v.focus_dist;
 	double viewport_width = viewport_height * aspect_ratio;
 
 	//Calculate the u,v,w unit basis vectors for the camera coordinate frame.
@@ -172,19 +172,73 @@ static void set_raytrace_values()
 	// Calculate the location of the upper left pixel.
 	vec3 viewport_upper_left = v_sub(v_sub(v_sub(
 		v.camera_center,
-		v_scal(_w, focal_length)),
+		v_scal(_w, v.focus_dist)),
 		v_scal(viewport_u, .5)),
 		v_scal(viewport_v, .5));
 	v.pixel00_loc = v_add(viewport_upper_left,
 		v_scal(v_add(v.pixel_delta_u, v.pixel_delta_v), .5) );
+
+	 // Calculate the camera defocus disk basis vectors.
+	double defocus_radius = v.focus_dist * tan(v.defocus_angle*DEG2RAD / 2);
+	v.defocus_disk_u = v_scal(_u, defocus_radius);
+	v.defocus_disk_v = v_scal(_v, defocus_radius);
 }
 
 // -----
 
-static void	rotate_camera()
+double	get_move_speed()
 {
+	const double	move_acceleration = 3;
+	const double	top_speed = 100;
+	static double	s;
+
+	if (v.lookat_toggle)
+		s = 0;
+	if (!v._right && !v._left && !v._up && !v._down && !v._space)
+		s = 0;
+
+	s += move_acceleration*v.delta_time;
+	s = clamp((interval){0, top_speed}, s);
+
+	if (v._shift)
+		return s/5;
+
+	return s;
+}
+
+double	get_angular_speed()
+{
+	const double	move_acceleration = MYPI/3;
+	const double	top_speed = MYPI;
+	static double	s;
+
+	if (!v.lookat_toggle)
+		s = 0;
+	if (!v._right && !v._left && !v._up && !v._down && !v._space)
+		s = 0;
+
+	s += move_acceleration*v.delta_time;
+	s = clamp((interval){0, top_speed}, s);
+
+	if (v._shift)
+		return s/5;
+
+	return s;
+}
+
+void	do_orbit_move(vec3 axis, double angle)
+{
+	axis = rotate_y(axis, v.camera_rot.y);
+	v.camera_pos = rotate_around(v.camera_pos, v.lookat, axis, angle);
+}
+
+//orbit or fly rotation movement
+static void	rotate_camera()
+{	
 	double dist_to = vec_dist(v.camera_pos, v.lookat);
-	
+
+	int one = 1 - 2*v.cam_flipp;
+
 	if (v._np0)
 	{
 		v.camera_pos = v3(0, 0, 0);
@@ -215,80 +269,63 @@ static void	rotate_camera()
 
 	if (v.lookat_toggle)
 	{
-		vec3 p = v_sub(v.camera_pos, v.lookat);
-		double d = vec_dist(v.camera_pos, v.lookat);
+		if (v._np9) NOT_IMPLEMENTED("Flip around Y axis")
 
-		if (v._np0)
-		{
-			p = v3(0, 0, 0);
-			v.camera_rot = lookRotation(v3(), v3(0, 0, -1));
-			v.lookat_toggle = 0;
-		}
-		if (v._np1) // from Z
-		{
-			p = v3(0, 0, d);
-			v.lookat_toggle = 1;
-		}
-		if (v._np3) // from X
-		{
-			p = v3(d);
-			v.lookat_toggle = 1;
-		}
-		if (v._np7) // from Y
-		{
-			p = v3(0, d);
-			v.lookat_toggle = 1;
-		}
-
-		if (v._np9) p = rotate_y(p, 180 * DEG2RAD);
-		if (v._np4) p = rotate_y(p, 15 * DEG2RAD);
-		if (v._np6)	p = rotate_y(p, -15 * DEG2RAD);
-		if (v._np2)
-		{
-			double alpha = atan2(p.x, p.z);
-			p = rotate_y(p, -alpha);
-			p = rotate_x(p, 15 * DEG2RAD);
-			p = rotate_y(p, alpha);
-		}
-		if (v._np8)
-		{
-			double alpha = atan2(p.x, p.z);
-			p = rotate_y(p, -alpha);
-			p = rotate_x(p, -15 * DEG2RAD);
-			p = rotate_y(p, alpha);
-		}
-
-		v.camera_pos = v_add(p, v.lookat);
+		if (v._np4) do_orbit_move(v3(0, one), 15*DEG2RAD);
+		if (v._np6)	do_orbit_move(v3(0,-one), 15*DEG2RAD);
+		if (v._np2) do_orbit_move(v3(-one), 15*DEG2RAD);
+		if (v._np8) do_orbit_move(v3( one), 15*DEG2RAD);
 	}
 	else /* look infront */
 	{
-		if (v._np9)
-			v.camera_rot.z += 15*DEG2RAD;
-		if (v._np4)
-			v.camera_rot.y -= 15*DEG2RAD;
-		if (v._np6)
-			v.camera_rot.y += 15*DEG2RAD;
-		if (v._np2)
-			v.camera_rot.x += 15*DEG2RAD;
-		if (v._np8)
-			v.camera_rot.x -= 15*DEG2RAD;
+		// if (v._np9) v.camera_rot.z += one*15*DEG2RAD;
+		if (v._np4) v.camera_rot.y -= one*15*DEG2RAD;
+		if (v._np6) v.camera_rot.y += one*15*DEG2RAD;
+		if (v._np2) v.camera_rot.x += one*15*DEG2RAD;
+		if (v._np8) v.camera_rot.x -= one*15*DEG2RAD;
 	}
 }
 
 static void	move_camera()
 {
-	if (v._right)
-		v.camera_pos = v_add(v.camera_pos, rotate3(v3(5*v.delta_time), v.camera_rot));
-	if (v._left)
-		v.camera_pos = v_add(v.camera_pos, rotate3(v3(-5*v.delta_time), v.camera_rot));
-	if (v._up)
-		v.camera_pos = v_add(v.camera_pos, rotate3(v3(0, 0, 5*v.delta_time), v.camera_rot));
-	if (v._down)
-		v.camera_pos = v_add(v.camera_pos, rotate3(v3(0, 0, -5*v.delta_time), v.camera_rot));
-	if (v._space && !v._shift)
-		v.camera_pos = v_add(v.camera_pos, rotate3(v3(0, 5*v.delta_time), v.camera_rot));
-	if (v._space && v._shift)
-		v.camera_pos = v_add(v.camera_pos, rotate3(v3(0, -5*v.delta_time), v.camera_rot));
+	double move_speed = get_move_speed();
+	double angular_speed = get_angular_speed();
+
+	int one = 1 - 2*v.cam_flipp;
+
+	if (v.lookat_toggle)
+	{
+		vec3 move;
+		if (v._space && !v._shift)	do_orbit_move(v3( one), angular_speed*v.delta_time);
+		if (v._space && v._shift)	do_orbit_move(v3(-one), angular_speed*v.delta_time);
+
+		if (v._right)				do_orbit_move(v3(0,-one), angular_speed*v.delta_time);
+		if (v._left)				do_orbit_move(v3(0, one), angular_speed*v.delta_time);
+
+		if (v._up || v._down)
+		{
+			if (v._up)		move = v3(0, 0, 1);
+			if (v._down)	move = v3(0, 0,-1);
+
+			move = v_scal(move, angular_speed*v.delta_time);
+
+			v.camera_pos = v_add(v.camera_pos, rotate3(move, v.camera_rot));
+		}
+	}
+	else
+	{
+		vec3 move;
+		if (v._right)				move = v3( one);
+		if (v._left)				move = v3(-one);
+		if (v._up)					move = v3(0, 0, 1);
+		if (v._down)				move = v3(0, 0,-1);
+		if (v._space && !v._shift)	move = v3(0, one);
+		if (v._space && v._shift)	move = v3(0,-one);
+
+		move = v_scal(move, move_speed*v.delta_time);
+
+		v.camera_pos = v_add(v.camera_pos, rotate3(move, v.camera_rot));
+	}
 }
 
 static void	fov_camera()

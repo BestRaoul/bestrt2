@@ -154,7 +154,7 @@ texture from_func(color (*uv_func)(vec3))
     return t;
 }
 
-// -- RETURNS
+// -- RETURN MODES
 
 void    repeat(double *_u, double *_v)
 {
@@ -165,6 +165,13 @@ void    repeat(double *_u, double *_v)
     if (*_v<0)
         *_v = 1 - fabs(*_v);
 }
+
+void    clip(double *_u, double *_v)
+{
+    return;
+}
+
+// -- RETURNS
 
 color   solid_color_return(double _u, double _v, const texture *self)
 {
@@ -191,9 +198,10 @@ color   checkeboard_return(double _u, double _v, const texture *self)
 		self->checker_0->value(_u,_v, self->checker_0);
 }
 
-//ADD repeat, mirror patterns
 color   image_return(double _u, double _v, const texture *self)
 {
+    repeat(&_u, &_v);
+    
     // If we have no texture data, then return solid cyan as a debugging aid.
     if (self->image_height <= 0) return v3(0,1,1);
 

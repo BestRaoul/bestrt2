@@ -138,6 +138,8 @@ int	handle_key_press(int k)
 		case K_DOWN: v._down = 1; break;
 		case K_LEFT: v._left = 1; break;
 		case K_RIGHT: v._right = 1; break;
+		case K_Q: v._Q = 1; break;
+		case K_E: v._E = 1; break;
 
 		case K_SPACE: v._space = 1; break;
 		case K_SHIFT: v._shift = 1; break;
@@ -162,6 +164,8 @@ int	handle_key_release(int k)
 		case K_DOWN: v._down = 0; break;
 		case K_LEFT: v._left = 0; break;
 		case K_RIGHT: v._right = 0; break;
+		case K_Q: v._Q = 0; break;
+		case K_E: v._E = 0; break;
 		/*[wasd]*/
 		case K_SPACE: v._space = 0; break;
 		case K_SHIFT: v._shift = 0; break;

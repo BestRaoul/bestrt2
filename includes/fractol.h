@@ -123,7 +123,7 @@
 #  define K_Y 16
 # endif
 
-# define K_MOVE K_M
+# define K_MOVE K_G
 # define K_ROTATE K_R
 # define K_SCALE K_S
 
@@ -173,6 +173,14 @@
 # define CORNER v3(v.w, v.h)
 
 # define NOT_IMPLEMENTED(f) printf("%s feature is not implemented yet..\n", f);
+
+# define X_COLOR vrgb(223,63,80)
+# define Y_COLOR vrgb(128,187,27)
+# define Z_COLOR vrgb(65,131,196)
+
+# define X_ENABLED (v.plane != YZ && v.plane != Y && v.plane != Z)
+# define Y_ENABLED (v.plane != XZ && v.plane != X && v.plane != Z)
+# define Z_ENABLED (v.plane != XY && v.plane != X && v.plane != Y)
 
 typedef struct s_point		vec3;
 typedef struct s_quat		quat;
@@ -416,6 +424,8 @@ typedef struct s_vars {
 	int			_A;
 	int			_S;
 	int			_D;
+	int			_Q;
+	int			_E;
 
 	int			_space;
 	int			_shift;
@@ -541,7 +551,7 @@ typedef struct s_vars {
 extern t_vars	v;
 
 
-void    init_scene(void);
+void    init_scene(int select);
 void	render_movie();
 //loop.c
 int		loop(void);
@@ -607,6 +617,7 @@ void	scribe_contour(char *str, int x, int y, color c1, color c2);
 void	scribe_pos(char *tag, vec3 pos, int x, int y, color c);
 void	scribe_v3d(char *tag, vec3 pos, int x, int y, color c);
 void	scribe_num(char *format, int n, int x, int y, color c);
+void	scribe_dub(char *format, double d, int x, int y, color c);
 //		-- rotate
 vec3	rotate(vec3 v, double o);
 vec3	rotate_x(vec3 v, double alpha);
@@ -761,6 +772,7 @@ vec3	random_on_hemisphere(vec3 normal);
 //.
 //trashcan.c
 void	update_delta_time(void);
+void	update_tfm_matrices(void);
 vec3	plane_alligned_add(vec3 base, vec3 add);
 int		get_elapsed(struct timeval event);
 vec3	*get_npoints(int n, double r_offset);
@@ -771,9 +783,12 @@ void	set_heat(vec3 pos);
 vec3	project(vec3 pos, double fov, double aspect);
 vec3	reverse_project(vec3 pos, double fov, double aspect);
 vec3	world_to_screenpos(vec3 pos);
+vec3	world_to_screenpos_fixed_fov(vec3 pos, double fov);
+vec3	world_to_screenpos_ortho(vec3 pos);
 
 void	draw_grid_and_cardinals(void);
 void	raster_items(void);
+void	raster_lamps(void);
 void	reset_heatmap(void);
 
 void	set_cursor(unsigned int xc);
@@ -879,9 +894,16 @@ ray	 apply_ray(const ray *in, const m4x4 t);
 
 //TRASHHHHH
 void    simulate_rayzz();
-
+typedef struct {
+	vec3	anchor;
+	vec3	r_top, r_bot;
+	vec3	g_top, g_bot;
+	vec3	b_top, b_bot;
+} ri;
+ri	get_rotation_indicator(vec3 anchor, vec3 end);
 
 # define INTERVAL_EMPTY (interval){+INFINITY, -INFINITY}
 # define INTERVAL_UNIVERSE (interval){-INFINITY, +INFINITY}
+# define INTERVAL_FORWARD (interval){0, +INFINITY}
 
 #endif

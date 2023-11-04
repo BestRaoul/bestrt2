@@ -19,14 +19,19 @@ enum e_et {
 	RESET
 };
 
-int	set_reset(tfm *transform, vec3 *pmp, vec3 *init_p, int mode, int et)
+void	default_crusor()
+{
+	set_cursor(XC_crosshair);
+}
+
+int	set_reset(tfm *transform, vec3 *inital_mp, vec3 *init_p, int mode, int et)
 {
 	if (et == SET)
 	{
 		if (mode == MOVE)	*init_p = transform->pos;
 		if (mode == ROTATE)	*init_p = transform->rot;
 		if (mode == SCALE)	*init_p = transform->scale;
-		*pmp = v.mouse_pos;
+		*inital_mp = v.mouse_pos;
 		v.selection_mode = mode;
 		v.render_mode = RASTER;
 
@@ -41,82 +46,245 @@ int	set_reset(tfm *transform, vec3 *pmp, vec3 *init_p, int mode, int et)
 		if (mode == MOVE)	transform->pos = *init_p;
 		if (mode == ROTATE)	transform->rot = *init_p;
 		if (mode == SCALE)	transform->scale = *init_p;
-		set_cursor(XC_crosshair);
+		default_crusor();
 		return 1;
 	}
 	return 0;
 }
 
+double distanceToLine(vec3 A, vec3 B, vec3 C) {
+    double numerator = fabs((B.x - A.x) * (A.y - C.y) - (A.x - C.x) * (B.y - A.y));
+    double denominator = sqrt((B.x - A.x) * (B.x - A.x) + (B.y - A.y) * (B.y - A.y));
+    double distance = numerator / denominator;
+    return distance;
+}
+
+vec3 projectOntoLine(vec3 A, vec3 B, vec3 C) {
+	vec3 AB, AC, P;
+    double dotAB, dotAC;
+
+    // Calculate vector AB
+    AB.x = B.x - A.x;
+    AB.y = B.y - A.y;
+
+    // Calculate vector AC
+    AC.x = C.x - A.x;
+    AC.y = C.y - A.y;
+
+    // Calculate dot products
+    dotAB = AB.x * AB.x + AB.y * AB.y;
+    dotAC = AC.x * AB.x + AC.y * AB.y;
+
+    // Calculate the projected vector P
+    P.x = (dotAC / dotAB) * AB.x;
+    P.y = (dotAC / dotAB) * AB.y;
+
+    return v_add(P, A);
+}
+
+double directioned_distance(vec3 from, vec3 to, vec3 dir)
+{
+	double d = vec_dist(from, to);
+
+	vec3 my_dir = from_to(from, to);
+	if (signd(my_dir.x) != signd(dir.x) && signd(my_dir.y) != signd(dir.y))
+		return -d;
+	return d;
+}
+
+Bool	smth_smth_check(vec3 nmp, vec3 pp, vec3 A, vec3 B, vec3 C, vec3 D)
+{
+	double dtp = vec_dist(nmp, pp);
+	vec3 I1 = line_intersection(nmp, pp, A, B);
+	vec3 I2 = line_intersection(nmp, pp, C, D);
+	double dt1 =  directioned_distance(nmp, I1, from_to(nmp, pp));
+	double dt2 =  directioned_distance(nmp, I2, from_to(nmp, pp));
+
+	if (dt1 < 0) dt1 = INFINITY;
+	if (dt2 < 0) dt2 = INFINITY;
+
+	return (dtp < dt1 && dtp < dt2);
+}
+
+double	tddd(vec3 from, vec3 to, vec3 dir)
+{
+	vec3 v = from_to(from, to);
+	double d = sqrt(v.x*v.x + v.y*v.y);
+	if (v_dot(v, dir) < 0)
+		return -d;
+	return d;
+}
+
+//in Radians
+//[0, MYPI]
+double get_angle(vec3 dir)
+{
+	double a = atan2(dir.y, dir.x);
+	if (a < 0)
+		return a + MYPI;
+	return a;	
+}
+
+int	get_move_plane(vec3 mp, ri r)
+{
+	double a_m =  get_angle(from_to(r.anchor, mp));
+	double a_r =  get_angle(from_to(r.anchor, r.r_top));
+	double a_g =  get_angle(from_to(r.anchor, r.g_top));
+	double a_b =  get_angle(from_to(r.anchor, r.b_top));
+
+	double up_bound = 10;
+	double low_bound = -10;
+	if (a_r < up_bound && a_r > a_m) up_bound = a_r;
+	if (a_r > low_bound && a_r < a_m) low_bound = a_r;
+	if (a_g < up_bound && a_g > a_m) up_bound = a_g;
+	if (a_g > low_bound && a_g < a_m) low_bound = a_g;
+	if (a_b < up_bound && a_b > a_m) up_bound = a_b;
+	if (a_b > low_bound && a_b < a_m) low_bound = a_b;
+
+	if (up_bound  ==  10) up_bound = fmin(fmin(a_r, a_g), a_b);
+	if (low_bound == -10) low_bound = fmax(fmax(a_r, a_g), a_b);
+
+	if (a_r != up_bound && a_r != low_bound) return YZ;
+	if (a_g != up_bound && a_g != low_bound) return XZ;
+	if (a_b != up_bound && a_b != low_bound) return XY;
+	write(1, "WTF!", 4);
+
+	// int mv_plane = get_move_plane(mp, r);
+	// if (v.plane == XY || v.plane == XZ || v.plane == YZ) mv_plane = v.plane;
+	// (void) mv_plane;
+	return X;
+}
+
+//should be on top
+void	draw_modify_axis(ri r, vec3 inital_position)
+{
+	if (v.selection_mode != NONE && v.plane != XYZ)
+	{
+		if (X_ENABLED)
+		{
+			vec3 f = v_add(inital_position, v3( v.far));
+			vec3 t = v_add(inital_position, v3(-v.far));
+			draw_projected_line(f, t, X_COLOR);
+		}
+		if (Y_ENABLED)
+		{
+			vec3 f = v_add(inital_position, v3(0, v.far));
+			vec3 t = v_add(inital_position, v3(0,-v.far));
+			draw_projected_line(f, t, Y_COLOR);
+		}
+		if (Z_ENABLED) {
+			vec3 f = v_add(inital_position, v3(0,0, v.far));
+			vec3 t = v_add(inital_position, v3(0,0,-v.far));
+			draw_projected_line(f, t, Z_COLOR);
+		}
+	}
+}
+
+void	get_intersections(vec3 pos, vec3 mp, vec3 *ir, vec3 *ib)
+{
+	vec3 anchor = world_to_screenpos(pos);
+	t_item temp = (t_item){(tfm){pos, v3(), v_3(1)}, new_m(BLACK), NULL, hit_plane};
+	hit_record rec;
+
+	//X - Z
+	set_transform_matrix(&temp.transform, temp.fwd, temp.bck);
+	ray raii; init_ray(mp.x,mp.y,&raii);
+	if (hit_plane(&raii, INTERVAL_FORWARD, &rec, &temp))
+	{
+		*ir = v3(rec.p.x, pos.y, pos.z);
+		*ib = v3(pos.x, pos.y, rec.p.z);
+	}
+	else
+	{
+		*ir = pos;
+		*ib = pos;
+	}
+}
+
+void	v_round(vec3 *in, double precision)
+{
+	in->x = (int)(in->x/precision) * precision;
+	in->y = (int)(in->y/precision) * precision;
+	in->z = (int)(in->z/precision) * precision;
+}
+
 void	move_transform(tfm *transform, int et)
 {
-	const int	pixels_to_unit = 200;
+	static vec3 initial_position = (vec3){};
 	static vec3 pmp = (vec3){};
-	static vec3 init_p = (vec3){};
 	vec3 mp = v.mouse_pos;
 
-	if (set_reset(transform, &pmp, &init_p, MOVE, et))
+	if (set_reset(transform, &pmp, &initial_position, MOVE, et))
+		return;
+	ri r = get_rotation_indicator(initial_position, world_to_screenpos(initial_position));
+	draw_modify_axis(r, initial_position);
+
+	vec3	pg = projectOntoLine(r.g_bot, r.g_top, mp);
+	pg.z = 0;
+	double dy = tddd(r.anchor, r.g_top, from_to(r.anchor, r.g_top));
+
+	vec3 ir, ib;
+	get_intersections(initial_position, mp, &ir, &ib);
+
+	vec3 move = v3(0,0,0);
+	move.x = ir.x - initial_position.x;
+	move.z = ib.z - initial_position.z;
+	move.y = tddd(r.anchor, pg, from_to(r.anchor, r.g_top)) / dy;
+
+	if (v_eq(pmp, mp))
 		return;
 
-	//--- ACTUAL MOVE ---
-	vec3 move = from_to(pmp, mp);
-	if (v._shift) move = v_scal(move, 1./5.);
-	move = v_scal(move, 1./pixels_to_unit);
-
-	//	get_3d_move() -- complicated
-	move = v3(move.x, 0, move.y);
-	//	enc -- complicated
-
-	transform->pos = plane_alligned_add(transform->pos, move);
+	transform->pos = plane_alligned_add(initial_position, move);
+	if (v._ctrl) v_round(&transform->pos, 0.25);
 
 	pmp = mp;
 }
 
 void	scale_transform(tfm *transform, int et)
 {
-	const int	pixels_to_unit = 200;
-	static vec3 pmp = (vec3){};
-	static vec3 init_p = (vec3){};
+	static vec3 initial_scale = (vec3){};
+	static vec3 inital_mp = (vec3){};
 	vec3 mp = v.mouse_pos;
 
-	if (set_reset(transform, &pmp, &init_p, SCALE, et))
+	if (set_reset(transform, &inital_mp, &initial_scale, SCALE, et))
 		return;
+	ri r = get_rotation_indicator(transform->pos, world_to_screenpos(transform->pos));
+	draw_modify_axis(r, transform->pos);
 
-	//--- ACTUAL MOVE ---
-	vec3 move = from_to(pmp, mp);
-	if (v._shift) move = v_scal(move, 1./5.);
-	move = v_scal(move, 1./pixels_to_unit);
+	double initial_d = vec_dist(r.anchor, inital_mp);
+	double d = vec_dist(r.anchor, mp);
 
-	//	get_3d_move() -- complicated
-	move = v_3(v_len(move));
-	//	enc -- complicated
+	vec3 move = v_scal(initial_scale, d / initial_d);
+	move = v_sub(move, initial_scale);
 
-	transform->scale = plane_alligned_add(transform->scale, move);
+	gizmo_line(r.anchor, mp, WHITE);
 
-	pmp = mp;
+	transform->scale = plane_alligned_add(initial_scale, move);
+	if (v._ctrl) v_round(&transform->scale, 0.1);
 }
 
 void	rotate_transform(tfm *transform, int et)
 {
-	const int	pixels_to_unit = 200/MYPI;
-	static vec3 pmp = (vec3){};
-	static vec3 init_p = (vec3){};
+	static vec3 initial_rot = (vec3){};
+	static vec3 inital_mp = (vec3){};
 	vec3 mp = v.mouse_pos;
 
-	if (set_reset(transform, &pmp, &init_p, ROTATE, et))
+	if (set_reset(transform, &inital_mp, &initial_rot, ROTATE, et))
 		return;
+	ri r = get_rotation_indicator(transform->pos, world_to_screenpos(transform->pos));
+	draw_modify_axis(r, transform->pos);
 
-	//--- ACTUAL MOVE ---
-	vec3 move = from_to(pmp, mp);
-	if (v._shift) move = v_scal(move, 1./5.);
-	move = v_scal(move, 1./pixels_to_unit);
+	vec3 initial_dir = from_to(r.anchor, inital_mp);
+	vec3 dir = from_to(r.anchor, mp);
+	double initial_angle = atan2(initial_dir.y, initial_dir.x) + MYPI;
+	double angle = atan2(dir.y, dir.x) + MYPI;
+	
+	vec3 move = v_3(angle - initial_angle);
 
-	//	get_3d_move() -- complicated
-	move = v3(move.y, move.x, 0);
-	//	enc -- complicated
+	gizmo_line(r.anchor, mp, WHITE);
 
-	transform->rot = plane_alligned_add(transform->rot, move);
-
-	pmp = mp;
+	transform->rot = plane_alligned_add(initial_rot, move);
+	if (v._ctrl) v_round(&transform->rot, 5*DEG2RAD);
 }
 
 void	mrs_null_reference(tfm *_, int et)
@@ -136,6 +304,12 @@ void	manage_selection(void)
 	if (v._lclick)
 	{
 		v._lclick = 0;
+		default_crusor();
+		if (v.selected && v.selection_mode != NONE)
+		{
+			v.selection_mode = NONE;
+			return;
+		}
 		v.selection_mode = NONE;
 
 		ray r; hit_record rec;
@@ -159,13 +333,13 @@ void	manage_selection(void)
 
 	if (v.selected == NULL) return;
 
-
 	if (v.selection_mode == NONE) // unselect
 	{
 		if (v._rclick)
 		{
 			v.selected = NULL;
 			v._rclick = 0;
+			default_crusor();
 		}
 		return;
 	}
@@ -174,6 +348,7 @@ void	manage_selection(void)
 	{
 		v.selection_mode = NONE;
 		v._space = 0;
+		default_crusor();
 		return;
 	}
 	if (v._rclick) //Reset
@@ -181,6 +356,7 @@ void	manage_selection(void)
 		v._rclick = 0;
 		apt[v.selection_mode](v.selected, RESET);
 		v.selection_mode = NONE;
+		default_crusor();
 		return;
 	}
 

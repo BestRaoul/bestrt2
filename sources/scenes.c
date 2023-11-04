@@ -47,13 +47,13 @@ void	showoff_7();
 void	showoff_8();
 void	showoff_9();
 
-void    init_scene(void)
+void    init_scene(int select)
 {
 	v.item_count = 0;
 	v.light_count = 0;
 	v.motion_count = 0;
 
-    switch (100)
+    switch (select)
     {
         case 1 : balls(); break;
         case 2 : tweens(); break;
@@ -91,6 +91,8 @@ void    init_scene(void)
 		case 109: showoff_9(); break;
 
 		case 100: test(); break;
+		
+		default: write(2, "NO scene selected..\n", 21); exit(1); break;
     }
 }
 
@@ -147,8 +149,27 @@ void    default_cam(void)
 
 void	test(void)
 {
-	// v.cam_flipp = 1;
-	showoff_1();
+	default_cam();
+    v.render_mode = RAYTRACE;
+	v.lookat_toggle = 1;
+	v.lookat = v3(0,0,0);
+	v.camera_pos = v3(0.850230, 0.779302, 2.851645);
+	v.vfov = 50;
+	v.ambient = 0;
+	v.background = cc3(WHITE);
+	v.irradiance_map = NO_MAP;
+	v.max_samples = 10;
+	v.max_depth = 3;
+	v.upscale = 1;
+
+    material material_ground = new_lambertian(checkerboard(.5, c3(.2,.3,.1), c3(.9, .9, .9)));
+    material material_center = new_lambertian(c3(0.1, 0.2, 0.4));
+    material material_left	 = new_dielectric(c3(1,1,1), 1.5);
+    material material_right  = new_metal(c3(0.8, 0.6, 0.2), 0.02);
+
+    
+	add_item(v3( 1, 0, 0),		v_3(0.2),	v3(), material_right, SPHERE);
+	add_item(v3( 1, 0, 0),		v_3(1),		v3(), material_right, PLANE);
 	return;
 }
 
@@ -344,7 +365,7 @@ void	showoff_7(void)
 	material floor = new_lambertian(from_bmp("textures/wooden_floor/woodenmap.bmp"));
 	floor.roughness = from_bmp("textures/wooden_floor/woodenrough.bmp");
 	floor.normal = from_bmp("textures/wooden_floor/woodennormal.bmp");
-	floor.specular = BW_MAP(0.5);
+	floor.specular = BW_MAP(0.2);
 
 	//METAL BOX
 	material box = new_lambertian(from_bmp("textures/metal_panel/color.bmp"));
@@ -376,7 +397,7 @@ void	showoff_7(void)
 	cyl.roughness = from_bmp("textures/wood_window/rough.bmp");
 	cyl.metalic = from_bmp("textures/wood_window/metalic.bmp");
 	cyl.normal = from_bmp("textures/wood_window/normal.bmp");
-	cyl.transmission = from_bmp("textures/wood_window/transmission.bmp"); cyl.ior = 1.5;
+	cyl.transmission = from_bmp("textures/wood_window/transmission.bmp"); cyl.ior = 1.0;
 
 	//WOOD ctlinder
 	material cyl2 = new_lambertian(from_bmp("textures/wood/color.bmp"));
@@ -393,7 +414,7 @@ void	showoff_7(void)
     add_item(v3(-s, 1,-d1),	v_3(1),	v3(), box2, BOX);
     add_item(v3(-s, 1, d1),	v_3(1),	v3(), sph, SPHERE);
     add_item(v3( s, 1, d1),	v_3(1),	v3(), sph2, SPHERE);
-    add_item(v3( 0, 4, d0),	v3(2,4,2),	v3(), cyl, CYLINDER);
+    add_item(v3( 0, 4, d0),	v3(2,4,2),	v3(0, MYPI/3), cyl, CYLINDER);
     add_item(v3( s, 1,-d1),	v3(1,1,1),	v3(), cyl2, CYLINDER);
 
 //LIGHTS

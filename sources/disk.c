@@ -218,7 +218,8 @@ int readBMP(const char* filename, bmp_read *r) {
 
     // Check if the file is actually a BMP file
     if (signature != 0x4D42) {
-        fprintf(stderr, "Error: File %s is not a BMP file\n", filename);
+        write(1, "\33[2K\r", ft_strlen("\33[2K\r"));
+        fprintf(stderr, "Error %s: File is not a BMP file\n", filename);
         fclose(file);
         return 0;
     }
@@ -275,7 +276,9 @@ int readBMP(const char* filename, bmp_read *r) {
     }
     else if (headerSize <= 124)
     {
-        fprintf(stderr, "READING headsize: 124..");
+        if (headerSize != 124)
+            fprintf(stderr, "WARNING: header size %d has not been tested\n", headerSize);
+        fprintf(stderr, "READING headsize: %d..", headerSize);
         // fprintf(stderr, "Warning: yolo reading bmp file with weird head size %u\n", headerSize);
         fread(&width, sizeof(int32_t), 1, file);
         fread(&height, sizeof(int32_t), 1, file);
@@ -306,10 +309,12 @@ int readBMP(const char* filename, bmp_read *r) {
     }
     else
     {
-        fprintf(stderr, "Error: %u wrong HEADER size\n", headerSize);
+        write(1, "\33[2K\r", ft_strlen("\33[2K\r"));
+        fprintf(stderr, "Error %s: wrong HEADER size %u\n", filename, headerSize);
+        fclose(file);
         return 0;
     }
-    
+
     int palette[256];
     if (bitsPerPixel == 8)
     {
@@ -328,11 +333,6 @@ int readBMP(const char* filename, bmp_read *r) {
     }
     // printf("bytes left: %d\n", bytes_till_pixels);
     
-    //Read till pixel data start
-    char _;
-    while (bytes_till_pixels-- > 0)
-        fread(&_, 1, 1, file);
-
     // Check if the BMP format is supported (usually 24 bits per pixel)
     if (bitsPerPixel == 1 || bitsPerPixel == 4)
     {
@@ -365,6 +365,7 @@ int readBMP(const char* filename, bmp_read *r) {
 
     int oii = 0;
     // Read pixel data
+    fseek(file, dataOffset, SEEK_SET);
     for (int i = r->height - 1; i >= 0; i--) {
         for (int j = 0; j < r->widht; j++) {
             if (bitsPerPixel == 24)
@@ -397,4 +398,9 @@ int readBMP(const char* filename, bmp_read *r) {
     fprintf(stderr, "READ %s: done!\n", filename);
 
     return 1;
+}
+
+int readXMP(const char* filename, bmp_read *r)
+{
+   return False; 
 }

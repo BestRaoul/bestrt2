@@ -38,23 +38,48 @@ static void apply_motions()
 	}
 }
 
-static void	_update(void)
+void	update_lamp_stats()
 {
+	t_light *lamp;
+	for (int i=0; i<v.light_count; i++)
+	{
+		lamp = &v.lights[i];
+		lamp->intensity = v_len(lamp->transform.scale);
+		lamp->dir = rotate3(v3(1,0,0), lamp->transform.rot);
+	}
+}
+
+void	update_tfm_matrices(void)
+{
+	t_item *item;
+	for (int i=0; i<v.item_count; i++)
+	{
+		item = &v.items[i];
+		set_transform_matrix(&item->transform, item->fwd, item->bck);
+	}
+}
+
+static void	_update(void)
+{	
 	update_delta_time();
 	
 	apply_motions();
 
 	update_camera();
 
+	v._rerender |= v.render_mode==RASTER;
+	if (v._rerender)
+		clear_img(v.img);
+
 	maybe_add_item();
 	manage_selection();
 
-	//if (_rerender)
-	//set_all_transform_matrices()
+	update_lamp_stats();
+	update_tfm_matrices();
 }
 
 static void	_render(void)
-{
+{	
 	if (v.render_mode == RASTER)
 		raster();
 	else

@@ -49,3 +49,10 @@ void	scribe_num(char *format, int n, int x, int y, color c)
 	scribe(str, x, y, c);
 }
 
+void	scribe_dub(char *format, double d, int x, int y, color c)
+{
+	char str[64] = "";
+	sprintf(str, format, d);
+	scribe(str, x, y, c);
+}
+

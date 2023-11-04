@@ -1,35 +1,23 @@
-threading plan + execute it
-	single thread simplicity
-	quick switch to multiple
-
+<!---
 mouse images
-	default
-	4 arrows move
-	2 arrows rot/scale around axis
 
-fix issue with total_move and anchor -> after using shift absulute center is not there
-
-item: 
-	+select, +modif
-	?color picker
-	shift + XZY
-
------ Things i dont want to do, but have to be done
+color picker
 
 //linux -> CAMERA MOVEMENT - mouse
-//cam add CAMERA FLIPP
 
 fix ambient bounces
+--->
 
------------ NOW ---------------
-4. onject modif SMART
-94. fix UV map read a bit too late 5 pixels
------------AT 42---------------
+# ----------- NOW ---------------
+# -----------AT 42---------------
 1. parsing
 2. no crash
 3. ptrs ALLL
 4. speed
------------ NEVER ---------------
+5. debug info
+6. flag ILLEGAL
+
+# ----------- NEVER ---------------
 IGNORED - 2. directional light/IBL (roughness)
 IGNORED - '. smoothshadows on lamps
 IGNORED - 3. window resizing
@@ -42,15 +30,18 @@ IGNORED - L. dir light check does not work
 IGNORED - N. normal self shadowing is bugged
 IGNORED - N. normal scaling fix
 IGNORED - IBL. proper cubemap, proper HDR-s values
---- after
+IGNORED - move is not smart
+IGNORED - ctrl snap is not flexible smart
+
+# ----------- AFTER ---------------
 //98. (bump to normal conversion)
-//6. add_item, add_tween (duration, loop, delay)
+//6. add_tween (duration, loop, delay)
 3. tween, item, lights, sky, rendermovie CLEANUP
 4. UI (material debug, vec3's, color materials)
 5. plenty render modes
 6. ao
 
-//TODO
+# ----------- WANTO ---------------
 3. ntfy
 	//cloudflare ->cronjob -> always notify
 3.1 better tweening

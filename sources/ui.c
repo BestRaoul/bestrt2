@@ -12,24 +12,45 @@
 
 #include "fractol.h"
 
-#define X_ENABLED (v.plane != YZ && v.plane != Y && v.plane != Z)
-#define Y_ENABLED (v.plane != XZ && v.plane != X && v.plane != Z)
-#define Z_ENABLED (v.plane != XY && v.plane != X && v.plane != Y)
+ri	get_rotation_indicator(vec3 anchor, vec3 end)
+{
+	ri	r;
+
+	r.anchor = world_to_screenpos(anchor);
+	r.r_top = world_to_screenpos(v_add(anchor, v3( 1)));
+	r.r_bot = world_to_screenpos(v_add(anchor, v3(-1)));
+	r.g_top = world_to_screenpos(v_add(anchor, v3(0, 1)));
+	r.g_bot = world_to_screenpos(v_add(anchor, v3(0,-1)));
+	r.b_top = world_to_screenpos(v_add(anchor, v3(0,0, 1)));
+	r.b_bot = world_to_screenpos(v_add(anchor, v3(0,0,-1)));
+
+	r.anchor.z = r.r_top.z = r.r_bot.z =  r.g_top.z = r.g_bot.z = r.b_top.z = r.b_bot.z = end.z = 0; 
+
+	vec3 move = from_to(r.anchor, end);
+	r.anchor = v_add(r.anchor, move);
+	r.r_top = v_add(r.r_top, move);
+	r.r_bot = v_add(r.r_bot, move);
+	r.g_top = v_add(r.g_top, move);
+	r.g_bot = v_add(r.g_bot, move);
+	r.b_top = v_add(r.b_top, move);
+	r.b_bot = v_add(r.b_bot, move);
+
+	return r;
+}
 
 void	rotation_indicator(void)
 {
-	double dist_to = 1;
-	double d = 0.06;
+	double	scale = 0.16;
 	color	line_color = WHITE;
 
 	vec3 anchor = v_add(v.camera_pos, rotate3(v3(0,0,1), v.camera_rot));
-	vec3 anchor_p = world_to_screenpos(anchor);
-	vec3 r_top = world_to_screenpos(v_add(anchor, v3( d)));
-	vec3 r_bot = world_to_screenpos(v_add(anchor, v3(-d)));
-	vec3 g_top = world_to_screenpos(v_add(anchor, v3(0, d)));
-	vec3 g_bot = world_to_screenpos(v_add(anchor, v3(0,-d)));
-	vec3 b_top = world_to_screenpos(v_add(anchor, v3(0,0, d)));
-	vec3 b_bot = world_to_screenpos(v_add(anchor, v3(0,0,-d)));
+	vec3 anchor_p = world_to_screenpos_ortho(anchor);
+	vec3 r_top = world_to_screenpos_ortho(v_add(anchor, v3( scale)));
+	vec3 r_bot = world_to_screenpos_ortho(v_add(anchor, v3(-scale)));
+	vec3 g_top = world_to_screenpos_ortho(v_add(anchor, v3(0, scale)));
+	vec3 g_bot = world_to_screenpos_ortho(v_add(anchor, v3(0,-scale)));
+	vec3 b_top = world_to_screenpos_ortho(v_add(anchor, v3(0,0, scale)));
+	vec3 b_bot = world_to_screenpos_ortho(v_add(anchor, v3(0,0,-scale)));
 
 	const vec3 end = v3(v.w - 75, 75);
 	vec3 move = v_sub(end, anchor_p);
@@ -44,24 +65,24 @@ void	rotation_indicator(void)
 	gizmo_dot(anchor_p, v3(.8, .6, .1));
 	if (X_ENABLED)
 	{
-		gizmo_line(r_top, anchor_p, RED);
-		gizmo_dot(r_top, RED);
+		gizmo_line(r_top, anchor_p, X_COLOR);
+		gizmo_dot(r_top, X_COLOR);
 		gizmo_dot(r_bot, v3(1, .2, .2));
 		scribe("X", r_top.x+5, r_top.y-5, WHITE);
 	// scribe("-X", r_bot.x+0, r_bot.y-5, WHITE);
 	}
 	if (Y_ENABLED)
 	{
-		gizmo_line(g_top, anchor_p, GREEN);
-		gizmo_dot(g_top, GREEN);
+		gizmo_line(g_top, anchor_p, Y_COLOR);
+		gizmo_dot(g_top, Y_COLOR);
 		gizmo_dot(g_bot, v3(.2, 1, .2));
 		scribe("Y", g_top.x+5, g_top.y-5, WHITE);
 	// scribe("-Y", g_bot.x+0, g_bot.y-5, WHITE);
 	}
 	if (Z_ENABLED)
 	{
-		gizmo_line(b_top, anchor_p, BLUE);
-		gizmo_dot(b_top, BLUE);
+		gizmo_line(b_top, anchor_p, Z_COLOR);
+		gizmo_dot(b_top, Z_COLOR);
 		gizmo_dot(b_bot, v3(.2, .2, 1));
 		scribe("Z", b_top.x+5, b_top.y-5, WHITE);
 	// scribe("-Z", b_bot.x+0, b_bot.y-5, WHITE);

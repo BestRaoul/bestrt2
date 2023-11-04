@@ -23,9 +23,10 @@ void	**alloc_2d(int size, int w, int h)
 	return ptr_ptr;
 }
 
-void	vars_init(void)
+void	vars_init(int ac, char **av)
 {
-	init_scene();
+	if (ac < 2) init_scene(100); //test scene
+	else init_scene(ft_atoi(av[1]));
 	texture *b = t_deep_copy(&v.irradiance_map);
 	for (double y=0; y<b->image_height; y++)
 		for (double x=0; x<b->image_width; x++)
@@ -100,9 +101,9 @@ void	set_cursor( unsigned int xc)
 	(void) cursor;
 }
 
-int	main(void)
+int	main(int ac, char **av)
 {
-	vars_init();
+	vars_init(ac, av);
 	
 	srand (time ( NULL));
 

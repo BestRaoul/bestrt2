@@ -112,9 +112,17 @@ vec3	project(vec3 pos, double vfov, double aspect)
 {
 	double f = 1.0 / tan(vfov * DEG2RAD * 0.5f);
 	if (v.orthographic_toggle)
-		f /= 10;
+		f /= 10.0;
 	else
 		f /= pos.z;
+	pos.x *= f / aspect;
+	pos.y *= f;
+	return pos;
+}
+
+vec3	project_ortho(vec3 pos, double vfov, double aspect)
+{
+	double f = 1.0;
 	pos.x *= f / aspect;
 	pos.y *= f;
 	return pos;
@@ -137,6 +145,40 @@ vec3	world_to_viewport(vec3 cam_pos, vec3 cam_rot, double vfov, double aspect, v
 vec3	world_to_screenpos(vec3 pos)
 {
 	vec3 p = world_to_viewport(v.camera_pos, v.camera_rot, v.vfov, (double)v.w / (double)v.h, pos);
+	p.x *= v.w;
+	p.y *= v.h;
+	p.y = v.h - p.y;
+
+	if (v.cam_flipp)
+	{
+		p.x = v.w - p.x;
+		p.y = v.h - p.y;
+	}
+
+	return p;
+}
+
+vec3	world_to_screenpos_fixed_fov(vec3 pos, double fov)
+{
+	vec3 p = world_to_viewport(v.camera_pos, v.camera_rot, fov, (double)v.w / (double)v.h, pos);
+	p.x *= v.w;
+	p.y *= v.h;
+	p.y = v.h - p.y;
+
+	if (v.cam_flipp)
+	{
+		p.x = v.w - p.x;
+		p.y = v.h - p.y;
+	}
+
+	return p;
+}
+
+vec3	world_to_screenpos_ortho(vec3 pos)
+{
+	vec3 p = world_to_local(v.camera_pos, v.camera_rot, pos);
+	p = project_ortho(p, v.vfov, (double)v.w / (double)v.h);
+	p = clip_space_to_viewport(p);
 	p.x *= v.w;
 	p.y *= v.h;
 	p.y = v.h - p.y;

@@ -324,6 +324,7 @@ void    raytrace(void)
 		{
 			reset_heatmap();
 			raster_items();
+			raster_lamps();
 		}
 		memset(v.accumulate_img[0], 0, sizeof(vec3) * v.w * v.h);
 
@@ -337,20 +338,6 @@ void    raytrace(void)
 		steps_rendered = 0;
 
 		gettimeofday(&frame_start, 0);
-
-		t_item *item;
-		for (int i=0; i<v.item_count; i++)
-		{
-			item = &v.items[i];
-			set_transform_matrix(&item->transform, item->fwd, item->bck);
-		}
-		t_light *lamp;
-		for (int i=0; i<v.light_count; i++)
-		{
-			lamp = &v.lights[i];
-			lamp->intensity = v_len(lamp->transform.scale);
-			lamp->dir = rotate3(v3(1,0,0), lamp->transform.rot);
-		}
 	}
 
 	while (_split < w_splits*h_splits)

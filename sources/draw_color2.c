@@ -12,39 +12,27 @@
 
 #include "fractol.h"
 
-#define FT_TRANSPARENCY 0
+int		get_r(int trgb);
+int		get_g(int trgb);
+int		get_b(int trgb);
 
-int	new_trgb(int t, int r, int g, int b)
+color	rgb2color(int rgb)
 {
-	return (t << 24 | r << 16 | g << 8 | b);
+	return (new_color(get_r(rgb) / 256.0, get_g(rgb) / 256.0, get_b(rgb)
+			/ 256.0));
 }
 
-int	new_rgb(int r, int g, int b)
+int	get_r(int trgb)
 {
-	return (new_trgb(FT_TRANSPARENCY, r, g, b));
+	return ((trgb >> 16) & 0xFF);
 }
 
-color	new_color(double r, double g, double b)
+int	get_g(int trgb)
 {
-	return ((color){r, g, b});
+	return ((trgb >> 8) & 0xFF);
 }
 
-color	color_lerp(double t, color color1, color color2)
+int	get_b(int trgb)
 {
-	double	r;
-	double	g;
-	double	b;
-
-	r = (1 - t) * color1.x + t * color2.x;
-	g = (1 - t) * color1.y + t * color2.y;
-	b = (1 - t) * color1.z + t * color2.z;
-	return (new_color(r, g, b));
-}
-
-int	color2rgb(color c)
-{
-	static const interval	intensity = (interval){0.000, 0.999};
-
-	return (new_rgb(clamp(intensity, c.x) * 256, clamp(intensity, c.y) * 256,
-			clamp(intensity, c.z) * 256));
+	return ((trgb >> 0) & 0xFF);
 }

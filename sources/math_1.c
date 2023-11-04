@@ -38,7 +38,28 @@ double	signd(double n)
 	return 1;
 }
 
-int max(int a, int b)
+int	max(int a, int b)
+{
+	if (a > b)
+		return (a);
+	return (b);
+}
+
+int min(int a, int b)
+{
+	if (a < b)
+		return (a);
+	return (b);
+}
+
+double	mind(double a, double b)
+{
+	if (a > b)
+		return (a);
+	return (b);
+}
+
+double	maxd(double a, double b)
 {
 	if (a > b)
 		return (a);
@@ -67,4 +88,3 @@ double	fclamp(double x, double min, double max)
 		return (max);
 	return (x);
 }
-

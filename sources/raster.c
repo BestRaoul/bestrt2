@@ -86,6 +86,7 @@ void	raster_items(void)
 			t.mat.base_color.color_value = random_unit_vector();
 		t.raster(&t);
 	}
+	
 }
 
 void	draw_light_gizmo(t_light *l)
@@ -127,6 +128,6 @@ void	raster_selection(void)
 
 	if (!v_in_bounds(spos)) return;
 
-	gizmo_nshape(8, spos, v3(0, 0, rrot/360.0*MYPI), v3(14, 14), 0, new_color(.8, .4, 0));
+	// gizmo_nshape(8, spos, v3(0, 0, rrot/360.0*MYPI), v3(14, 14), 0, new_color(.8, .4, 0));
 	gizmo_dot(spos, new_color(1, .2, .2));
 }

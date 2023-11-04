@@ -193,7 +193,7 @@ double	get_move_speed()
 
 	if (v.lookat_toggle)
 		s = 0;
-	if (!v._right && !v._left && !v._up && !v._down && !v._Q && !v._E)
+	if (!v._right && !v._left && !v._up && !v._down && !v._q && !v._e)
 		s = 0;
 
 	s += move_acceleration*v.delta_time;
@@ -213,7 +213,7 @@ double	get_angular_speed()
 
 	if (!v.lookat_toggle)
 		s = 0;
-	if (!v._right && !v._left && !v._up && !v._down && !v._Q && !v._E)
+	if (!v._right && !v._left && !v._up && !v._down && !v._q && !v._e)
 		s = 0;
 
 	s += move_acceleration*v.delta_time;
@@ -295,8 +295,8 @@ static void	move_camera()
 	if (v.lookat_toggle)
 	{
 		vec3 move;
-		if (v._Q)	do_orbit_move(v3( one), angular_speed*v.delta_time);
-		if (v._E)	do_orbit_move(v3(-one), angular_speed*v.delta_time);
+		if (v._q)	do_orbit_move(v3( one), angular_speed*v.delta_time);
+		if (v._e)	do_orbit_move(v3(-one), angular_speed*v.delta_time);
 
 		if (v._right)				do_orbit_move(v3(0,-one), angular_speed*v.delta_time);
 		if (v._left)				do_orbit_move(v3(0, one), angular_speed*v.delta_time);
@@ -318,8 +318,8 @@ static void	move_camera()
 		if (v._left)				move = v3(-one);
 		if (v._up)					move = v3(0, 0, 1);
 		if (v._down)				move = v3(0, 0,-1);
-		if (v._Q)	move = v3(0, one);
-		if (v._E)	move = v3(0,-one);
+		if (v._q)	move = v3(0, one);
+		if (v._e)	move = v3(0,-one);
 
 		move = v_scal(move, move_speed*v.delta_time);
 

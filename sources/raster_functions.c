@@ -57,8 +57,8 @@ void	raster_cylinder(t_item *item)
 //draw joints
 	for (int j=0; j<v_splits; j++) draw_projected_line(l1[j], l2[j], item->mat.base_color.color_value);
 
-	free(l1);
-	free(l2);
+	gc_free(l1);
+	gc_free(l2);
 }
 
 void	raster_sphere(t_item *item)
@@ -76,7 +76,7 @@ void	raster_sphere(t_item *item)
 	for (int j=0; j<=2*v_splits; j++) ring_scale[j] = swap_yz(ring_scale[j]);
 
 
-	vec3	**rings = malloc((v_splits-1) * sizeof(vec3 *));
+	vec3	**rings = gc_malloc((v_splits-1) * sizeof(vec3 *));
 	for (int j=1; j<v_splits; j++)
 	{
 		rings[j-1] = get_npoints(h_splits, 0);
@@ -101,9 +101,9 @@ void	raster_sphere(t_item *item)
 		draw_projected_dot(south_pole, BLUE);
 	}
 
-	free(ring_scale);
-	for (int k=0; k<v_splits-1; k++)  free(rings[k]);
-	free(rings);
+	gc_free(ring_scale);
+	for (int k=0; k<v_splits-1; k++)  gc_free(rings[k]);
+	gc_free(rings);
 }
 
 void	raster_pyramid(t_item *item)
@@ -241,19 +241,19 @@ void	raster_square(t_item *item)
 	gizmo_line(c4, c1, item->mat.base_color.color_value);
 }
 //CIRCLE - 2
-void	raster_circle(t_item *item)
-{
-	gizmo_nshape(max(item->transform.scale.x*2.0/50.0, 10), item->transform.pos, item->transform.rot, item->transform.scale, 0, item->mat.base_color.color_value);
-}
-//TRI.. 3,4,0
-void	raster_tri(t_item *item)
-{
-	gizmo_nshape(3, item->transform.pos, item->transform.rot, item->transform.scale, MYPI, item->mat.base_color.color_value);
-}
-void	raster_hex(t_item *item)
-{
-	gizmo_nshape(6, item->transform.pos, item->transform.rot, item->transform.scale, MYPI/6, item->mat.base_color.color_value);
-}
+// void	raster_circle(t_item *item)
+// {
+// 	gizmo_nshape(max(item->transform.scale.x*2.0/50.0, 10), item->transform.pos, item->transform.rot, item->transform.scale, 0, item->mat.base_color.color_value);
+// }
+// //TRI.. 3,4,0
+// void	raster_tri(t_item *item)
+// {
+// 	gizmo_nshape(3, item->transform.pos, item->transform.rot, item->transform.scale, MYPI, item->mat.base_color.color_value);
+// }
+// void	raster_hex(t_item *item)
+// {
+// 	gizmo_nshape(6, item->transform.pos, item->transform.rot, item->transform.scale, MYPI/6, item->mat.base_color.color_value);
+// }
 void	raster_line(t_item *item)
 {
 	gizmo_line(item->transform.pos,

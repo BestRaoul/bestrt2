@@ -5,7 +5,7 @@ NAME					:= minirt
 UNAME_S					:= $(shell uname -s)
 
 ifeq ($(UNAME_S),Linux)
-  FSANITIZE				:= #-fsanitize=address -fsanitize=leak
+  FSANITIZE				:= -fsanitize=address -fsanitize=leak
   FRAMEWORK				:=
   LINUX_LIBS			:= -lXext -lX11 -lXi
   LINUX_INCLUDES		:= -I/usr/include
@@ -29,6 +29,10 @@ LIBFT					:= $(LIBFT_DIRECTORY)libft.a
 LIBFT_DIRECTORY			:= $(LIB_DIRECTORY)libft/
 LIBFT_HEADERS			:= $(LIBFT_DIRECTORY)./
 
+GC						:= $(GC_DIRECTORY)gc.a
+GC_DIRECTORY			:= $(LIB_DIRECTORY)gc/
+GC_HEADERS				:= $(GC_DIRECTORY)./
+
 ifeq ($(UNAME_S),Darwin)
   MINILIBX_DIRECTORY	:= $(LIB_DIRECTORY)mlx
   MINILIBX_NAME			:= libmlx.dylib
@@ -43,18 +47,24 @@ MINILIBX_HEADERS		:= $(MINILIBX_DIRECTORY)
 INCLUDE_DIR				:= ./includes/
 
 # lm: default math lib
-LIBRARIES				:= -lmlx -lm -lft -L. -L$(LIBFT_DIRECTORY) -L$(MINILIBX_DIRECTORY) $(FRAMEWORK) $(LINUX_LIBS)
-INCLUDES				:= -I$(LIBFT_HEADERS) -I$(MINILIBX_HEADERS) -I$(INCLUDE_DIR) $(LINUX_INCLUDES)
+LIBRARIES				:= -lmlx -lm -lft -lgc -L. -L$(LIBFT_DIRECTORY) -L$(GC_DIRECTORY) -L$(MINILIBX_DIRECTORY) $(FRAMEWORK) $(LINUX_LIBS)
+INCLUDES				:= -I$(LIBFT_HEADERS) -I$(GC_HEADERS) -I$(MINILIBX_HEADERS) -I$(INCLUDE_DIR) $(LINUX_INCLUDES)
 
 SOURCES_DIRECTORY		:= ./sources/
 SOURCES_LIST			:=	main.c\
 							loop.c\
 							draw_color.c\
+							draw_color2.c\
 							draw_gizmo.c\
+							draw_gizmo2.c\
 							draw_scribe.c\
 							event_handlers.c\
+							event_handlers2.c\
+							event_handlers3.c\
 							img.c\
+							img2.c\
 							item_lamps.c\
+							item_lamps2.c\
 							raster_functions.c\
 							raster.c\
 							raytrace.c\
@@ -70,6 +80,8 @@ SOURCES_LIST			:=	main.c\
 							math_7.c\
 							math_8.c\
 							materials.c\
+							materials2.c\
+							materials_scatter.c\
 							hit_functions.c\
 							update_camera.c\
 							tweens.c\
@@ -107,12 +119,16 @@ $(LIBFT):
 	@echo "$(NAME): Creating $(LIBFT)..."
 	@$(MAKE) -sC $(LIBFT_DIRECTORY)
 
+$(GC):
+	@echo "$(NAME): Creating $(GC)..."
+	@$(MAKE) -sC $(GC_DIRECTORY)
+
 $(MINILIBX):
 	@echo "$(NAME): Creating $(MINILIBX)..."
 	cd $(MINILIBX_DIRECTORY) && $(MAKE)
 	cp $(MINILIBX) .
 
-$(NAME): $(LIBFT) $(MINILIBX) $(OBJECTS_DIRECTORY) $(OBJECTS) $(HEADER_FILES)
+$(NAME): $(LIBFT) $(GC) $(MINILIBX) $(OBJECTS_DIRECTORY) $(OBJECTS) $(HEADER_FILES)
 	$(CC) $(CFLAGS) $(OBJECTS) $(LIBRARIES) $(INCLUDES) -o $(NAME)
 ifeq ($(UNAME_S),Linux)
 	@export ASAN_OPTIONS=use_sigaltstack=false
@@ -120,6 +136,7 @@ endif
 
 clean:
 	@$(MAKE) -sC $(LIBFT_DIRECTORY) clean
+	@$(MAKE) -sC $(GC_DIRECTORY) clean
 	@$(MAKE) -sC $(MINILIBX_DIRECTORY) clean
 	@rm -rf $(OBJECTS_DIRECTORY)
 	@rm -rf *.dSYM
@@ -128,6 +145,7 @@ clean:
 
 fclean: clean
 	@$(MAKE) -sC $(LIBFT_DIRECTORY) fclean
+	@$(MAKE) -sC $(GC_DIRECTORY) fclean
 	@rm -f $(MINILIBX)
 	@echo "$(NAME): $(MINILIBX) was deleted"
 	@rm -f $(NAME)
@@ -138,7 +156,7 @@ fclean: clean
 re: fclean all
 
 norm:
-	norminette includes/ sources/ libs/libft/ libs/libprintf/
+	norminette includes/ sources/ libs/libft/ libs/libprintf/ libs/gc
 
 funcs: $(NAME)
 	nm -u $(NAME)

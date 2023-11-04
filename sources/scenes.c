@@ -136,7 +136,7 @@ void    default_cam(void)
 	v.use_background = True;
 	v.background = cc3(WHITE);
 	
-	v.use_IBL = False;
+	v.use_ibl = False;
 	v.irradiance_map = NO_MAP;
 	v.blurry_irradiance_map = NO_MAP;
 
@@ -356,7 +356,7 @@ void	showoff_7(void)
 	v.max_depth = 6;
 	v.max_samples = 1;v.samples_per_step = 2;
 	v.irradiance_map = from_bmp("textures/hdri/emptyroom1k.bmp");
-	v.use_IBL = 1;
+	v.use_ibl = 1;
 	v.use_background = 1;
 	v.background = WHITE_MAP;
 	
@@ -465,7 +465,7 @@ void	showoff_9(void)
 	v.upscale = 1;
 	v.max_depth = 0;
 	v.irradiance_map = from_bmp("textures/hdri/grass4k.bmp");
-	v.use_IBL = 1;
+	v.use_ibl = 1;
 	v.background = BLACK_MAP;
 	v.solo_lighting = 1;
 

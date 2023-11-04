@@ -10,12 +10,16 @@ fix ambient bounces
 
 # ----------- NOW ---------------
 # -----------AT 42---------------
+0. NORME
+skip - disk.c
+skip - hit_functions.c	
+ - materials.c
+
 1. parsing
-2. no crash
-3. ptrs ALLL
-4. speed
-5. debug info
-6. flag ILLEGAL
+
+5. flag ILLEGAL
+6. debug info
+7. speed
 
 # ----------- NEVER ---------------
 IGNORED - 2. directional light/IBL (roughness)

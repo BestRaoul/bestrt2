@@ -78,16 +78,16 @@ double   evaluate_bw(texture *t, double _u, double _v)
 
 texture *t_shallow_copy(texture *t)
 {
-    texture *copy_t = malloc(sizeof(texture));
+    texture *copy_t = gc_malloc(sizeof(texture));
     memcpy(copy_t, t, sizeof(texture));
     return copy_t;
 }
 
 texture *t_deep_copy(texture *t)
 {
-    texture *copy_t = malloc(sizeof(texture));
+    texture *copy_t = gc_malloc(sizeof(texture));
     memcpy(copy_t, t, sizeof(texture));
-    copy_t->image = malloc(sizeof(color)*t->image_height*t->image_width);
+    copy_t->image = gc_malloc(sizeof(color)*t->image_height*t->image_width);
     memcpy(copy_t->image, t->image, sizeof(color)*t->image_height*t->image_width);
     return copy_t;
 }
@@ -125,13 +125,13 @@ texture from_bmp(const char *filename)
     {
         r.widht = 1;
         r.height = 1;
-        int *x = malloc(sizeof(int));
-        int **x_ptr = malloc(sizeof(int *));
+        int *x = gc_malloc(sizeof(int));
+        int **x_ptr = gc_malloc(sizeof(int *));
         *x = color2rgb(ERROR_CYAN);
         *x_ptr = x;
         r.pixels = x_ptr;
     }
-    color *image = malloc(sizeof(color) * r.widht * r.height);
+    color *image = gc_malloc(sizeof(color) * r.widht * r.height);
     for (int x=0; x<r.widht; x++)
         for (int y=0; y<r.height; y++)
             image[x + y * r.widht] = rgb2color(r.pixels[y][x]);

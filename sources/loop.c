@@ -13,139 +13,88 @@
 #include "fractol.h"
 
 static void	_update(void);
-static void _render(void);
+static void	_render(void);
 
 int	loop(void)
 {
 	_update();
 	_render();
-	v.frame++;
 	v.time_passed += v.delta_time * v.time_speed;
 	_reset_consumable_clicks();
 	return (0);
 }
 
-static void apply_motions()
-{
-	if (!v.motion_enabled) return; //fix so it only adds time when enabled
-	
-	double t = v.time_passed - (int)v.time_passed/1;
-	
-	for(int i=0; i<v.motion_count; i++)
-	{
-		motion m = v.motions[i];
-		*m.value = m.tween(m.start_val, m.end_val, t);
-	}
-}
-
-void	update_lamp_stats()
-{
-	t_light *lamp;
-	for (int i=0; i<v.light_count; i++)
-	{
-		lamp = &v.lights[i];
-		lamp->intensity = v_len(lamp->transform.scale);
-		lamp->dir = rotate3(v3(1,0,0), lamp->transform.rot);
-	}
-}
-
-void	update_tfm_matrices(void)
-{
-	t_item *item;
-	for (int i=0; i<v.item_count; i++)
-	{
-		item = &v.items[i];
-		set_transform_matrix(&item->transform, item->fwd, item->bck);
-	}
-}
-
 static void	_update(void)
-{	
+{
 	update_delta_time();
-	
 	apply_motions();
-
 	update_camera();
-
-	v._rerender |= v.render_mode==RASTER;
+	v._rerender |= v.render_mode == RASTER;
 	if (v._rerender)
 		clear_img(v.img);
-
 	maybe_add_item();
 	manage_selection();
-
 	update_lamp_stats();
 	update_tfm_matrices();
 }
 
 static void	_render(void)
-{	
+{
 	if (v.render_mode == RASTER)
 		raster();
 	else
 		raytrace();
-
 	simulate_rayzz();
-
 	mlx_put_image_to_window(v.mlx, v.win, v.img.mlx_img, 0, 0);
-
 	help_ui();
 	debug_ui();
 }
 
-void	render_movie()
+// ffmpeg should fork();...
+//?destroy bmp
+//ffmpeg only in range from frame_start to frame_end
+void	render_movie(void)
 {
-	//close window
+	int	framerate;
+	int	frames;
+	int	loops;
+	int	frame_id;
+
 	mlx_destroy_window(v.mlx, v.win);
-	
 	v.render_mode = v.animation_render_mode;
 	v.rendering_movie = True;
-
-	int	framerate = v.animation_framerate;
-	int	frames = framerate * v.animation_duration;
-	v.time_speed = v.animation_speed;
-	int loops = v.animation_loops;
-	//Fix delta time
-	v.delta_time = 1.0/framerate;
-	//Reset motions
+	framerate = v.animation_framerate;
+	frames = framerate * v.animation_duration;
+	loops = v.animation_loops;
+	v.delta_time = 1.0 / framerate;
 	v.time_passed = 0;
 	v.motion_enabled = 1;
-	
-	for (int i=0; i<frames; i++)
+	frame_id = 0;
+	while (frame_id < frames)
 	{
-		//update scene
-		apply_motions();
-		update_camera();
-
-		//generate img, but dont show it
-		v._rerender = 1;
-		raytrace();
-
-		//write img to disk
-		write_img();
-
-		v.frame++;
-		v.time_passed += v.delta_time * v.time_speed;
-
-		printf("%d/%d !\n", i, frames);
+		(apply_motions(), update_camera(), raytrace(), write_img());
+		printf("%d/%d !\n", frame_id++, frames);
+		v.time_passed += v.delta_time * v.animation_speed;
 	}
-
 	ffmpeg_bmp_to_mp4(framerate, loops);
-	//ffmpeg should fork();...
-	//?destroy bmp
 	exit(0);
 }
 
 /*
-static void	draw_heatmap_to_img()
+static void	draw_heatmap_to_img(void)
 {
+	double	dist;
+	int		farfar;
+	int		l;
+	color	c;
+
 	for (int x=0; x<v.w; x++)
 		for (int y=0; y<v.h; y++)
 			{
-				double dist = v.dist_heatmap[x][y];
-				int farfar = 15;
-				int l = (farfar*farfar - dist*dist)/farfar/farfar;
-				color c = new_color(.25, l*(dist<farfar), 0);
+				dist = v.dist_heatmap[x][y];
+				farfar = 15;
+				l = (farfar*farfar - dist*dist)/farfar/farfar;
+				c = new_color(.25, l*(dist<farfar), 0);
 				draw_raw(x, y, c);
 			}
 }

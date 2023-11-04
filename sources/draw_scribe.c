@@ -17,42 +17,39 @@ void	scribe(char *str, int x, int y, color c)
 	mlx_string_put(v.mlx, v.win, x, y, color2rgb(c), str);
 }
 
-void	scribe_contour(char *str, int x, int y, color c1, color c2)
-{
-	scribe(str, x+1, y, c2);
-	scribe(str, x-1, y, c2);
-	scribe(str, x, y+1, c2);
-	scribe(str, x, y-1, c2);
-
-	scribe(str, x, y, c1);
-}
-
-//Careful! there is a max of 64 char to be scribed
+// Careful! there is a max of 64 char to be scribed
 void	scribe_pos(char *tag, vec3 pos, int x, int y, color c)
 {
-	char str[64] = "";
+	char	str[64];
+
+	memset(str, '\0', 64);
 	sprintf(str, "%s (%d, %d)", tag, (int)pos.x, (int)pos.y);
 	scribe(str, x, y, c);
 }
 
 void	scribe_v3d(char *tag, vec3 pos, int x, int y, color c)
 {
-	char str[64] = "";
+	char	str[64];
+
+	memset(str, '\0', 64);
 	sprintf(str, "%s (%.2f, %.2f, %.2f)", tag, pos.x, pos.y, pos.z);
 	scribe(str, x, y, c);
 }
 
 void	scribe_num(char *format, int n, int x, int y, color c)
 {
-	char str[64] = "";
+	char	str[64];
+
+	memset(str, '\0', 64);
 	sprintf(str, format, n);
 	scribe(str, x, y, c);
 }
 
 void	scribe_dub(char *format, double d, int x, int y, color c)
 {
-	char str[64] = "";
+	char	str[64];
+
+	memset(str, '\0', 64);
 	sprintf(str, format, d);
 	scribe(str, x, y, c);
 }
-

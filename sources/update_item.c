@@ -28,6 +28,8 @@ int	set_reset(tfm *transform, vec3 *inital_mp, vec3 *init_p, int mode, int et)
 {
 	if (et == SET)
 	{
+		if (v.selected == NULL)
+			return 0;
 		if (mode == MOVE)	*init_p = transform->pos;
 		if (mode == ROTATE)	*init_p = transform->rot;
 		if (mode == SCALE)	*init_p = transform->scale;
@@ -235,7 +237,7 @@ void	move_transform(tfm *transform, int et)
 		return;
 
 	transform->pos = plane_alligned_add(initial_position, move);
-	if (v._ctrl) v_round(&transform->pos, 0.25);
+	// if (v._ctrl) v_round(&transform->pos, 0.25);
 
 	pmp = mp;
 }
@@ -260,7 +262,7 @@ void	scale_transform(tfm *transform, int et)
 	gizmo_line(r.anchor, mp, WHITE);
 
 	transform->scale = plane_alligned_add(initial_scale, move);
-	if (v._ctrl) v_round(&transform->scale, 0.1);
+	// if (v._ctrl) v_round(&transform->scale, 0.1);
 }
 
 void	rotate_transform(tfm *transform, int et)
@@ -284,7 +286,7 @@ void	rotate_transform(tfm *transform, int et)
 	gizmo_line(r.anchor, mp, WHITE);
 
 	transform->rot = plane_alligned_add(initial_rot, move);
-	if (v._ctrl) v_round(&transform->rot, 5*DEG2RAD);
+	// if (v._ctrl) v_round(&transform->rot, 5*DEG2RAD);
 }
 
 void	mrs_null_reference(tfm *_, int et)

@@ -177,7 +177,7 @@ void    set_transform_matrix(const tfm *transform, m4x4 m_fwd, m4x4 m_bck)
     set_m4(rotation_matrix, temp.mat);
     */
 	double _a = transform->rot.x, _b = transform->rot.y, _y = transform->rot.z;
-    //cheating to avoid GIMBAL LOCK flattening, if you figure out how not to flatten with given angles feel free to correct
+    //cheating to avoid GIMBAL LOCK flattening, if you figure out how not to flatten with given angles feel gc_free to correct
     if (((fabs(fmod(fabs(_a), MYPI) - MYPI/2) < MYPI/100)
        ||(fabs(fmod(fabs(_y), MYPI) - MYPI/2) < MYPI/100))
        && fabs(fmod(fabs(_b), MYPI) - MYPI/2) < MYPI/100)

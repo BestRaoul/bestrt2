@@ -27,7 +27,7 @@ void	simulate_ray(ray *r, sim_hit *hits, int depth)
         {
 			ray scattered;
             Bool _;
-	        PBR_scatter(r, &rec, &scattered, &_);
+	        pbr_scatter(r, &rec, &scattered, &_);
             hits[bounce].p = scattered.orig;
             hits[bounce].c = rec.mat.base_color.color_value;
             hits[bounce].rec = rec;

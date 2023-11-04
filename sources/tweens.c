@@ -55,7 +55,7 @@ double	easeInOutCubic(double a, double b, double t)
 
 void	add_motion(double *value, double start_value, double end_value, double (*tween)(double, double , double))
 {
-	motion	*new_motions = calloc(v.motion_count + 1, sizeof(motion));
+	motion	*new_motions = gc_malloc((v.motion_count + 1) * sizeof(motion));
 	for (int i=0; i<v.motion_count; i++)
 		new_motions[i] = v.motions[i];
 	new_motions[v.motion_count] = (motion){value, start_value, end_value, tween};

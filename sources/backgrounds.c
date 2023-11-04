@@ -10,34 +10,36 @@
 
 #include "fractol.h"
 
-double maxd(double a, double b)
-{
-	if (a > b) return a;
-	return b;
-}
-
 color	sky_background(vec3 uv)
 {
-	return color_lerp(uv.y, WHITE, new_color(.5, .7, 1));
+	return (color_lerp(uv.y, WHITE, new_color(.5, .7, 1)));
 }
+
+const color	skyColorHorizon = (vec3){.7, .8, 1.0};
+const color	skyColorZenith = (vec3){.3, .4, .7};
+const color	groundColor = (vec3){.4,.4,.4};
+const vec3	sunDirection = (vec3){-1,-1,-1};
+const double	sunFocus = 10;
+const double	sunIntensity = 1.0;
 
 color	shit_sky_background(vec3 uv)
 {
-	color	skyColorHorizon = v3(.7, .8, 1.0);
-	color	skyColorZenith = v3(.3, .4, .7);
-	color	groundColor = v3(.4,.4,.4);
+	vec3	dir;
+	double	sky_gradient_t;
+	vec3	sky_gradient;
+	double	sun;
+	double	ground_to_sky_t;
 
-	vec3	sunDirection = v3(-1,-1,-1);
-	double	sunFocus = 10;
-	double	sunIntensity = 1.0;
-	
-	vec3 dir = v3(uv.x*2.0 - 1, uv.y*2.0 - 1, uv.z*2.0 - 1);
-	double skyGradientT = pow(smoothstep(0, 0.4, dir.y), 0.35);
-	vec3 skyGradient = lerp(skyGradientT, skyColorHorizon, skyColorZenith);
-	double sun = pow(maxd(0, v_dot(dir, sunDirection)), sunFocus) * sunIntensity;
+	dir = v3(uv.x * 2.0 - 1, uv.y * 2.0 - 1, uv.z * 2.0 - 1);
+	sky_gradient_t = pow(smoothstep(0, 0.4, dir.y), 0.35);
+	sky_gradient = lerp(sky_gradient_t, skyColorHorizon, skyColorZenith);
+	sun = pow(maxd(0, v_dot(dir, sunDirection)), sunFocus) * sunIntensity;
+	ground_to_sky_t = smoothstep(-0.01, 0, dir.y);
+	return (v_add(lerp(ground_to_sky_t, groundColor, sky_gradient),
+			v_3(sun * ground_to_sky_t >= 1)));
+}
 
-	double groundToSkyT = smoothstep(-0.01, 0, dir.y);
-	double sunMask = groundToSkyT >= 1;
-	return v_add(lerp(groundToSkyT, groundColor, skyGradient),
-			v_3(sun * sunMask));
+color	uv_background(vec3 uv)
+{
+	return (v_scal(v_add(uv, v_3(1)), 0.5));
 }

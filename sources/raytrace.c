@@ -66,7 +66,7 @@ color	paint_uv(Bool did_hit, hit_record *rec)
 {
 	if (did_hit)
 		return evaluate(&v.uv_debug, rec->u, rec->v);
-	return BLACK; // v_scal(v_add(r->dir, v_3(1)), 0.5);
+	return BLACK;
 }
 
 color	paint_env(vec3 r_dir)
@@ -206,7 +206,7 @@ color	trace(ray *r, int max_depth)
 			if (v.render_mode == RAYTRACE_MAT_DEBUG) return paint_mat_debug_lit(&se, &rec);
 			
 			Bool was_specular;
-			PBR_scatter(r, &rec, &scattered, &was_specular);
+			pbr_scatter(r, &rec, &scattered, &was_specular);
 
 			light = v_add(light, v_mult(paint_se(&se), contribution));
 
@@ -310,7 +310,7 @@ void    raytrace(void)
 	static struct timeval frame_start;
 
 	//static ;
-	if (v._rerender)
+	if (v._rerender || v.rendering_movie)
 	{
 		// printf("RERENDER ---\n");
 		// printf("see : %d\n", (int)v.vfov);

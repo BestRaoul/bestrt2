@@ -18,12 +18,11 @@ int get_elapsed(struct timeval event)
 	return elapsed_ms;
 }
 
-
 //returns array with n+1 points along a circular path offset by r
 //[0] == [n]
 vec3	*get_npoints(int n, double r_offset)
 {
-	vec3 *points = malloc((n+1) * sizeof(vec3));
+	vec3 *points = gc_malloc((n+1) * sizeof(vec3));
 
 	for (int i = 0; i <= n; i++)
 	{
@@ -393,3 +392,50 @@ double	realistic_specular(double ior)
 	R0 = R0 * R0;
 	return R0 / 0.08;
 }
+
+void	fswap(double *__x, double *__y)
+{
+	double	__temp;
+
+	__temp = *__x;
+	*__x = *__y;
+	*__y = __temp;
+}
+
+void	vswap(vec3 *__x, vec3 *__y)
+{
+	vec3	__temp;
+
+	__temp = *__x;
+	*__x = *__y;
+	*__y = __temp;
+}
+
+void	**alloc_2d(int size, int w, int h)
+{
+	void	*mem_start;
+	void	**ptr_ptr;
+
+	mem_start = gc_malloc(size * w * h);
+	ptr_ptr = gc_malloc(sizeof(void *) * w);
+	for (int i = 0; i < w; i++)
+		ptr_ptr[i] = (mem_start + i * h * size);
+	return (ptr_ptr);
+}
+
+void	set_cursor(unsigned int xc)
+{
+	t_xvar		*xvar;
+	t_win_list	*win;
+	Cursor		cursor;
+
+	xvar = (t_xvar *)v.mlx;
+	win = (t_win_list *)v.win;
+	xc %= 154;
+	printf("xc: %u\n", xc);
+	cursor = XCreateFontCursor(xvar->display, xc);
+	XDefineCursor(xvar->display, win->window, cursor);
+	XMoveWindow(xvar->display, win->window, 955, 0);
+	(void)cursor;
+}
+

@@ -24,6 +24,8 @@ int	get_pixel(int x, int y)
 {
 	char	*pixel;
 
+	if (!in_bounds(x, y))
+		return (color2rgb(ERROR_CYAN));
 	pixel = v.img.addr + v.img.line_len * y + x * (v.img.bpp / 8);
 	return (*(unsigned int *)pixel);
 }

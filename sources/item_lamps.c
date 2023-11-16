@@ -12,6 +12,8 @@
 
 #include "fractol.h"
 
+#ifdef ILLEGAL
+
 t_item	*add_item(vec3 position, vec3 scale, vec3 rotation, material m,
 		void (*raster)(t_item *), Bool (*hit)(const ray *, const interval,
 			hit_record *, const t_item *))
@@ -19,6 +21,7 @@ t_item	*add_item(vec3 position, vec3 scale, vec3 rotation, material m,
 	return (add_item_((t_item){(tfm){position, rotation, scale}, m, raster,
 		hit}));
 }
+#endif
 
 t_item	*add_item_(t_item t)
 {
@@ -42,14 +45,19 @@ void	remove_item(t_item *t_ptr)
 	v.item_count--;
 }
 
-t_light	*add_lamp(color col, vec3 pos_dir, double intensity, Bool is_dir)
+t_light	*add_lamp(color col, vec3 pos_dir, PFPN intensity, Bool is_dir)
 {
+	vec3	new_rot;
+
 	if (is_dir)
-		return (add_lamp_((t_light){(tfm){v3(), v3(), v3(1, 1, 1)}, col,
-			pos_dir, intensity, True}));
+	{
+		new_rot = dir_to_rot(pos_dir);
+		return (add_lamp_((t_light){(tfm){v3(), new_rot, v_3(intensity)}, col,
+			v_norm(pos_dir), intensity, True}));
+	}
 	else
-		return (add_lamp_((t_light){(tfm){pos_dir, v3(), v3(1, 1, 1)}, col,
-			pos_dir, intensity, True}));
+		return (add_lamp_((t_light){(tfm){pos_dir, v3(), v_3(intensity)}, col,
+			pos_dir, intensity, False}));
 }
 
 t_light	*add_lamp_(t_light l)

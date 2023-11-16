@@ -12,11 +12,26 @@
 
 #include "fractol.h"
 
+// returns time elapsed from event in ms
+int	get_elapsed(struct timeval event)
+{
+	struct timeval	current;
+	int				elapsed_ms;
+
+	gettimeofday(&current, 0);
+	elapsed_ms = ((current.tv_sec - event.tv_sec) * 1000000 + current.tv_usec
+			- event.tv_usec);
+	return (elapsed_ms);
+}
+
 void	update_delta_time(void)
 {
-	struct timeval current;
+	struct timeval	current;
+	int				elapsed_ms;
+
 	gettimeofday(&current, 0);
-	int elapsed_ms = ((current.tv_sec - v.last_update.tv_sec) * 1000000	+ current.tv_usec - v.last_update.tv_usec);
+	elapsed_ms = ((current.tv_sec - v.last_update.tv_sec) * 1000000
+			+ current.tv_usec - v.last_update.tv_usec);
 	v.delta_time = elapsed_ms / 1000000.0;
 	v.last_update = current;
 }
@@ -24,8 +39,8 @@ void	update_delta_time(void)
 void	apply_motions(void)
 {
 	static int	was_enabled = 0;
-	double		t;
-	double		t_offset;
+	PFPN		t;
+	PFPN		t_offset;
 	motion		m;
 	int			i;
 
@@ -73,4 +88,3 @@ void	update_tfm_matrices(void)
 		i++;
 	}
 }
-

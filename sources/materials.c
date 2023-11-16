@@ -89,21 +89,21 @@ ray *scattered, material *self)
 Bool	dielectric_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 ray *scattered, material *self)
 {
-	double	refraction_ratio;
+	PFPN	refraction_ratio;
 	vec3	unit_direction;
-	double	sin_theta;
+	PFPN	sin_theta;
 	Bool	cannot_refract;
 	vec3	direction;
 
 	*attenuation = self->base_color.value(rec->u, rec->v, &self->base_color);
 	refraction_ratio = rec->front_face ? (1.0/self->ior) : self->ior;
 	unit_direction = v_norm(ray_in->dir);
-	double cos_theta = fmin(v_dot(v_scal(unit_direction, -1.0), rec->normal),
+	PFPN cos_theta = fmin(v_dot(v_scal(unit_direction, -1.0), rec->normal),
 	1.0);
 	sin_theta = sqrt(1.0 - cos_theta*cos_theta);
 	cannot_refract = refraction_ratio * sin_theta > 1.0;
 	if (cannot_refract || reflectance(cos_theta, refraction_ratio)
-	> random_double())
+	> random_PFPN())
 		direction = reflect(unit_direction, rec->normal);
 	else
 		direction = refract(unit_direction, rec->normal, refraction_ratio);

@@ -31,7 +31,7 @@ void	gizmo_dot(vec3 pos, color c)
 	}
 }
 
-static void	draw_line(vec3 start, vec3 end, color c, int (*draw_func)(vec3 p,
+void	draw_line(vec3 start, vec3 end, color c, int (*draw_func)(vec3 p,
 			color c))
 {
 	vec3	move;
@@ -69,18 +69,18 @@ void	heat_line(vec3 start, vec3 end, color c)
 
 void	gizmo_drag(vec3 start_pos, vec3 current_pos, color c)
 {
-	scribe("O", start_pos.x - 2, start_pos.y + 4, c);
-	scribe("x", current_pos.x - 2, current_pos.y + 4, c);
+	scribe("O", v3(start_pos.x - 2, start_pos.y + 4), c);
+	scribe("x", v3(current_pos.x - 2, current_pos.y + 4), c);
 	draw_debug_line(start_pos, current_pos, WHITE);
 }
 
-// void	gizmo_nshape(int n, vec3 pos, vec3 rot, vec3 scale, double r_offset,
+// void	gizmo_nshape(int n, vec3 pos, vec3 rot, vec3 scale, PFPN r_offset,
 // 		color c)
 // {
 // 	vec3	this;
 // 	vec3	next;
 
-// 	double _a = 0 + r_offset; // 45'
+// 	PFPN _a = 0 + r_offset; // 45'
 // 	this = v3(scale.x * sin(_a), scale.y * cos(_a));
 // 	this = rotate3(this, rot);
 // 	for (int i = 1; i <= n; i++)

@@ -78,6 +78,8 @@
 #  define K_X 120
 #  define K_Y 121
 #  define K_Z 122
+#  define K_PLUS 61
+#  define K_MINUS 45
 # else
 #  define K_ESC 53
 #  define K_UP 126

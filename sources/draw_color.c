@@ -24,16 +24,16 @@ int	new_rgb(int r, int g, int b)
 	return (new_trgb(FT_TRANSPARENCY, r, g, b));
 }
 
-color	new_color(double r, double g, double b)
+color	new_color(PFPN r, PFPN g, PFPN b)
 {
 	return ((color){r, g, b});
 }
 
-color	color_lerp(double t, color color1, color color2)
+color	color_lerp(PFPN t, color color1, color color2)
 {
-	double	r;
-	double	g;
-	double	b;
+	PFPN	r;
+	PFPN	g;
+	PFPN	b;
 
 	r = (1 - t) * color1.x + t * color2.x;
 	g = (1 - t) * color1.y + t * color2.y;

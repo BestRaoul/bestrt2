@@ -12,31 +12,17 @@
 
 #include "fractol.h"
 
+static int	debug_pixel(vec3 p, color c)
+{
+	if (!in_bounds(p.x, p.y))
+		return (0);
+	mlx_pixel_put(v.mlx, v.win, p.x, p.y, color2rgb(c));
+	return (1);
+}
+
 void	draw_debug_line(vec3 start, vec3 end, color c)
 {
-	vec3	move;
-	vec3	step;
-	vec3	ve;
-
-	if (in_bounds(end.x, end.y) && !in_bounds(start.x, start.y))
-	{
-		draw_debug_line(end, start, c);
-		return ;
-	}
-	start.x += 0.000001 * (start.x == end.x);
-	move = v3(end.x - start.x, end.y - start.y);
-	if (fabs(move.x) >= fabs(move.y))
-		step = v3(sign(move.x), move.y / fabs(move.x));
-	else
-		step = v3(move.x / fabs(move.y), sign(move.y));
-	ve = start;
-	while (in_bounds(ve.x, ve.y) && (fabs(end.x - ve.x) > fabs(step.x)))
-		mlx_pixel_put(v.mlx, v.win, ve.x += step.x, ve.y += step.y,
-			color2rgb(c));
-	if (in_bounds(ve.x, ve.y))
-		mlx_pixel_put(v.mlx, v.win, ve.x, ve.y, color2rgb(c));
-	if (in_bounds(end.x, end.y))
-		mlx_pixel_put(v.mlx, v.win, end.x, end.y, color2rgb(c));
+	draw_line(start, end, c, debug_pixel);
 }
 
 void	draw_debug_dot(vec3 pos, color c)
@@ -101,11 +87,11 @@ void	draw_projected_dot(vec3 pos, color c)
 	}
 }
 
-void	draw_projected_point(vec3 pos, color c)
-{
-	pos = world_to_screenpos(pos);
-	draw_v_inheat(pos, c);
-}
+// void	draw_projected_point(vec3 pos, color c)
+// {
+// 	pos = world_to_screenpos(pos);
+// 	draw_v_inheat(pos, c);
+// }
 
 // // SEGV so much
 void	draw_projected_line(vec3 start, vec3 end, vec3 c)

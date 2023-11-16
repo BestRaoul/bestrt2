@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   math_4.c                                           :+:      :+:    :+:   */
+/*   math_2.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: pkondrac <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -12,47 +12,33 @@
 
 #include "fractol.h"
 
-//unused
-void	mm_(const m4x4 a, const m4x4 b, m4x4 c)
+// Define the constants for the ACES tone mapping function
+#define A 2.51
+#define B 0.03
+#define C 2.43
+#define D 0.59
+#define E 0.14
+
+// ACES tone mapping function
+PFPN	aces(PFPN x)
 {
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            c[i][j] = 0;
-            for (int k = 0; k < 4; k++) {
-                c[i][j] += a[i][k] * b[k][j];
-            }
-        }
-    }
+	return ((x * (A * x + B)) / (x * (C * x + D) + E));
 }
 
-s_m4	mm(const m4x4 a, const m4x4 b)
+PFPN	linear_to_gamma(PFPN linear_component)
 {
-    s_m4    c;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            c.mat[i][j] = 0;
-            for (int k = 0; k < 4; k++) {
-                c.mat[i][j] += a[i][k] * b[k][j];
-            }
-        }
-    }
-    return c;
+	return (sqrt(linear_component));
 }
 
-vec3	mult_point_matrix(const vec3 in, const m4x4 M)
-{ 
-	vec3 out;
-    //out = in * M;
-    out.x   = in.x * M[0][0] + in.y * M[1][0] + in.z * M[2][0] + /* in.z = 1 */ M[3][0]; 
-    out.y   = in.x * M[0][1] + in.y * M[1][1] + in.z * M[2][1] + /* in.z = 1 */ M[3][1]; 
-    out.z   = in.x * M[0][2] + in.y * M[1][2] + in.z * M[2][2] + /* in.z = 1 */ M[3][2]; 
-    double w = in.x * M[0][3] + in.y * M[1][3] + in.z * M[2][3] + /* in.z = 1 */ M[3][3]; 
- 
-    // normalize if w is different than 1 (convert from homogeneous to Cartesian coordinates)
-    if (w != 1) { 
-        out.x /= w; 
-        out.y /= w; 
-        out.z /= w; 
-    } 
-	return out;
+Bool	near_zero(vec3 e)
+{
+	PFPN	s;
+
+	s = 1e-8;
+	return ((fabs(e.x) < s) && (fabs(e.y) < s) && (fabs(e.z) < s));
+}
+
+Bool	close_enough(PFPN __x)
+{
+	return (fabs(__x) < 1e-8);
 }

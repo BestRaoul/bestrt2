@@ -31,7 +31,7 @@ material	new_lambertian_bump(texture t, texture bump)
 	return (m);
 }
 
-material	new_metal(texture t, double roughness)
+material	new_metal(texture t, PFPN roughness)
 {
 	material	m;
 
@@ -39,11 +39,10 @@ material	new_metal(texture t, double roughness)
 	m.base_color = t;
 	m.metalic = BW_MAP(1.0);
 	m.roughness = BW_MAP(roughness);
-	NOT_IMPLEMENTED("textured roughness");
 	return (m);
 }
 
-material	new_dielectric(texture t, double ior)
+material	new_dielectric(texture t, PFPN ior)
 {
 	material	m;
 
@@ -51,13 +50,11 @@ material	new_dielectric(texture t, double ior)
 	m.base_color = t;
 	m.ior = ior;
 	m.transmission = BW_MAP(.8);
-	NOT_IMPLEMENTED("dielectric custom transmission values");
 	m.transmission_roughness = NO_MAP;
-	NOT_IMPLEMENTED("transmission roughness map");
 	return (m);
 }
 
-material	new_light(texture t, double emission_strength)
+material	new_light(texture t, PFPN emission_strength)
 {
 	material	m;
 

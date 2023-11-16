@@ -13,8 +13,31 @@
 #ifndef FRACTOL_H
 # define FRACTOL_H
 
+# define ANSI_RESET   "\x1b[0m"
+# define ANSI_RED     "\x1b[31m"
+# define ANSI_GREEN   "\x1b[32m"
+# define ANSI_YELLOW  "\x1b[33m"
+# define ANSI_BLUE    "\x1b[34m"
+
+# define PFPN	double
+
+# define ILLEGAL
+# include <stdio.h>
+
+static inline void	notify_illegal(const char *feature)
+{
+	dprintf(2, "["ANSI_YELLOW"WARNING"ANSI_RESET"] ""\
+You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
+	dprintf(2, "Please recompile with that flag\n");
+}
+
+# define FF	"\%03d.bmp"
+# define OUTFOLDER "output"
+
 # define MAX_ITEM_COUNT 100
 # define MAX_LIGHT_COUNT 100
+
+# define TARGET_FPS 60
 
 # define MYPI 3.1415
 # define DEG2RAD MYPI/180.0
@@ -56,16 +79,23 @@
 # define BOX		raster_box,		hit_box
 # define CYLINDER	raster_cylinder,hit_cylinder
 # define CONE		raster_pyramid,	hit_cone
-# define LINE		raster_line,	hit_line
 # define PLANE		raster_plane,	hit_plane
 # define QUAD		raster_quad,	hit_quad
 # define SS_QUAD	raster_quad,	hit_ss_quad
 
+# include <sys/types.h>
+# include <sys/wait.h>
+# include <unistd.h>
+# include <stdint.h>
+
 # include "keymap.h"
+# include "structs.h"
 # include "libft.h"
 # include "gc_malloc.h"
 # include "mlx_int.h"
+# include "gnl.h"
 
+# include <limits.h>
 # include <math.h>
 # include <mlx.h>
 # include <stdio.h>
@@ -74,7 +104,6 @@
 # include <stdarg.h>
 # include <string.h>
 # include <X11/cursorfont.h>
-
 
 //temp
 #include <X11/Xlib.h>
@@ -89,215 +118,6 @@
 #include <X11/extensions/XInput2.h>
 //--temp end
 
-typedef struct s_point		vec3;
-typedef struct s_quat		quat;
-
-typedef struct s_ray		ray;
-typedef struct s_material	material;
-typedef struct s_hit_record	hit_record;
-typedef struct s_interval	interval;
-typedef struct s_item		t_item;
-typedef struct s_texture	texture;
-
-typedef vec3 color;
-
-//row . collumn
-typedef double m4x4[4][4];
-
-typedef struct {
-	m4x4 mat;
-} s_m4;
-
-typedef struct s_quat {
-    double x, y, z, w;
-}	quat;
-
-typedef struct s_point {
-	double	x, y, z;
-}	vec3;
-
-typedef struct t_transform {
-	vec3	pos;
-	vec3	rot;
-	vec3	scale;
-} tfm;
-
-typedef struct s_ray {
-	vec3	orig;
-	vec3	dir;
-} ray;
-
-typedef struct s_bmp_read {
-    int widht;
-    int height;
-    int **pixels;
-}  bmp_read;
-
-typedef struct s_texture {
-	color	color_value;
-	color	(*value)(double, double, const texture *);
-	//checkers
-	texture	*checker_0;
-	texture	*checker_1;
-	double	inv_scale;
-	//image
-	int		image_width;
-	int		image_height;
-	color	*image;
-	//func
-	color	(*uv_func)(vec3);
-} texture;
-
-typedef struct s_material {
-	//PBR
-	texture	base_color;		//(diffuse, base_color)
-	texture	metalic;		//(is_metalic, can be texture)  (BW)
-
-	//[subsurface]
-
-	texture	specular;		//(how much, specular probability base on IOR)
-	double	specular_tint;	//(lerp between WHITE - base_color)(should always be 0=WHITE)
-
-	texture	roughness;		//(fuzz, ..)  (BW)
-
-	//[anisotropic]
-	//[sheen]
-	//[clearcoat]
-
-	double	ior;
-	texture	transmission;			//(dielectric probability)
-	texture	transmission_roughness;	//(BW)
-
-	texture	emission;				//(color)
-	double	emission_strength;		//(1.0 = exact same as base_color)
-	//texture	emission_strength;  	//(BW)
-
-	texture	normal;
-	vec3	normal_strength;
-	int		normal_mode;
-
-	texture alpha;
-
-} material;
-
-typedef struct s_hit_record {
-	vec3	p;
-	vec3	normal;
-	vec3	old_normal;
-	double	t;
-	Bool	front_face;
-	material mat;
-	double	u;
-	double	v;
-	t_item	*item;
-} hit_record;
-
-typedef struct s_interval {
-	double min;
-	double max;
-} interval;
-
-
-enum e_plne {
-	XYZ,
-	XY,
-	XZ,
-	YZ,
-	X,
-	Y,
-	Z
-};
-
-enum e_slct {
-	NONE	= 0,
-	MOVE	= 1,
-	ROTATE	= 2,
-	SCALE	= 3
-};
-
-enum e_nmode {
-	OPENGL,
-	DIRECTX
-	//idk
-};
-
-enum e_render_mode {
-	RAYTRACE,
-	RAYTRACE_STEPS,
-	RAYTRACE_MAT_DEBUG,
-	RAYTRACE_UVS,
-	RASTER,
-	RENDERMODES_MAX,
-
-	//deprecated
-	RAYTRACE_STEPS_2,
-	RAYTRACE_STEPS_3,
-	RAYTRACE_DIST,
-
-	RASTER_HEATMAP,
-	RENDER_MOVIE,
-};
-
-enum e_mat_debugmode {
-	NORMAL,
-	MIST,
-	
-	DIFFUSE_LIGHT,
-	DIFFUSE_COLOR,
-	SPECULAR_LIGHT,
-	SPECULAR_COLOR,
-
-	EMISSION,
-	ENVIRONEMENT,
-	COMBINED,
-
-	MAT_DEBUGMODES_MAX,
-};
-
-typedef struct s__img {
-	void	*mlx_img;
-	char	*addr;
-	int		bpp;
-	int		line_len;
-	int		endian;
-}	t__img;
-
-typedef struct s_motion {
-	double	*value;
-	double	start_val;
-	double	end_val;
-	double	(*tween)(double, double, double);
-} motion;
-
-typedef struct s_shader_end {
-	vec3	diffuse_light;
-	color	diffuse_color;
-	vec3	specular_light;
-	color	specular_color;
-} shader_end;
-
-typedef struct s_light
-{
-	tfm		transform;
-
-	vec3	col;
-	vec3	dir; //(0, -1, 0) rot3(rot)
-	double	intensity; //v_len(scale)
-	Bool	is_dir; //whether is a directional light or positional
-} t_light;
-
-typedef struct s_item {
-	tfm			transform;
-
-	material	mat;
-	void 		(*raster)(t_item *);
-	Bool		(*hit)(const ray *, const interval, hit_record *, const t_item *);
-
-	m4x4		fwd;
-	m4x4		bck;
-}	t_item;
-
-
 typedef struct s_vars {
 	int			w;
 	int			h;
@@ -306,7 +126,7 @@ typedef struct s_vars {
 	Cursor		cursor;
 	t__img		img;
 	vec3		**accumulate_img;
-	double		**dist_heatmap;
+	PFPN		**dist_heatmap;
 
 	//mouse
 	int			_lmouse;
@@ -365,7 +185,7 @@ typedef struct s_vars {
 
 	//data
 	struct timeval	last_update;
-	double		delta_time; //time since last update in seconds
+	PFPN		delta_time; //time since last update in seconds
  
  //Camera
 	vec3		camera_pos;
@@ -373,18 +193,17 @@ typedef struct s_vars {
 	quat		camera_quat;
 	m4x4 		rotation_matrix;
 
-    double		defocus_angle;
-    double		focus_dist;
+    PFPN		defocus_angle;
+    PFPN		focus_dist;
 
 	int			upscale;
 	int			max_depth;
 
-	double		near;
-	double		far;
+	PFPN		near;
+	PFPN		far;
 
-	double		vfov;
+	PFPN		vfov;
 	int			lookat_toggle;
-	vec3		lookfrom;
 	vec3		lookat;
 	vec3		vup;
 	vec3		pixel00_loc;
@@ -394,7 +213,8 @@ typedef struct s_vars {
 	vec3		defocus_disk_u;
     vec3		defocus_disk_v;
 	Bool		camera_change;
-	double		camera_dist_lookat;
+	PFPN		camera_dist_lookat;
+	vec3		camera_dir;
 
 	t_item		items[MAX_ITEM_COUNT];
 	int			item_count;
@@ -413,15 +233,18 @@ typedef struct s_vars {
 	int			motion_count;
 	Bool		motion_enabled;
 
-	double		time_passed;
-	double		time_speed;
+	PFPN		time_passed;
+	PFPN		time_speed;
+
+	int 		samples;
+	int			steps_rendered;
 
 	int			max_samples;
 	int			samples_per_step;
 
-	double		animation_duration;
+	PFPN		animation_duration;
 	int			animation_framerate;
-	double		animation_speed;
+	PFPN		animation_speed;
 	//animation samples
 	int			animation_render_mode;
 	int			animation_loops;
@@ -439,9 +262,13 @@ typedef struct s_vars {
 	texture		irradiance_map;
 	texture		blurry_irradiance_map;
 
-	double		ambient;
+	PFPN		ambient;
+	color		ambient_color;
 
 	int			mat_debugmode;
+	int			mat_valuesmode;
+	int			tone_mode;
+	int			skip_mode;
 
 	Bool		solo_lighting;
 
@@ -449,10 +276,13 @@ typedef struct s_vars {
 
 extern t_vars	v;
 
-//	ain
+// ------------------------------------------------------------------------- //
+
+// Main
 void    init_scene(int select);
 int		my_exit();
-//loop.c
+
+// Loop
 int		loop();
 void	render_movie();
 
@@ -461,21 +291,32 @@ color	sky_background(vec3 uv);
 color	shit_sky_background(vec3 uv);
 color	uv_background(vec3 uv);
 
-//disk
-//------------skipped
+// Disk
+// # ffmpeg
+void	ffmpeg_bmp_to_mp4(int framerate, int loops);
+// # read
+Bool	read_bmp(const char *filename, bmp_read *r);
+Bool	read_header(FILE *file, t_bmp_header *header, const char *filename);
+Bool	read_palette(FILE *file, t_bmp_header *header, int palette[256]);
+void	init_pixel_read(t_bmp_header *header, bmp_read *r);
+void	pixel_read(FILE *file, t_bmp_header *h, int p[256], bmp_read *r);
+// # write
+void	write_bmp(const char *filename, int w, int h, unit8_color *ps);
+void	write_img(void);
 
 // Draw
 // # color
 int		new_trgb(int t, int r, int g, int b);
 int		new_rgb(int r, int g, int b);
-color	new_color(double r, double g, double b);
-color	color_lerp(double t, color color1, color color2);
+color	new_color(PFPN r, PFPN g, PFPN b);
+color	color_lerp(PFPN t, color color1, color color2);
 int		color2rgb(color c);
 color	rgb2color(int rgb);
 int		get_r(int trgb);
 int		get_g(int trgb);
 int		get_b(int trgb);
 // # gizmo
+void	draw_line(vec3 start, vec3 end, color c, int (*draw_func)(vec3 p, color c));
 void	gizmo_dot(vec3 pos, color c);
 void	gizmo_line(vec3 start, vec3 end, color c);
 void	heat_line(vec3 start, vec3 end, color c);
@@ -483,26 +324,47 @@ void	gizmo_drag(vec3 start_pos, vec3 current_pos, color c);
 void	draw_debug_line(vec3 start, vec3 end, color c);
 void	draw_debug_dot(vec3 pos, color c);
 void	draw_projected_dot(vec3 pos, color c);
-void	draw_projected_point(vec3 pos, color c);
+// void	draw_projected_point(vec3 pos, color c);
 void	draw_projected_line(vec3 start, vec3 end, vec3 c);
 // # scribe
-void	scribe(char *str, int x, int y, color c);
-void	scribe_pos(char *tag, vec3 pos, int x, int y, color c);
-void	scribe_v3d(char *tag, vec3 pos, int x, int y, color c);
-void	scribe_num(char *format, int n, int x, int y, color c);
-void	scribe_dub(char *format, double d, int x, int y, color c);
+void	scribe(char *str, vec3 at, color c);
+void	scribe_pos(char *tag, vec3 pos, vec3 at, color c);
+void	scribe_v3d(char *tag, vec3 pos, vec3 at, color c);
+void	scribe_num(char *format, int n, vec3 at, color c);
+void	scribe_dub(char *format, PFPN d, vec3 at, color c);
 
 // Event handlers
 int		handle_mouse_move(int x, int y);
 int		handle_mouse_press(int button, int x, int y);
 int		handle_mouse_release(int button, int x, int y);
 int		handle_key_press(int key);
+void	handle_submode_next(void);
 int		handle_key_release(int k);
 void	plane_switch(enum e_plne _plane, enum e_plne _excluded);
 void	_reset_consumable_clicks(void);
 
-// Image
+// Hit functions
+Bool	hit(const ray *r, const interval ray_t, hit_record *rec);
+Bool	info_hit(const ray *r, const interval ray_t, hit_record *rec);
+Bool	check_hit(const ray *r, const interval ray_t);
+// # 2 helpers
+void	set_face_normal(hit_record *rec, const ray *r, const vec3 on);
+PFPN	t2global(const PFPN lt, const ray *lr, const ray *r, const m4x4 fwd);
+Bool	is_interior(const PFPN a, const PFPN b);
+vec3	get_cube_normal(const int id, hit_record *rec);
+// # HITS
+Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
+Bool    hit_plane(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
+Bool    hit_quad(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
+Bool    hit_ss_quad(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
+Bool    hit_box(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
+Bool    hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
+Bool    hit_cone(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
 
+// # ehlps
+void	save_box_intersection(PFPN t[2], PFPN u[2], PFPN v[2], const ray *local_r);
+
+// Image
 void	draw_raw(int x, int y, color c);
 int		get_pixel(int x, int y);
 int		draw_inbounds(int x, int y, color c);
@@ -517,13 +379,13 @@ void	draw_gamma_corrected(int x, int y, color c);
 
 // Items
 t_item	*add_item(vec3 p, vec3 s, vec3 r, material m,
-		void (*raster)(t_item *), Bool (*hit)(const ray *, const interval,
-			hit_record *, const t_item *));
+			void (*raster)(t_item *), Bool (*hit)(const ray *, const interval,
+				hit_record *, const t_item *));
 t_item	*add_item_(t_item t);
 void	remove_item(t_item *t_ptr);
 t_item	get_item_default(void);
 // Lamps
-t_light	*add_lamp(color col, vec3 pos_dir, double intensity, Bool is_dir);
+t_light	*add_lamp(color col, vec3 pos_dir, PFPN intensity, Bool is_dir);
 t_light	*add_lamp_(t_light l);
 void	remove_lamp(t_light *l_ptr);
 t_light	get_lamp_default(void);
@@ -534,250 +396,352 @@ material	new_m(vec3 color);
 material	new_m_rgb(vec3 rgbs);
 material	new_lambertian(texture t);
 material	new_lambertian_bump(texture t, texture bump);
-material	new_metal(texture t, double roughness);
-material	new_dielectric(texture t, double ior);
+material	new_metal(texture t, PFPN roughness);
+material	new_dielectric(texture t, PFPN ior);
+material	new_light(texture t, PFPN emission_strength);
 // # scatter
 void	pbr_scatter(const ray *r, hit_record *e, ray *s, Bool *w);
 
-
-// ------------------------------------------------------------------------- //
-
-//		-- rotate
-vec3	rotate(vec3 v, double o);
-vec3	rotate_x(vec3 v, double alpha);
-vec3	rotate_y(vec3 v, double beta);
-vec3	rotate_z(vec3 v, double gamma);
+// Math
+int		max(int a, int b);
+int		min(int a, int b);
+PFPN	mind(PFPN a, PFPN b);
+PFPN	maxd(PFPN a, PFPN b);
+PFPN	fclamp(PFPN x, PFPN min, PFPN max);
+int		sign(int n);
+PFPN	signd(PFPN n);
+vec3	lerp(PFPN t, vec3 a, vec3 b);
+vec3	rotate_x(vec3 v, PFPN alpha);
+vec3	rotate_y(vec3 v, PFPN beta);
+vec3	rotate_z(vec3 v, PFPN gamma);
 vec3	rotate3(vec3 v, vec3 r);
-vec3	rotate_around(vec3 v, vec3 p, vec3 axis, double angle);
+vec3	rotate_around(vec3 v, vec3 p, vec3 axis, PFPN angle);
+Bool	contains(interval _t, PFPN x);
+Bool	surrounds(interval _t, PFPN x);
+PFPN	clamp(interval _t, PFPN x);
+PFPN	clamp_(PFPN x);
+PFPN	aces(PFPN x);
+PFPN	linear_to_gamma(PFPN linear_component);
+Bool	near_zero(vec3 e);
+Bool	close_enough(PFPN __x);
+// # matrix
+s_m4	mm(const m4x4 a, const m4x4 b);
+void	multiply_matrix_vector(const m4x4 mat, const vec3 in, vec3 *out);
+vec3	mult_point_matrix(const vec3 in, const m4x4 M);
+void	print_mx4(m4x4 m);
+void	set_m4(m4x4 m, const m4x4 s);
+void	set_identity(m4x4 m);
+void	inverse(const m4x4 in, m4x4 out);
+// # projection
+vec3	world_to_local(vec3 cam_pos, vec3 pos);
+vec3	reverse_project(vec3 pos, PFPN vfov, PFPN aspect);
+vec3	project(vec3 pos, PFPN vfov, PFPN aspect);
+vec3	project_ortho(vec3 pos, PFPN vfov, PFPN aspect);
+vec3	clip_space_to_viewport(vec3 pos);
+vec3	world_to_viewport(vec3 cam_pos, PFPN vfov, PFPN aspect, vec3 pos);
+vec3	world_to_screenpos(vec3 pos);
+vec3	world_to_screenpos_fixed_fov(vec3 pos, PFPN fov);
+vec3	world_to_screenpos_ortho(vec3 pos);
+// # quaternion
+quat	euler_to_quaternion(vec3 euler);
+vec3	quaternion_to_euler(quat q);
+void	quaternion_to_m4x4(quat q, m4x4 m);
+quat	quaternion_multiply(quat a, quat b);
+quat	angle_axis(PFPN angle, vec3 axis);
+// # random
+PFPN	random_PFPN(void);
+PFPN	random_normal_distribution(void);
+PFPN	random_PFPN_l(PFPN min, PFPN max);
+vec3	pixel_sample_square(void);
+vec3	random_in_unit_disk(void);
+vec3	defocus_disk_sample(void);
+vec3	random_v3(void);
+vec3	random_v3_l(PFPN min, PFPN max);
+vec3	random_in_unit_sphere(void);
+vec3	random_unit_vector(void);
+// # ray
+vec3	get_ray_direction(int i, int j);
+vec3	ray_at(const ray *r, PFPN t);
+vec3	local_p(vec3 p, tfm *transform);
+ray		apply_ray(const ray *in, const m4x4 t);
+// # reflection
+vec3	reflect(vec3 v, vec3 n);
+vec3	reflect_safe(vec3 v, vec3 n, vec3 old_n);
+vec3	refract(vec3 uv, vec3 n, PFPN etai_over_etat);
+PFPN	reflectance(PFPN cosine, PFPN ref_idx);
+PFPN	realistic_specular(PFPN ior);
+// # trash
+vec3	plane_alligned_add(vec3 base, vec3 add);
+vec3	*get_npoints(int n, PFPN r_offset);
+void	set_npoints(vec3 *points, int n, PFPN r_offset);
+vec3	look_rotation(vec3 lookfrom, vec3 lookat);
+vec3	look_at(vec3 lookfrom, vec3 lookat, vec3 up);
+// # tweens
+void	add_motion(PFPN *value, PFPN start_value, PFPN end_value,
+			PFPN (*tween)(PFPN, PFPN, PFPN));
+PFPN	lerpd(PFPN a, PFPN b, PFPN t);
+PFPN	ping_pong(PFPN a, PFPN b, PFPN t);
+PFPN	ping_pong_2(PFPN a, PFPN b, PFPN t);
+PFPN	sin_tween(PFPN a, PFPN b, PFPN t);
+PFPN	cos_tween(PFPN a, PFPN b, PFPN t);
+PFPN	ease_in_out_cubic(PFPN a, PFPN b, PFPN t);
+PFPN	smoothstep(PFPN edge0, PFPN edge1, PFPN x);
+// # vector
+vec3	v_add(vec3 a, vec3 b);
+vec3	from_to(vec3 a, vec3 b);
+vec3	v_sub(vec3 a, vec3 b);
+vec3	v_mult(vec3 a, vec3 b);
+vec3	v_div(vec3 a, vec3 b);
+vec3	v3_base(vec3 in);
+vec3	v_3(PFPN x);
+Bool	v_eq(vec3 a, vec3 b);
+vec3	v_norm(vec3 a);
+vec3	swap_yz(vec3 v);
+int		in_bounds(int x, int y);
+int		v_in_bounds(vec3 pos);
+PFPN	length_squared(vec3 a);
+PFPN	v_len(vec3 a);
+PFPN	vec_dist(vec3 a, vec3 b);
+vec3	v_scal(vec3 a, PFPN scalar);
+PFPN	v_dot(vec3 a, vec3 b);
+vec3	v_cross(vec3 a, vec3 b);
+vec3	line_intersection(vec3 A, vec3 B, vec3 C, vec3 D);
+vec3	project_onto_screen_limits(vec3 p, vec3 dir);
+vec3	parent_to(vec3 v, const tfm *transform);
+vec3	parent_to_virtual(vec3 v, vec3 pos, vec3 rot, vec3 scale);
+PFPN	distanceToLine(vec3 A, vec3 B, vec3 C);
+vec3	project_onto_line(vec3 A, vec3 B, vec3 C);
+PFPN	directioned_distance(vec3 from, vec3 to, vec3 dir);
+PFPN	tddd(vec3 from, vec3 to, vec3 dir);
+PFPN	get_angle(vec3 dir);
+void	v_round(vec3 *in, PFPN precision);
+
+// Parsing
+int		parse_file(const char *filename);
+void	parse_2nd_argument(int ac, char **av);
+// # atoos
+vec3	atov3(const char *str, vec3 __default);
+PFPN	atod(const char *str, PFPN __default);
+texture	atotexture(const char *str, texture __default);
+material	atomaterial(const char **line, material __default);
+Bool	get_id(const char *tag, const char **dictionary, int *id);
+// #2
+int	parse_ibl(const char **line);
+int	parse_bg(const char **line);
+int	parse_ambient_light(const char **line);
+int	parse_point_lamp(const char **line);
+int	parse_directional_lamp(const char **line);
+// #3 camera
+vec3	dir_to_rot(vec3 dir);
+int	parse_camera(const char **line);
+int	parse_camera_extension(const char **line);
+int	parse_render_settings(const char **line);
+int	parse_animation_settings(const char **line);
+// # line parsing
+int	parse_sphere(const char **line);
+int	parse_plane(const char **line);
+int	parse_quad(const char **line);
+int	parse_ss_quad(const char **line);
+int	parse_box(const char **line);
+int	parse_cylinder(const char **line);
+int	parse_cone(const char **line);
+int	parse_texture(const char **line);
+int	parse_material(const char **line);
+void	print_rt_format(void);
 
 
+// PBR lighting
+shader_end	pbr_lighting(hit_record *rec, ray *ray_in);
+PFPN	distribution_ggx(PFPN nDotH, PFPN roughness);
+PFPN	geometry_smith(PFPN NdotV, PFPN NdotL, PFPN roughness);
+vec3	fresnel_shlick(PFPN HdotV, PFPN R0);
+Bool	check_obstruction(t_light *l, vec3 p);
 
-//raster.c
+// Raster
 void	raster(void);
-//		--Functions
-void	raster_square(t_item *item);
-void	raster_line(t_item *item);
-void	raster_box(t_item *item);
-void	raster_pyramid(t_item *item);
+void	raster_items(void);
+void	raster_lamps(void);
+void	raster_selection(void);
+// # helpers
+void	draw_grid_and_cardinals(void);
+void	draw_light_gizmo(t_light *l);
+void	__swap_yz(vec3 *v);
+// void	draw_lookat(void);
+// # functions
 void	raster_sphere(t_item *item);
 void	raster_cylinder(t_item *item);
-void	raster_plane(t_item *item);
+void	raster_box(t_item *item);
+void	raster_pyramid(t_item *item);
 void	raster_quad(t_item *item);
+void	raster_plane(t_item *item);
+void	link_lines(vec3 *points, int count, color c);
+void	dot_them(vec3 *points, int count, color c);
+// # heatmap
+void	reset_heatmap(void);
+Bool	check_heat(vec3 pos);
+void	set_heat(vec3 pos);
 
-//hit
-Bool	hit			(const ray *r, const interval ray_t, hit_record *rec);
-Bool	hit_sphere	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-Bool	hit_box		(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-Bool	hit_cylinder(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-Bool	hit_cone	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-Bool	hit_line	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-Bool    hit_plane	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-Bool    hit_quad	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-Bool	hit_ss_quad	(const ray *r, const interval ray_t, hit_record *rec, const t_item *self);
-//triangle
-//quad
-//cylinder
-//cone
-Bool	check_hit(const ray *r, const interval ray_t);
-Bool	info_hit(const ray *r, const interval ray_t, hit_record *rec);
+// Raytrace
+// # paint
+color	paint_dist(Bool did_hit, PFPN d);
+color	paint_uv(Bool did_hit, hit_record *rec);
+color	paint_env(vec3 r_dir);
+color	mat_values(Bool did_hit, hit_record *rec);
+color	paint_se(shader_end *se);
+Bool	is_unlit(int mode);
+color	paint_mat_debug_unlit(Bool did_hit, hit_record *rec, ray *r);
+color	paint_mat_debug_lit(ray *ray_in, hit_record *rec);
+// # pixel
+void	init_ray(PFPN x, PFPN y, ray *r);
+color	trace(ray *r, int max_depth);
+void    render_pixel(int x, int y);
+// # tasks
+void	generate_tasks(t_split_task *tasks, int w_splits, int h_splits, int upscale);
+Bool	fullfill(t_split_task *task, int _split);
+void	show_progress(int _split, int max_splits, struct timeval frame_start);
+void	print_progress(int pixel_count);
+// # trace
+color	tone(color light);
+color	trace(ray *r, int max_depth);
+// # render
+void	init_ray(PFPN x, PFPN y, ray *r);
+color	trace(ray *r, int max_depth);
+void    render_pixel(int x, int y);
+void	raytrace(void);
 
-//raytrace.c
-//		--Pixels
-void    raytrace(void);
-void	init_ray(double x, double y, ray *r);
-int		ray_trace(ray *r);
+// Scenes
+void    init_scene(int select);
+void    default_cam(void);
+void    cornell(vec3 dimensions);
+void	test(void);
+// # showoff
+void	showoff_1(void);
+void	showoff_2(void);
+void	showoff_3(void);
+void	showoff_4(void);
+void	showoff_5(void);
+void	showoff_6(void);
+void	showoff_7(void);
+void	showoff_8(void);
+void	showoff_9(void);
+// # 4-7
+void    balls(void);
+void    tweens(void);
+void    quads(void);
+void	lights0(void);
+void	lights(void);
+void	lights2(void);
+void	cornell(vec3 dimensions);
+void	mirror_balls(void);
+void	checkers(void);
+void	first_animation(void);
+void	colored_lights(void);
+void	specular(void);
+void	earth(void);
+void	bumpy(void);
+void	mirrors(void);
+void	tomato(void);
+void	glass_ball(void);
+void	normal_reflection(void);
 
-//ui.c
-void	help_ui(void);
+// Simulation
+void	simulate_rayzz(void);
+
+// Textures
+texture	solid_color(color c);
+texture	checkerboard(PFPN scale, texture even, texture odd);
+texture	from_bmp(const char *filename);
+texture	from_func(color (*uv_func)(vec3));
+texture	*t_shallow_copy(texture *t);
+texture	*t_deep_copy(texture *t);
+color	evaluate(texture *t, PFPN _u, PFPN _v);
+PFPN	evaluate_bw(texture *t, PFPN _u, PFPN _v);
+color	evaluate_spread(texture *t, PFPN _u, PFPN _v, PFPN _spread);
+// # returns
+color   solid_color_return(PFPN _u, PFPN _v, const texture *self);
+color   checkeboard_return(PFPN _u, PFPN _v, const texture *self);
+color   image_return(PFPN _u, PFPN _v, const texture *self);
+color   func_return(PFPN _u, PFPN _v, const texture *self);
+
+// Transform
+void    set_transform_matrix(const tfm *transform, m4x4 m_fwd, m4x4 m_bck);
+
+// UI
 void	debug_ui(void);
+void	help_ui(void);
+ri		get_rotation_indicator(vec3 anchor, vec3 end);
 
+// Update camera
+void	update_camera(void);
+void	maybe_flipp(void);
+PFPN	get_move_speed(void);
+PFPN	get_angular_speed(void);
+void	do_orbit_move(vec3 axis, PFPN angle);
+void	rotate_camera(void);
+void	move_camera(void);
+void	fov_camera(void);
 
-
-//update
-//		--Data
+// Update data
+int		get_elapsed(struct timeval event);
 void	update_delta_time(void);
 void	apply_motions(void);
 void	update_lamp_stats(void);
 void	update_tfm_matrices(void);
-//		--Item
-void	move_transform(tfm *t, Bool set);
-void	rotate_transform(tfm *t, Bool set);
-void	scale_transform(tfm *t, Bool set);
-void	maybe_add_item(void);
+
+// Update item
 void	manage_selection(void);
-//		--Camera
-void    update_camera(void);
+void	maybe_add_item(void);
+// # 2 - 3
+void	move_transform(tfm *transform, int et);
+void	scale_transform(tfm *transform, int et);
+void	rotate_transform(tfm *transform, int et);
+void	mrs_null_reference(tfm *_, int et);
+int		set_reset(tfm *t, vec3 *ip, int mode, int et);
+void	draw_modify_axis(ri r, vec3 inital_position);
+void	get_intersections(vec3 pos, vec3 mp, vec3 *ir, vec3 *ib);
 
+// ------------------------------------------------------------------------- //
 
-//math.c
-double	distance(vec3 a, vec3 b);
-int 	sign(int n);
-double	signd(double n);
-int		min(int a, int b);
-int		max(int a, int b);
-double	mind(double a, double b);
-double	maxd(double a, double b);
-int 	in_bounds(int x, int y);
-int		v_in_bounds(vec3 pos);
-double	fclamp(double i, double max, double min);
-//2
-vec3    v3_base(vec3 in);
-vec3    v_3(double x);
-vec3    v_add(vec3 a, vec3 b);
-vec3    v_sub(vec3 a, vec3 b);
-vec3    v_mult(vec3 a, vec3 b);
-vec3    v_div(vec3 a, vec3 b);
-double	v_len(vec3 a);
-vec3   from_to(vec3 a, vec3 b);
-//3
-Bool	v_eq(vec3 a, vec3 b);
-vec3	v_norm(vec3 a);
-vec3	v_scal(vec3 a, double scalar);
-double	vec_dist(vec3 a, vec3 b);
-double	pt_dist_to_sphere(vec3 pt, vec3 sphere_center, double rad);
-vec3	v_cross(vec3 a, vec3 b);
-double	v_dot(vec3 a, vec3 b);
-double	length_squared(vec3 a);
-//4
-vec3	line_intersection(vec3 A, vec3 B, vec3 C, vec3 D);
-vec3	project_onto_screen_limits(vec3 p, vec3 dir);
-//5
-void	mm_(const m4x4 a, const m4x4 b, m4x4 c);
-s_m4	mm(const m4x4 a, const m4x4 b);
-void	matrix_multiplicationconst (m4x4 a, const m4x4 b, m4x4 c);
-vec3	mult_point_matrix(const vec3 in, const m4x4 M);
-//6
-vec3    get_ray_direction(int i, int j);
-vec3	ray_at(const ray *r, double t);
-double	t_at(const ray *r, vec3 ray);
-vec3	lerp(double t, vec3 a, vec3 b);
-vec3    local_p(vec3 p, tfm *transform);
-//7
-double	random_double_l(double min, double max);
-double	random_double();
-vec3	pixel_sample_square(void);
-vec3	defocus_disk_sample(void);
-vec3	random_v3();
-vec3	random_v3_l(double min, double max);
-//a lot of random vector shit
-vec3	random_in_unit_sphere();
-vec3	random_unit_vector();
-vec3	random_on_hemisphere(vec3 normal);
+// ------------------------------------------------------------------------- //
 
-//.
-//.
-//.
-//trashcan.c
-void	update_delta_time(void);
-vec3	plane_alligned_add(vec3 base, vec3 add);
-int		get_elapsed(struct timeval event);
-vec3	*get_npoints(int n, double r_offset);
+// ------------------------------------------------------------------------- //
+
+// ------------------------------------------------------------------------- //
+
+// ------------------------------------------------------------------------- //
+
+// TRASH
+// # 1
+void	maybe_apply_perturb(hit_record *rec);
+vec3	perturb_normal(vec3 normal, vec3 perturbation);
 void	print_pos(vec3 pos, char *msg);
-int		check_heat(vec3 pos);
+void	fswap(PFPN *__x, PFPN *__y);
+void	vswap(vec3 *__x, vec3 *__y);
+// # +
+Bool	check_heat(vec3 pos);
 void	set_heat(vec3 pos);
-
-vec3	project(vec3 pos, double fov, double aspect);
-vec3	reverse_project(vec3 pos, double fov, double aspect);
-vec3	world_to_screenpos(vec3 pos);
-vec3	world_to_screenpos_fixed_fov(vec3 pos, double fov);
-vec3	world_to_screenpos_ortho(vec3 pos);
-
-void	draw_grid_and_cardinals(void);
-void	raster_items(void);
-void	raster_lamps(void);
-void	reset_heatmap(void);
-
+void	**alloc_2d(int size, int w, int h);
 void	set_cursor(unsigned int xc);
 
-quat	euler_to_quaternion(vec3 euler);
-vec3	quaternion_to_euler(quat q);
-vec3	rotate3d(vec3 vector, quat quaternion);
-vec3	rotate_ly(vec3 position, vec3 rotation);
+color	invert_color(color c);
+color	get_inverted(vec3 p);
 
-double	linear_to_gamma(double linear_component);
+color	gaussian_blur(int x, int y, const texture *self);
 
-Bool	near_zero(vec3 e);
-Bool	close_enough(double __x);
-vec3	reflect(vec3 v, vec3 n);
-vec3	reflect_safe(vec3 v, vec3 n, vec3 old_n);
-vec3	refract(vec3 uv, vec3 n, double etai_over_etat);
-double	reflectance(double cosine, double ref_idx);
+void	default_crusor(void);
+void	mode_cursor(int mode);
 
-vec3	lookRotation(vec3 lookfrom, vec3 lookat);
-vec3	look_at(vec3 lookfrom, vec3 lookat, vec3 up);
+char	**_gc_add_2d(char **ptr_2d);
 
-double	smoothstep (double edge0, double edge1, double x);
-double	realistic_specular(double ior);
+// ------------------------------------------------------------------------- //
 
-vec3	parent_to(vec3 v, const tfm *transform);
+// ------------------------------------------------------------------------- //
 
-double	ACES(double x);
+// ------------------------------------------------------------------------- //
 
-// ------Interval
-Bool	contains(interval _t, double x);
-Bool	surrounds(interval _t, double x);
-double	clamp(interval _t, double x);
-double	clamp_(double x);
+// ------------------------------------------------------------------------- //
 
-// ------Textures
-//deepcopy
-texture		*t_shallow_copy(texture *t);
-texture		*t_deep_copy(texture *t);
-texture		solid_color(color c);
-texture		checkerboard(double scale, texture even, texture odd);
-texture		from_bmp(const char *filename);
-texture		from_func(color (*uv_func)(vec3));
-color  		evaluate(texture *t, double u, double v);
-double   	evaluate_bw(texture *t, double u, double v);
-color   	evaluate_spread(texture *t, double _u, double _v, double _spread);
-color		getGaussianBlur(int x, int y, const texture *self);
-
-// ------Tweens
-void	add_motion(double *value, double start_value, double end_value, double (*tween)(double, double , double));
-double	lerpd(double a, double b, double t);
-double	ping_pong(double a, double b, double t);
-double	ping_pong_2(double a, double b, double t);
-double	sin_tween(double a, double b, double t);
-double	cos_tween(double a, double b, double t);
-double	easeInOutCubic(double a, double b, double t);
-
-// ------Normals
-vec3    perturb_normal(vec3 normal, vec3 perturbation);
-vec3    texture_diff_bw(texture *t, vec3 uv);
-vec3    compute_rgb_perturbation(texture *t, vec3 normal, vec3 uv);
-
-void	maybe_apply_perturb(hit_record *rec);
-
-// ------Output to disk
-void write_img(void);
-void ffmpeg_bmp_to_mp4(int framerate, int loops);
-int	readBMP(const char* filename, bmp_read *r);
-
-// ------PBR shenenigans
-shader_end	CalcTotalPBRLighting(hit_record *rec, ray *ray_in);
-
-// -----Transformation Mx4
-void set_transform_matrix(const tfm *t, m4x4 m, m4x4 m_bck);
-void create_transform_matrix(const tfm* t, m4x4 result);
-void multiply_matrix_vector(const m4x4 mat, const vec3 in, vec3* out);
-void multiply_matrix_vector_2(const m4x4 M, const vec3 in, vec3* out);
-void print_mx4(m4x4 matrix);
-ray	 apply_ray(const ray *in, const m4x4 t);
-
-//TRASHHHHH
-void    simulate_rayzz();
-typedef struct {
-	vec3	anchor;
-	vec3	r_top, r_bot;
-	vec3	g_top, g_bot;
-	vec3	b_top, b_bot;
-} ri;
-ri	get_rotation_indicator(vec3 anchor, vec3 end);
-
-void	fswap(double *__x, double *__y);
-void	vswap(vec3 *__x, vec3 *__y);
-void	**alloc_2d(int size, int w, int h);
-
+// ------------------------------------------------------------------------- //
 
 # define INTERVAL_EMPTY (interval){+INFINITY, -INFINITY}
 # define INTERVAL_UNIVERSE (interval){-INFINITY, +INFINITY}

@@ -1,5 +1,6 @@
 <!---
 mouse images
+UI 	  images
 
 color picker
 
@@ -10,16 +11,15 @@ fix ambient bounces
 
 # ----------- NOW ---------------
 # -----------AT 42---------------
-0. NORME
-skip - disk.c
-skip - hit_functions.c	
- - materials.c
 
-1. parsing
+<!---
+?10 - main
+?10 - v3();
+--->
 
-5. flag ILLEGAL
-6. debug info
-7. speed
+0. 0. figure out why catesian is weird
+
+-----------------------------------
 
 # ----------- NEVER ---------------
 IGNORED - 2. directional light/IBL (roughness)
@@ -40,9 +40,6 @@ IGNORED - ctrl snap is not flexible smart
 # ----------- AFTER ---------------
 //98. (bump to normal conversion)
 //6. add_tween (duration, loop, delay)
-3. tween, item, lights, sky, rendermovie CLEANUP
-4. UI (material debug, vec3's, color materials)
-5. plenty render modes
 6. ao
 
 # ----------- WANTO ---------------

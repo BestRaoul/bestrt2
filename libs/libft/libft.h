@@ -20,6 +20,8 @@
 # include <stdlib.h>
 # include <unistd.h>
 
+# include "additional.h"
+
 # define T_BOLD  "\x1B[7m"
 # define T_RED   "\x1B[31m"
 # define T_GRN   "\x1B[32m"

@@ -83,7 +83,7 @@ void	render_movie(void)
 /*
 static void	draw_heatmap_to_img(void)
 {
-	double	dist;
+	PFPN	dist;
 	int		farfar;
 	int		l;
 	color	c;

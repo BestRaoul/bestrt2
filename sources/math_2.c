@@ -12,45 +12,24 @@
 
 #include "fractol.h"
 
-vec3    v_add(vec3 a, vec3 b)
+int	sign(int n)
 {
-    return v3(a.x+b.x, a.y+b.y, a.z+b.z);
+	if (n >= 0)
+		return (1);
+	return (-1);
 }
 
-vec3   from_to(vec3 a, vec3 b)
+PFPN	signd(PFPN n)
 {
-    return (v_sub(b, a));
+	if (n < 0)
+		return (-1);
+	return (1);
 }
 
-vec3    v_sub(vec3 a, vec3 b)
+// 0.0: a
+// 1.0: b
+vec3	lerp(PFPN t, vec3 a, vec3 b)
 {
-    return v3(a.x-b.x, a.y-b.y, a.z-b.z);
-}
-
-vec3    v_mult(vec3 a, vec3 b)
-{
-    return v3(a.x*b.x, a.y*b.y, a.z*b.z);
-}
-
-vec3    v_div(vec3 a, vec3 b)
-{
-    return v3(a.x/b.x, a.y/b.y, a.z/b.z);
-}
-
-
-//defaults to 0
-inline vec3    v3_base(vec3 in)
-{
-    return (vec3){in.x, in.y, in.z};
-}
-
-//all values to X
-vec3    v_3(double x)
-{
-    return v3(x, x, x);
-}
-
-double	v_len(vec3 a)
-{
-	return (sqrtf(a.x * a.x + a.y * a.y + a.z * a.z));
+	return ((vec3){(1. - t) * a.x + t * b.x, (1. - t) * a.y + t * b.y, (1. - t)
+		* a.z + t * b.z});
 }

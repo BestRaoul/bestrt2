@@ -27,14 +27,14 @@ color	hdr_tone(color c)
 
 color	aces_tone(color c)
 {
-	double	y;
-	double	y_mapped;
-	double	r_mapped;
-	double	g_mapped;
-	double	b_mapped;
+	PFPN	y;
+	PFPN	y_mapped;
+	PFPN	r_mapped;
+	PFPN	g_mapped;
+	PFPN	b_mapped;
 
 	y = 0.299 * c.x + 0.587 * c.y + 0.114 * c.z;
-	y_mapped = ACES(y);
+	y_mapped = aces(y);
 	r_mapped = c.x * (y_mapped / y);
 	g_mapped = c.y * (y_mapped / y);
 	b_mapped = c.z * (y_mapped / y);
@@ -62,12 +62,12 @@ void	draw_gamma_corrected(int x, int y, color c)
 	draw_raw(x, y, c);
 }
 
-// void	gradientContrastAdjustment(float *image, int width, int height,
-// 		float contrastFactor)
+// void	gradientContrastAdjustment(PFPN *image, int width, int height,
+// 		PFPN contrastFactor)
 // {
-// 	float	dx;
-// 	float	dy;
-// 	float	gradient;
+// 	PFPN	dx;
+// 	PFPN	dy;
+// 	PFPN	gradient;
 //
 // 	int x, y;
 // 	// Calculate gradients using central differences
@@ -83,4 +83,3 @@ void	draw_gamma_corrected(int x, int y, color c)
 // 		}
 // 	}
 // }
-

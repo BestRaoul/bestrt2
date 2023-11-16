@@ -12,6 +12,22 @@
 
 #include "fractol.h"
 
+void	handle_submode_next(void)
+{
+	if (v.render_mode == RAYTRACE_MAT_DEBUG
+		|| v.render_mode == RAYTRACE_MAT_VALUES
+		|| v.render_mode == RAYTRACE
+		|| v.render_mode == RAYTRACE_STEPS)
+		v._rerender = 1;
+	if (v.render_mode == RAYTRACE_MAT_DEBUG)
+		v.mat_debugmode = (v.mat_debugmode + 1) % MAT_DEBUGMODES_MAX;
+	if (v.render_mode == RAYTRACE_MAT_VALUES)
+		v.mat_valuesmode = (v.mat_valuesmode + 1) % MAT_VALUESMODES_MAX;
+	if (v.render_mode == RAYTRACE
+		|| v.render_mode == RAYTRACE_STEPS)
+		v.tone_mode = (v.tone_mode + 1) % TONEMODES_MAX;
+}
+
 /*[wasd]*/
 int	handle_key_release(int k)
 {
@@ -33,6 +49,8 @@ int	handle_key_release(int k)
 		v._shift = 0;
 	else if (k == K_CTRL)
 		v._ctrl = 0;
+	else if (k == K_PLUS || k == K_MINUS)
+		v.max_depth += (k == K_PLUS) - (k == K_MINUS);
 	else
 		printf("[UP] key <%d>\n", k);
 	return (0);

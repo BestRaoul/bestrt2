@@ -1,0 +1,4 @@
+1. check if it works with more ram
+2. make it not timeout on higher 10 buffersize
+
+ps: onlz diff between normal and bonus is the headers and protection defines

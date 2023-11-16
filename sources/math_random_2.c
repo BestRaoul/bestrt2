@@ -24,13 +24,13 @@ vec3	defocus_disk_sample(void)
 
 vec3	random_v3(void)
 {
-	return (v3(random_PFPN(), random_PFPN(), random_PFPN()));
+	return (v3(random_pfpn(), random_pfpn(), random_pfpn()));
 }
 
 vec3	random_v3_l(PFPN min, PFPN max)
 {
-	return (v3(random_PFPN_l(min, max), random_PFPN_l(min, max),
-			random_PFPN_l(min, max)));
+	return (v3(random_pfpn_l(min, max), random_pfpn_l(min, max),
+			random_pfpn_l(min, max)));
 }
 
 vec3	random_in_unit_sphere(void)

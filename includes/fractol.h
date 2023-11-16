@@ -449,9 +449,9 @@ void	quaternion_to_m4x4(quat q, m4x4 m);
 quat	quaternion_multiply(quat a, quat b);
 quat	angle_axis(PFPN angle, vec3 axis);
 // # random
-PFPN	random_PFPN(void);
+PFPN	random_pfpn(void);
 PFPN	random_normal_distribution(void);
-PFPN	random_PFPN_l(PFPN min, PFPN max);
+PFPN	random_pfpn_l(PFPN min, PFPN max);
 vec3	pixel_sample_square(void);
 vec3	random_in_unit_disk(void);
 vec3	defocus_disk_sample(void);

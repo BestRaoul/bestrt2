@@ -20,7 +20,7 @@ void	update_camera(void)
 {
 	static vec3		prev_pos = (vec3){0, 0, 0};
 	static vec3		prev_rot = (vec3){0, 0, 0};
-	static PFPN	prev_fov = 0;
+	static PFPN		prev_fov = 0;
 	vec3			temp_lookat;
 	int				change;
 
@@ -64,7 +64,7 @@ static void	set_camera_vup(void)
 	right = v_norm(v_cross(forward, v3(0, 1, 0)));
 	new_up = v_scal(v_cross(forward, right), -1);
 	if (v.cam_flipp)
-		v.vup = v_scal(v.vup, -1);
+		new_up = v_scal(new_up, -1);
 	v.vup = new_up;
 	v.camera_dir = rotate3(v3(0, 0, 1), v.camera_rot);
 }

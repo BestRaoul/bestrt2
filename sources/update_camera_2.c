@@ -54,8 +54,8 @@ void	rotate_camera(void)
 	}
 	if (v._np1 || v._np3 || v._np7)
 	{
-		v.camera_pos = v_mult(v_3(dist_to), v3(v._np3, v._np7, v._np1));
-		v.camera_pos.x += 1e-8 * v._np7;
+		v.camera_pos = v_mult(v_3(dist_to), v3(-v._np3, v._np7, v._np1));
+		v.camera_pos.z += 1e-4 * v._np7;
 		v.lookat_toggle = 1;
 	}
 	if (v._np5)

@@ -13,7 +13,7 @@
 #include "fractol.h"
 
 // 0.0 to 1.0 using PCG hash
-PFPN	random_PFPN(void)
+PFPN	random_pfpn(void)
 {
 	static unsigned int	state;
 	unsigned int		result;
@@ -29,14 +29,14 @@ PFPN	random_normal_distribution(void)
 	PFPN	theta;
 	PFPN	rho;
 
-	theta = 2 * 3.1415926 * random_PFPN();
-	rho = sqrt(-2 * log(random_PFPN()));
+	theta = 2 * 3.1415926 * random_pfpn();
+	rho = sqrt(-2 * log(random_pfpn()));
 	return (rho * cos(theta));
 }
 
-PFPN	random_PFPN_l(PFPN min, PFPN max)
+PFPN	random_pfpn_l(PFPN min, PFPN max)
 {
-	return (min + (max - min) * random_PFPN());
+	return (min + (max - min) * random_pfpn());
 }
 
 vec3	pixel_sample_square(void)
@@ -44,8 +44,8 @@ vec3	pixel_sample_square(void)
 	PFPN	px;
 	PFPN	py;
 
-	px = -0.5 + random_PFPN();
-	py = -0.5 + random_PFPN();
+	px = -0.5 + random_pfpn();
+	py = -0.5 + random_pfpn();
 	return (v_add(v_scal(v.pixel_delta_u, px), v_scal(v.pixel_delta_v, py)));
 }
 
@@ -55,7 +55,7 @@ vec3	random_in_unit_disk(void)
 
 	while (True)
 	{
-		p = v3(random_PFPN() * 2 - 1, random_PFPN() * 2 - 1, 0);
+		p = v3(random_pfpn() * 2 - 1, random_pfpn() * 2 - 1, 0);
 		if (length_squared(p) < 1)
 			return (p);
 	}

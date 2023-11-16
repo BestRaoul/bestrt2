@@ -159,5 +159,4 @@ void	parse_2nd_argument(int ac, char **av)
 		if (parse_file(av[1]) == -1)
 			my_exit();
 	}
-
 }

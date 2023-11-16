@@ -31,13 +31,13 @@ void	pbr_scatter(const ray *ray_in, hit_record *rec, ray *scattered,
 	diffuse_dir = v_add(rec->normal, random_unit_vector());
 	if (near_zero(diffuse_dir))
 		diffuse_dir = rec->normal;
-	is_specular_bounce = ((specular >= random_PFPN())
+	is_specular_bounce = ((specular >= random_pfpn())
 			|| evaluate_bw(&(self->metalic), rec->u, rec->v)
-			>= random_PFPN());
+			>= random_pfpn());
 	if (is_specular_bounce)
 		specular_bounce(ray_in, rec, &scatter_dir, diffuse_dir);
 	else if (evaluate_bw(&(self->transmission), rec->u, rec->v)
-		> random_PFPN())
+		> random_pfpn())
 		reflecto_bounce(ray_in, rec, &scatter_dir, &is_specular_bounce);
 	else
 		scatter_dir = diffuse_dir;
@@ -76,7 +76,7 @@ static void	reflecto_bounce(const ray *ray_in, hit_record *rec,
 	cos_theta = fmin(v_dot(v_scal(ray_in->dir, -1.0), rec->normal), 1.0);
 	sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 	if (refraction_ratio * sin_theta > 1.0 || reflectance(cos_theta,
-			refraction_ratio) > random_PFPN())
+			refraction_ratio) > random_pfpn())
 	{
 		*scatter_dir = reflect_safe(ray_in->dir, v_add(rec->normal,
 					v_scal(random_unit_vector(), roughness)),

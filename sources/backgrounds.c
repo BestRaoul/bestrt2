@@ -21,8 +21,8 @@ const color		g_sky_color_horizon = (vec3){.7, .8, 1.0};
 const color		g_sky_color_zenith = (vec3){.3, .4, .7};
 const color		g_ground_color = (vec3){.4, .4, .4};
 const vec3		g_sun_direction = (vec3){-1, -1, -1};
-const PFPN	g_sun_focus = 10;
-const PFPN	g_sun_intensity = 1.0;
+const PFPN		g_sun_focus = 10;
+const PFPN		g_sun_intensity = 1.0;
 
 color	shit_sky_background(vec3 uv)
 {

@@ -36,7 +36,7 @@ void	lights2(void)
 	vec3 pp = v3();
 	for (int i=0; i<50; i++)
 	{
-		material m = new_lambertian(c3(1, random_PFPN(), random_PFPN()));
+		material m = new_lambertian(c3(1, random_pfpn(), random_pfpn()));
 		vec3	p = rotate_y(v3(_d, 0, 0), _beta);
     	PFPN radius = vec_dist(p,pp)/2;
 		p.y += radius;

@@ -22,7 +22,7 @@ char	*get_current_date_time(void)
 	struct tm	*time_info;
 	char		*date_time_string;
 
-	date_time_string = (char *)gc_malloc(20);
+	date_time_string = (char *)gc_malloc(100);
 	if (date_time_string == NULL)
 	{
 		perror("Memory allocation error");

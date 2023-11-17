@@ -28,9 +28,12 @@
 # define True 1
 # define False 0
 
+# define WARNING "["ANSI_YELLOW"WARNING"ANSI_RESET"]"
+# define ERROR	 "["ANSI_RED"WARNING"ANSI_RESET"]"
+
 static inline void	notify_illegal(const char *feature)
 {
-	dprintf(2, "["ANSI_YELLOW"WARNING"ANSI_RESET"] ""\
+	dprintf(2, WARNING" \
 You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
 	dprintf(2, "Please recompile with that flag\n");
 }

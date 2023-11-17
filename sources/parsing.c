@@ -112,7 +112,8 @@ int	parse_line(const char *line)
 		return (1);
 	id = get_idd(line_split[0]);
 	if (id == -1)
-		return (dprintf(2, "Unknown identifier [%s]\n", line_split[0]), 0);
+		return (dprintf(2, WARNING" \
+Unknown identifier [%s]\n", line_split[0]), 0);
 	return (g_parsing_functions[id]((const char **)&(line_split[1])));
 }
 
@@ -143,6 +144,8 @@ int	parse_file(const char *filename)
 //crash on its own
 void	parse_2nd_argument(int ac, char **av)
 {
+	int	i;
+
 	if (ac < 2)
 		init_scene(100);
 	else if (ft_strncmp(av[1], "-n", 3) == 0)
@@ -156,7 +159,12 @@ void	parse_2nd_argument(int ac, char **av)
 		(print_rt_format(), my_exit());
 	else
 	{
-		if (parse_file(av[1]) == -1)
-			my_exit();
+		i = 1;
+		while (i < ac)
+		{
+			if (parse_file(av[i]) == -1)
+				(dprintf(2, ERROR" in file %s\n", av[i]), my_exit());
+			i++;
+		}
 	}
 }

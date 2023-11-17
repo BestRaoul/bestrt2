@@ -19,7 +19,7 @@ typedef struct s_ch
 {
 	PFPN			t;
 	int				final_index;
-	Bool			valid_intersection;
+	bool			valid_intersection;
 }					t_ch;
 
 static inline void	choose_final(PFPN t[3], t_ch *data)
@@ -126,7 +126,7 @@ static inline void	set_cone_values(hit_record *rec, const ray *local_r,
 	rec->old_normal = rotate3(rec->old_normal, self->transform.rot);
 }
 
-Bool	hit_cone(const ray *r, const interval ray_t, hit_record *rec,
+bool	hit_cone(const ray *r, const interval ray_t, hit_record *rec,
 		const t_item *self)
 {
 	ray		local_r;

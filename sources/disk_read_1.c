@@ -21,7 +21,7 @@ static inline void	close_file(FILE *file, const char *filename)
 
 // 0 on failure
 // Function to read a BMP image file and return its data
-Bool	read_bmp(const char *filename, bmp_read *r)
+bool	read_bmp(const char *filename, bmp_read *r)
 {
 	FILE			*file;
 	t_bmp_header	header;
@@ -40,7 +40,7 @@ Bool	read_bmp(const char *filename, bmp_read *r)
 	return (1);
 }
 
-Bool	read_xmp(const char *filename, bmp_read *r)
+bool	read_xmp(const char *filename, bmp_read *r)
 {
 	return (False);
 }

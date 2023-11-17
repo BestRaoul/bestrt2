@@ -18,7 +18,7 @@ typedef struct s_bh
 	PFPN			u;
 	PFPN			v;
 	int				final_index;
-	Bool			valid_intersection;
+	bool			valid_intersection;
 }					t_bh;
 
 static inline void	set_box_values(hit_record *rec, const ray *local_r,
@@ -75,12 +75,12 @@ static inline void	get_box_intersection(const ray *local_r, t_bh *data)
 	choose_final(t, u, v, data);
 }
 
-Bool	hit_box(const ray *r, const interval ray_t, hit_record *rec,
+bool	hit_box(const ray *r, const interval ray_t, hit_record *rec,
 		const t_item *self)
 {
 	ray		local_r;
 	t_bh	data;
-	Bool	valid_intersection;
+	bool	valid_intersection;
 	PFPN	gt;
 
 	local_r = apply_ray(r, self->bck);

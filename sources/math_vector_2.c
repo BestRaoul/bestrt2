@@ -24,7 +24,7 @@ vec3	v_3(PFPN x)
 	return (v3(x, x, x));
 }
 
-Bool	v_eq(vec3 a, vec3 b)
+bool	v_eq(vec3 a, vec3 b)
 {
 	return (close_enough(a.x - b.x) && close_enough(a.y - b.y)
 		&& close_enough(a.z - b.z));

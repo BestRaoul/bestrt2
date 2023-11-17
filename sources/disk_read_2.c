@@ -53,7 +53,7 @@ static inline void	headsize_less_128(FILE *file, t_bmp_header *header)
 	fread(&header->bpp, sizeof(uint16_t), 1, file);
 }
 
-Bool	read_header(FILE *file, t_bmp_header *header, const char *filename)
+bool	read_header(FILE *file, t_bmp_header *header, const char *filename)
 {
 	fread(&header->signature, sizeof(uint16_t), 1, file);
 	fread(&header->file_size, sizeof(uint32_t), 1, file);

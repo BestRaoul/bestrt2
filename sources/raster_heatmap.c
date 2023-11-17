@@ -19,7 +19,7 @@ void	reset_heatmap(void)
 	memset(v.dist_heatmap[0], -1., v.w * v.h * sizeof(PFPN));
 }
 
-Bool	check_heat(vec3 pos)
+bool	check_heat(vec3 pos)
 {
 	int	x;
 	int	y;

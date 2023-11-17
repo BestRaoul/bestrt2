@@ -30,7 +30,7 @@ PFPN	linear_to_gamma(PFPN linear_component)
 	return (sqrt(linear_component));
 }
 
-Bool	near_zero(vec3 e)
+bool	near_zero(vec3 e)
 {
 	PFPN	s;
 
@@ -38,7 +38,7 @@ Bool	near_zero(vec3 e)
 	return ((fabs(e.x) < s) && (fabs(e.y) < s) && (fabs(e.z) < s));
 }
 
-Bool	close_enough(PFPN __x)
+bool	close_enough(PFPN __x)
 {
 	return (fabs(__x) < 1e-8);
 }

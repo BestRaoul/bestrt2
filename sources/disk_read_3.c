@@ -32,7 +32,7 @@ static inline void	acutally_read_palette(FILE *file,
 	}
 }
 
-Bool	read_palette(FILE *file, t_bmp_header *header, int palette[256])
+bool	read_palette(FILE *file, t_bmp_header *header, int palette[256])
 {
 	if (header->bpp == 8)
 		acutally_read_palette(file, header, palette);

@@ -18,7 +18,7 @@
 // PFPN f = (1.0) / (pow(2.7, d * density));
 // Exponential fog 2
 //(used)
-color	paint_dist(Bool did_hit, PFPN d)
+color	paint_dist(bool did_hit, PFPN d)
 {
 	PFPN	density;
 	PFPN	f;
@@ -30,7 +30,7 @@ color	paint_dist(Bool did_hit, PFPN d)
 	return (lerp(f, BLACK, WHITE));
 }
 
-color	paint_uv(Bool did_hit, hit_record *rec)
+color	paint_uv(bool did_hit, hit_record *rec)
 {
 	if (did_hit)
 		return (evaluate(&v.uv_debug, rec->u, rec->v));
@@ -47,7 +47,7 @@ color	paint_env(vec3 r_dir)
 	return (irradiance);
 }
 
-color	mat_values(Bool did_hit, hit_record *rec)
+color	mat_values(bool did_hit, hit_record *rec)
 {
 	if (!did_hit)
 		return (BLACK);

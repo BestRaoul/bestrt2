@@ -35,7 +35,7 @@ PFPN	t2global(const PFPN lt, const ray *local_r, const ray *r,
 	return (vec_dist(r->orig, temp));
 }
 
-Bool	is_interior(const PFPN a, const PFPN b)
+bool	is_interior(const PFPN a, const PFPN b)
 {
 	if ((a < 0) || (1 < a) || (b < 0) || (1 < b))
 		return (False);

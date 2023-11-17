@@ -14,7 +14,7 @@
 
 typedef struct s_sim_hit
 {
-	Bool		simd;
+	bool		simd;
 	vec3		p;
 	color		c;
 	hit_record	rec;
@@ -23,9 +23,9 @@ typedef struct s_sim_hit
 void	simulate_ray(ray *r, t_sim_hit *hits, int depth)
 {
 	hit_record	rec;
-	Bool		did_hit;
+	bool		did_hit;
 	ray			scattered;
-	Bool		_;
+	bool		_;
 	int			bounce;
 
 	hits[0] = (t_sim_hit){True, r->orig, WHITE};
@@ -141,7 +141,7 @@ void	simulate_rayzz(void)
 
 {
 	static hit_record rec = (hit_record){};
-	static Bool	did_hit = False;
+	static bool	did_hit = False;
 	static vec3 old_normal;
 	static vec3 new_normal;
 

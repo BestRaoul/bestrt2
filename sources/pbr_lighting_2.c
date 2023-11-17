@@ -48,7 +48,7 @@ vec3	fresnel_shlick(PFPN HdotV, PFPN R0)
 }
 
 // 1 on failure OBSTRUCTED
-Bool	check_obstruction(t_light *l, vec3 p)
+bool	check_obstruction(t_light *l, vec3 p)
 {
 	ray			check;
 	interval	check_interval;

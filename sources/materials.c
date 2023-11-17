@@ -45,22 +45,22 @@ material	new_m_rgb(vec3 rgbs)
 
 //  ----- Scatters
 /*
-Bool		lambertian_scatter(ray *ray_in, hit_record *rec, color *attenuation,
+bool		lambertian_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 				ray *scattered, material *self);
-Bool		metal_scatter(ray *ray_in, hit_record *rec, color *attenuation,
+bool		metal_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 				ray *scattered, material *self);
-Bool		dielectric_scatter(ray *ray_in, hit_record *rec, color *attenuation,
+bool		dielectric_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 				ray *scattered, material *self);
-Bool		no_scatter(ray *ray_in, hit_record *rec, color *attenuation,
+bool		no_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 				ray *scattered, material *self);
 
-Bool	no_scatter(ray *ray_in, hit_record *rec, color *attenuation,
+bool	no_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 ray *scattered, material *self)
 {
 	return (False);
 }
 
-Bool	lambertian_scatter(ray *ray_in, hit_record *rec, color *attenuation,
+bool	lambertian_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 ray *scattered, material *self)
 {
 	vec3	diffuse_dir;
@@ -74,7 +74,7 @@ ray *scattered, material *self)
 	(void) ray_in;
 }
 
-Bool	metal_scatter(ray *ray_in, hit_record *rec, color *attenuation,
+bool	metal_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 ray *scattered, material *self)
 {
 	vec3	reflected;
@@ -86,13 +86,13 @@ ray *scattered, material *self)
 	return (v_dot(scattered->dir, rec->normal) > 0);
 }
 
-Bool	dielectric_scatter(ray *ray_in, hit_record *rec, color *attenuation,
+bool	dielectric_scatter(ray *ray_in, hit_record *rec, color *attenuation,
 ray *scattered, material *self)
 {
 	PFPN	refraction_ratio;
 	vec3	unit_direction;
 	PFPN	sin_theta;
-	Bool	cannot_refract;
+	bool	cannot_refract;
 	vec3	direction;
 
 	*attenuation = self->base_color.value(rec->u, rec->v, &self->base_color);

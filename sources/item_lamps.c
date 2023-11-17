@@ -15,7 +15,7 @@
 #ifdef ILLEGAL
 
 t_item	*add_item(vec3 position, vec3 scale, vec3 rotation, material m,
-		void (*raster)(t_item *), Bool (*hit)(const ray *, const interval,
+		void (*raster)(t_item *), bool (*hit)(const ray *, const interval,
 			hit_record *, const t_item *))
 {
 	return (add_item_((t_item){(tfm){position, rotation, scale}, m, raster,
@@ -45,7 +45,7 @@ void	remove_item(t_item *t_ptr)
 	v.item_count--;
 }
 
-t_light	*add_lamp(color col, vec3 pos_dir, PFPN intensity, Bool is_dir)
+t_light	*add_lamp(color col, vec3 pos_dir, PFPN intensity, bool is_dir)
 {
 	vec3	new_rot;
 

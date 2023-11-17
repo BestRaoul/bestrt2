@@ -12,7 +12,7 @@
 
 #include "fractol.h"
 
-Bool	is_unlit(int mode)
+bool	is_unlit(int mode)
 {
 	return (mode == NORMAL
 		|| mode == MIST
@@ -20,7 +20,7 @@ Bool	is_unlit(int mode)
 		|| mode == ENVIRONEMENT);
 }
 
-color	paint_mat_debug_unlit(Bool did_hit, hit_record *rec, ray *r)
+color	paint_mat_debug_unlit(bool did_hit, hit_record *rec, ray *r)
 {
 	color	e;
 

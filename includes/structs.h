@@ -111,7 +111,7 @@ typedef struct s_hit_record {
 	vec3	normal;
 	vec3	old_normal;
 	PFPN	t;
-	Bool	front_face;
+	bool	front_face;
 	material mat;
 	PFPN	u;
 	PFPN	v;
@@ -241,7 +241,7 @@ typedef struct s_light
 	vec3	col;
 	vec3	dir; //(0, -1, 0) rot3(rot)
 	PFPN	intensity; //v_len(scale)
-	Bool	is_dir; //whether is a directional light or positional
+	bool	is_dir; //whether is a directional light or positional
 } t_light;
 
 typedef struct s_item {
@@ -249,7 +249,7 @@ typedef struct s_item {
 
 	material	mat;
 	void 		(*raster)(t_item *);
-	Bool		(*hit)(const ray *, const interval, hit_record *, const t_item *);
+	bool		(*hit)(const ray *, const interval, hit_record *, const t_item *);
 
 	m4x4		fwd;
 	m4x4		bck;
@@ -261,7 +261,7 @@ typedef struct s_split_task {
 	int		w_size;
 	int		h_size;
 	int		upscale;
-	Bool	noblock;
+	bool	noblock;
 	int		_x;
 	int		_y;
 }	t_split_task;
@@ -293,6 +293,11 @@ static inline void	set(PFPN *x, PFPN _x)
 }
 
 static inline void	seti(int *x, int _x)
+{
+	*x = _x;
+}
+
+static inline void	setb(bool *x, bool _x)
 {
 	*x = _x;
 }

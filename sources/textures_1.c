@@ -35,7 +35,7 @@ texture	checkerboard(PFPN scale, texture even, texture odd)
 	return (t);
 }
 
-static Bool	read_bmp_into_texture(texture *t, const char *filename)
+static bool	read_bmp_into_texture(texture *t, const char *filename)
 {
 	bmp_read	r;
 	color		*image;

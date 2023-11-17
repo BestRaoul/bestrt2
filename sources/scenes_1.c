@@ -33,7 +33,7 @@ void	default_cam(void)
 	v.animation_render_mode = RAYTRACE;
 	v.animation_loops = 0;
 	v.rendering_movie = False;
-	(seti(&v.use_background, True), seti(&v.use_ibl, False));
+	(setb(&v.use_background, True), setb(&v.use_ibl, False));
 	v.background = cc3(WHITE);
 	v.irradiance_map = NO_MAP;
 	v.blurry_irradiance_map = NO_MAP;

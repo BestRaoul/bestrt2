@@ -24,7 +24,7 @@ const char	*g_imported_materials_names[MAX_IMPORT_MATERIALS] = {};
 material	g_imported_materials[MAX_IMPORT_MATERIALS] = {};
 int			g_im_index = 0;
 
-Bool	get_id(const char *tag, const char **dictionary, int *id)
+bool	get_id(const char *tag, const char **dictionary, int *id)
 {
 	*id = 0;
 	while (dictionary[*id] != NULL)

@@ -48,7 +48,7 @@ void	init_ray(PFPN x, PFPN y, ray *r)
 #define HALF 0
 #define SPEEDUP 0
 
-Bool	is_eliminated(int x, int y)
+bool	is_eliminated(int x, int y)
 {
 	if (HALF)
 	{

@@ -12,12 +12,12 @@
 
 #include "fractol.h"
 
-Bool	contains(interval _t, PFPN x)
+bool	contains(interval _t, PFPN x)
 {
 	return (_t.min <= x && x <= _t.max);
 }
 
-Bool	surrounds(interval _t, PFPN x)
+bool	surrounds(interval _t, PFPN x)
 {
 	return (_t.min < x && x < _t.max);
 }

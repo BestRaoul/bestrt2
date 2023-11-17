@@ -18,7 +18,7 @@ void	(*g_apt[4])(tfm *, int) = {
 	rotate_transform,
 	scale_transform};
 
-static Bool	shoot(void)
+static bool	shoot(void)
 {
 	ray			r;
 	hit_record	rec;
@@ -46,7 +46,7 @@ static Bool	shoot(void)
 	return (False);
 }
 
-static Bool	unselect_confirm_or_reset(void)
+static bool	unselect_confirm_or_reset(void)
 {
 	if (v.selection_mode == NONE)
 	{

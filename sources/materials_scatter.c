@@ -15,16 +15,16 @@
 static void	specular_bounce(const ray *ray_in, hit_record *rec, vec3 *sd,
 				vec3 diffuse_dir);
 static void	reflecto_bounce(const ray *ray_in, hit_record *rec, vec3 *sd,
-				Bool *is_specular_bounce);
+				bool *is_specular_bounce);
 
 void	pbr_scatter(const ray *ray_in, hit_record *rec, ray *scattered,
-		Bool *was_specular)
+		bool *was_specular)
 {
 	material	*self;
 	PFPN		specular;
 	vec3		scatter_dir;
 	vec3		diffuse_dir;
-	Bool		is_specular_bounce;
+	bool		is_specular_bounce;
 
 	self = &rec->mat;
 	specular = evaluate_bw(&(self->specular), rec->u, rec->v);
@@ -60,7 +60,7 @@ static void	specular_bounce(const ray *ray_in, hit_record *rec,
 }
 
 static void	reflecto_bounce(const ray *ray_in, hit_record *rec,
-	vec3 *scatter_dir, Bool *is_specular_bounce)
+	vec3 *scatter_dir, bool *is_specular_bounce)
 {
 	PFPN		refraction_ratio;
 	PFPN		cos_theta;

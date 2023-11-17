@@ -12,9 +12,9 @@
 
 #include "fractol.h"
 
-Bool	hit(const ray *r, const interval ray_t, hit_record *rec)
+bool	hit(const ray *r, const interval ray_t, hit_record *rec)
 {
-	Bool		hit_anything;
+	bool		hit_anything;
 	PFPN		closest_so_far;
 	hit_record	temp_rec;
 	int			alpha;
@@ -40,9 +40,9 @@ Bool	hit(const ray *r, const interval ray_t, hit_record *rec)
 	return (hit_anything);
 }
 
-Bool	info_hit(const ray *r, const interval ray_t, hit_record *rec)
+bool	info_hit(const ray *r, const interval ray_t, hit_record *rec)
 {
-	Bool		hit_anything;
+	bool		hit_anything;
 	PFPN		closest_so_far;
 	hit_record	temp_rec;
 	int			alpha;
@@ -69,7 +69,7 @@ Bool	info_hit(const ray *r, const interval ray_t, hit_record *rec)
 	return (hit_anything);
 }
 
-Bool	check_hit(const ray *r, const interval ray_t)
+bool	check_hit(const ray *r, const interval ray_t)
 {
 	hit_record	temp_rec;
 	int			alpha;

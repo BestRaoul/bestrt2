@@ -28,7 +28,7 @@ static inline void	set_sphere_values(hit_record *rec,
 }
 
 // a = 1.0
-static inline Bool	get_sphere_intersection(const ray *local_r,
+static inline bool	get_sphere_intersection(const ray *local_r,
 	const interval ray_t, PFPN *t1, PFPN *t2)
 {
 	PFPN	b;
@@ -52,7 +52,7 @@ static inline Bool	get_sphere_intersection(const ray *local_r,
 }
 
 // sphere normal based on local UV
-Bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec,
+bool	hit_sphere(const ray *r, const interval ray_t, hit_record *rec,
 		const t_item *self)
 {
 	ray		local_r;

@@ -18,7 +18,7 @@ static void	trace_sub_hit(color *light, color *contribution, hit_record *rec,
 	color		emitted_light;
 	ray			scattered;
 	shader_end	se;
-	Bool		was_specular;
+	bool		was_specular;
 
 	emitted_light = evaluate(&(rec->mat.emission), rec->u, rec->v);
 	emitted_light = v_scal(emitted_light, rec->mat.emission_strength);
@@ -33,7 +33,7 @@ static void	trace_sub_hit(color *light, color *contribution, hit_record *rec,
 	*r = scattered;
 }
 
-static Bool	trase_sub_hitnt(color *light, color *c, ray *r, int bounce)
+static bool	trase_sub_hitnt(color *light, color *c, ray *r, int bounce)
 {
 	vec3	uv;
 	vec3	bg_light;
@@ -60,7 +60,7 @@ static Bool	trase_sub_hitnt(color *light, color *c, ray *r, int bounce)
 	}
 }
 
-static Bool	other_rendermodes(color *light, Bool d_hit, hit_record *rec, ray *r)
+static bool	other_rendermodes(color *light, bool d_hit, hit_record *rec, ray *r)
 {
 	if (v.render_mode == RAYTRACE_UVS)
 		*light = paint_uv(d_hit, rec);
@@ -104,7 +104,7 @@ color	trace(ray *r, int max_depth)
 	color		light;
 	color		contribution;
 	hit_record	rec;
-	Bool		did_hit;
+	bool		did_hit;
 	int			bounce;
 
 	light = BLACK;

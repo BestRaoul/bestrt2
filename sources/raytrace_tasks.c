@@ -42,7 +42,7 @@ void	generate_tasks(t_split_task *tasks, int w_splits, int h_splits,
 	}
 }
 
-Bool	fullfill(t_split_task *task, int _split)
+bool	fullfill(t_split_task *task, int _split)
 {
 	while (task->_y < task->h_size)
 	{

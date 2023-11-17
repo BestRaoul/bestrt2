@@ -17,7 +17,7 @@ typedef struct s_qh
 	PFPN			t;
 	PFPN			u;
 	PFPN			v;
-	Bool			valid_intersection;
+	bool			valid_intersection;
 }					t_qh;
 
 static inline void	get_plane_intersection(const ray *local_r, t_qh *data)
@@ -55,7 +55,7 @@ static inline void	set_plane_values(hit_record *rec, const ray *local_r,
 	rec->old_normal = rotate3(rec->old_normal, self->transform.rot);
 }
 
-Bool	hit_plane(const ray *r, const interval ray_t, hit_record *rec,
+bool	hit_plane(const ray *r, const interval ray_t, hit_record *rec,
 		const t_item *self)
 {
 	ray		local_r;

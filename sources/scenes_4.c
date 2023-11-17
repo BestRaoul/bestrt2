@@ -49,8 +49,8 @@ void    tweens(void)
 	material mg = new_lambertian(c3(0, 1, 0));
 	material mb = new_lambertian(c3(0, 0, 1));
     
-	int _x = 7;
-	int _y = 1.5;
+	double _x = 7;
+	double _y = 1.5;
     add_item(v3( _x--, _y),	v_3(0.5), v3(), mr, SPHERE);
     add_item(v3( _x--, _y),	v_3(0.5), v3(), mg, SPHERE);
     add_item(v3( _x--, _y),	v_3(0.5), v3(), mb, SPHERE);

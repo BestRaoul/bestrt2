@@ -98,6 +98,7 @@ You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
 # include "gc_malloc.h"
 # include "gnl.h"
 
+# include <fcntl.h>
 # include <limits.h>
 # include <math.h>
 # include <mlx.h>

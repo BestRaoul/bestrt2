@@ -20,7 +20,7 @@ else
 endif
 
 CC						:= gcc
-CFLAGS					:= -pg -g -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -ggdb $(FSANITIZE) $(OS_FLAG)
+CFLAGS					:= -o3 -Wall -Wextra -Werror -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -ggdb $(FSANITIZE) $(OS_FLAG)
 RM						:= rm -f
 
 LIB_DIRECTORY			:= ./libs/

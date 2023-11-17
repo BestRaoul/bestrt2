@@ -14,6 +14,8 @@
 
 #define NTFY_SERVER "0.0.0.0:80/balls"
 
+extern char **environ;
+
 // Get the current time
 // Format: "YYYY-MM-DD HH:MM\0"
 char	*get_current_date_time(void)
@@ -64,7 +66,7 @@ void	ntfy_file(const char *filename, const char *output_filename,
 	av[12] = "";
 	av[13] = NTFY_SERVER;
 	av[14] = NULL;
-	execve(av[0], av, __environ);
+	execve(av[0], av, environ);
 }
 #else
 
@@ -110,7 +112,7 @@ void	ffmpeg_bmp_to_mp4(int framerate, int loops)
 		get_current_date_time());
 	id = fork();
 	if (!id)
-		execve(av[0], av, __environ);
+		execve(av[0], av, environ);
 	ntfy_file(output_filename, output_filename, id, "The Render has finished!");
 }
 #else

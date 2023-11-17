@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "fractol.h"
+#include <dirent.h>
 
 #define NTFY_SERVER "0.0.0.0:80/balls"
 
@@ -116,32 +117,6 @@ static inline void	set_pixels(unit8_color *pixels)
 	}
 }
 
-#ifdef LINUX
-
-void	write_img(void)
-{
-	static int	count = 0;
-	int			dir_fd;
-	char		filename[100];
-	unit8_color	*pixels;
-
-	dir_fd = open(OUTFOLDER, __O_DIRECTORY);
-	if (dir_fd == -1)
-		return ((void)printf("no such directory \"%s\"\n", OUTFOLDER));
-	write(1, "writing img..", 14);
-	sprintf(filename, "%s/%s", OUTFOLDER, FF);
-	sprintf(filename, filename, count);
-	pixels = gc_malloc(v.w * v.h * sizeof(unit8_color));
-	set_pixels(pixels);
-	write_bmp(filename, v.w, v.h, pixels);
-	write(1, "done!", 5);
-	gc_free(pixels);
-	count++;
-}
-#else
-
-#include <dirent.h>
-
 void	write_img(void)
 {
 	static int	count = 0;
@@ -163,4 +138,3 @@ void	write_img(void)
 	gc_free(pixels);
 	count++;
 }
-#endif

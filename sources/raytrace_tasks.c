@@ -60,6 +60,9 @@ bool	fullfill(t_split_task *task, int _split)
 		}
 		task->_x = 0;
 		task->_y += task->upscale;
+		if (v.rendering_movie)
+			print_progress(_split * task->w_size * task->h_size
+				+ task->_y * task->w_size);
 	}
 	task->_y = 0;
 	return (True);

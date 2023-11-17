@@ -14,7 +14,7 @@
 
 #define NTFY_SERVER "0.0.0.0:80/balls"
 
-extern char **environ;
+extern char	**environ;
 
 // Get the current time
 // Format: "YYYY-MM-DD HH:MM\0"

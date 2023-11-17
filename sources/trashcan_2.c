@@ -30,6 +30,7 @@ void	**alloc_2d(int size, int w, int h)
 }
 
 #ifdef LINUX
+
 void	set_cursor(unsigned int xc)
 {
 	t_xvar		*xvar;
@@ -45,12 +46,14 @@ void	set_cursor(unsigned int xc)
 	XMoveWindow(xvar->display, win->window, 955, 0);
 }
 #else
+
 void	set_cursor(unsigned int xc)
 {
 	static int	notified = 0;
 
 	if (!notified)
-		dprintf(2, "["ANSI_YELLOW"WARNING"ANSI_RESET"] ""Cursor modification disabled as not on LINUX\n");
+		dprintf(2, "["ANSI_YELLOW"WARNING"ANSI_RESET"] "
+			"Cursor modification disabled as not on LINUX\n");
 	(void) xc;
 }
 #endif

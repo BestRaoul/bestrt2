@@ -116,6 +116,8 @@ static inline void	set_pixels(unit8_color *pixels)
 	}
 }
 
+#ifdef LINUX
+
 void	write_img(void)
 {
 	static int	count = 0;
@@ -136,3 +138,29 @@ void	write_img(void)
 	gc_free(pixels);
 	count++;
 }
+#else
+
+#include <dirent.h>
+
+void	write_img(void)
+{
+	static int	count = 0;
+	DIR			*dir;
+	char		filename[100];
+	unit8_color	*pixels;
+
+	dir = opendir(OUTFOLDER);
+	if (!dir)
+		return ((void)printf("no such directory \"%s\"\n", OUTFOLDER));
+	closedir(dir);
+	write(1, "writing img..", 14);
+	sprintf(filename, "%s/%s", OUTFOLDER, FF);
+	sprintf(filename, filename, count);
+	pixels = gc_malloc(v.w * v.h * sizeof(unit8_color));
+	set_pixels(pixels);
+	write_bmp(filename, v.w, v.h, pixels);
+	write(1, "done!", 5);
+	gc_free(pixels);
+	count++;
+}
+#endif

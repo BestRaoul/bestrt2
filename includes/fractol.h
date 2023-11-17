@@ -93,7 +93,6 @@ You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
 # include "structs.h"
 # include "libft.h"
 # include "gc_malloc.h"
-# include "mlx_int.h"
 # include "gnl.h"
 
 # include <limits.h>
@@ -104,8 +103,11 @@ You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
 # include <time.h>
 # include <stdarg.h>
 # include <string.h>
-# include <X11/cursorfont.h>
 
+# ifdef LINUX
+#  include "mlx_int.h"
+#  include <X11/cursorfont.h>
+# endif
 //temp
 // #include <X11/Xlib.h>
 // #include <X11/keysym.h>
@@ -124,7 +126,9 @@ typedef struct s_vars {
 	int			h;
 	void		*mlx;
 	void		*win;
+# ifdef LINUX
 	Cursor		cursor;
+# endif
 	t__img		img;
 	vec3		**accumulate_img;
 	PFPN		**dist_heatmap;

@@ -28,9 +28,12 @@
 # define True 1
 # define False 0
 
+# define WARNING "["ANSI_YELLOW"WARNING"ANSI_RESET"]"
+# define ERROR	 "["ANSI_RED"ERROR"ANSI_RESET"]"
+
 static inline void	notify_illegal(const char *feature)
 {
-	dprintf(2, "["ANSI_YELLOW"WARNING"ANSI_RESET"] ""\
+	dprintf(2, WARNING" \
 You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
 	dprintf(2, "Please recompile with that flag\n");
 }
@@ -305,6 +308,8 @@ color	uv_background(vec3 uv);
 void	ffmpeg_bmp_to_mp4(int framerate, int loops);
 // # read
 bool	read_bmp(const char *filename, bmp_read *r);
+bool	read_xmp(const char *filename, bmp_read *r);
+bool	read_png(const char *filename, bmp_read *r);
 bool	read_header(FILE *file, t_bmp_header *header, const char *filename);
 bool	read_palette(FILE *file, t_bmp_header *header, int palette[256]);
 void	init_pixel_read(t_bmp_header *header, bmp_read *r);
@@ -376,6 +381,7 @@ void	save_box_intersection(PFPN t[2], PFPN u[2], PFPN v[2], const ray *local_r);
 // Image
 void	draw_raw(int x, int y, color c);
 int		get_pixel(int x, int y);
+int		get_pixel_(int x, int y, t__img *image);
 int		draw_inbounds(int x, int y, color c);
 int		draw_v_inbounds(vec3 p, color c);
 int		draw_v_inheat(vec3 p, color c);
@@ -660,6 +666,8 @@ void	simulate_rayzz(void);
 texture	solid_color(color c);
 texture	checkerboard(PFPN scale, texture even, texture odd);
 texture	from_bmp(const char *filename);
+texture	from_xmp(const char *filename);
+texture	from_png(const char *filename);
 texture	from_func(color (*uv_func)(vec3));
 texture	*t_shallow_copy(texture *t);
 texture	*t_deep_copy(texture *t);

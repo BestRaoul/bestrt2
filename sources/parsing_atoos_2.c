@@ -47,6 +47,10 @@ texture	atotexture(const char *str, texture __default)
 		return (__default);
 	if (len(str) > 4 && ft_strncmp(str + len(str) - 4, ".bmp", 4) == 0)
 		return (from_bmp(str));
+	if (len(str) > 4 && ft_strncmp(str + len(str) - 4, ".xpm", 4) == 0)
+		return (from_xmp(str));
+	if (len(str) > 4 && ft_strncmp(str + len(str) - 4, ".png", 4) == 0)
+		return (from_png(str));
 	check_split = _gc_add_2d(ft_split_sep(str, "()|"));
 	if (check_split && check_split[0]
 		&& ft_strncmp(check_split[0], "CHECKERBOARD", 13) == 0)

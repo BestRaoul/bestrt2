@@ -105,5 +105,6 @@ void	render_pixel(int x, int y)
 	v.accumulate_img[x][y] = v_add(v.accumulate_img[x][y], sample);
 	pixel_color = v_scal(v.accumulate_img[x][y], 1.0 / (v.samples * (1
 					+ v.steps_rendered * (v.render_mode == RAYTRACE_STEPS))));
+	pixel_color = tone(pixel_color);
 	draw_gamma_square(v3(x, y), v.upscale, v.upscale, pixel_color);
 }

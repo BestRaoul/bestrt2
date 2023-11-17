@@ -19,6 +19,9 @@ void	vars_init(int ac, char **av)
 	texture	*b;
 	int		xy;
 
+	v.mlx = mlx_init();
+	if (v.mlx == NULL)
+		exit(1);
 	parse_2nd_argument(ac, av);
 	b = t_deep_copy(&v.irradiance_map);
 	xy = -1;
@@ -26,9 +29,6 @@ void	vars_init(int ac, char **av)
 		b->image[xy] = gaussian_blur(xy % b->image_width,
 				xy / b->image_width, b);
 	v.blurry_irradiance_map = *b;
-	v.mlx = mlx_init();
-	if (v.mlx == NULL)
-		exit(1);
 	v.win = mlx_new_window(v.mlx, v.w, v.h, "bruh");
 	v.img.mlx_img = mlx_new_image(v.mlx, v.w, v.h);
 	v.img.addr = mlx_get_data_addr(v.img.mlx_img, &v.img.bpp, &v.img.line_len,

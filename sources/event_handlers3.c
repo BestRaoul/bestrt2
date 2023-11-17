@@ -15,8 +15,7 @@
 void	handle_submode_next(void)
 {
 	if (v.render_mode == RAYTRACE_MAT_DEBUG
-		|| v.render_mode == RAYTRACE_MAT_VALUES || v.render_mode == RAYTRACE
-		|| v.render_mode == RAYTRACE_STEPS)
+		|| v.render_mode == RAYTRACE_MAT_VALUES)
 		v._rerender = 1;
 	if (v.render_mode == RAYTRACE_MAT_DEBUG)
 		v.mat_debugmode = (v.mat_debugmode + 1) % MAT_DEBUGMODES_MAX;

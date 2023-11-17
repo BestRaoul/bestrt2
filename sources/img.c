@@ -30,6 +30,15 @@ int	get_pixel(int x, int y)
 	return (*(unsigned int *)pixel);
 }
 
+// -- RAW --
+int	get_pixel_(int x, int y, t__img *image)
+{
+	char	*pixel;
+
+	pixel = image->addr + image->line_len * y + x * (image->bpp / 8);
+	return (*(unsigned int *)pixel);
+}
+
 // 0 if not inbouds, 1 on success
 int	draw_inbounds(int x, int y, color c)
 {

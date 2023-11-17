@@ -104,12 +104,13 @@ void	simulate_rayzz(void)
 		modify code if needed..\n", 68);
 		depth = 100;
 	}
-	if (v._ctrl)
+	if (v._ctrl && v._debug)
 	{
 		init_ray(v.mouse_pos.x, v.mouse_pos.y, &r);
 		simulate_ray(&r, hits, depth);
 	}
-	draw_rayzz(hits, depth);
+	if (v._debug)
+		draw_rayzz(hits, depth);
 }
 
 /*

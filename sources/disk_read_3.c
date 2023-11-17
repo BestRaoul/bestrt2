@@ -46,13 +46,14 @@ bool	read_palette(FILE *file, t_bmp_header *header, int palette[256])
 	{
 		if (header->bpp == 8)
 		{
-			NOT_IMPLEMENTED("add 8-bit bmp read from palette");
+			write(1, "\33[2K\r", ft_strlen("\33[2K\r"));
+			dprintf(2, ERROR" 8-bit bmp read from palette is not implemented\n");
 			return (False);
 		}
 	}
 	else
 	{
-		fprintf(stderr, "Error: Unsupported BMP format \
+		fprintf(stderr, ERROR" Unsupported BMP format \
 		(bits per pixel %u != 24)\n", header->bpp);
 		fclose(file);
 		return (False);
@@ -66,7 +67,7 @@ void	init_pixel_read(t_bmp_header *header, bmp_read *r)
 
 	r->widht = header->width;
 	r->height = header->height;
-	r->pixels = (int **)gc_malloc(sizeof(int *) * r->widht);
+	r->pixels = (int **)gc_malloc(sizeof(int *) * r->height);
 	i = 0;
 	while (i < r->height)
 	{

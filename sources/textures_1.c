@@ -35,30 +35,27 @@ texture	checkerboard(PFPN scale, texture even, texture odd)
 	return (t);
 }
 
-static bool	read_bmp_into_texture(texture *t, const char *filename)
+static bool	bmp_read_into_texture(const bmp_read *r, texture *t)
 {
-	bmp_read	r;
 	color		*image;
 	int			x;
 	int			y;
 
-	r = (bmp_read){0, 0, 0};
-	if (!read_bmp(filename, &r))
-		return (False);
-	image = gc_malloc(sizeof(color) * r.widht * r.height);
+
+	image = gc_malloc(sizeof(color) * r->widht * r->height);
 	x = 0;
-	while (x < r.widht)
+	while (x < r->widht)
 	{
 		y = 0;
-		while (y < r.height)
+		while (y < r->height)
 		{
-			image[x + y * r.widht] = rgb2color(r.pixels[y][x]);
+			image[x + y * r->widht] = rgb2color(r->pixels[y][x]);
 			y++;
 		}
 		x++;
 	}
-	t->image_width = r.widht;
-	t->image_height = r.height;
+	t->image_width = r->widht;
+	t->image_height = r->height;
 	t->image = image;
 	return (True);
 }
@@ -66,9 +63,45 @@ static bool	read_bmp_into_texture(texture *t, const char *filename)
 texture	from_bmp(const char *filename)
 {
 	texture		t;
+	bmp_read	r;
 
 	t = (texture){};
-	if (!read_bmp_into_texture(&t, filename))
+	r = (bmp_read){0, 0, 0};
+	if (!read_bmp(filename, &r))
+		return (solid_color(ERROR_CYAN));
+	if (!bmp_read_into_texture(&r, &t))
+		return (solid_color(ERROR_CYAN));
+	t.color_value = ERROR_CYAN;
+	t.value = image_return;
+	return (t);
+}
+
+texture	from_xmp(const char *filename)
+{
+	texture		t;
+	bmp_read	r;
+
+	t = (texture){};
+	r = (bmp_read){0, 0, 0};
+	if (!read_xmp(filename, &r))
+		return (solid_color(ERROR_CYAN));
+	if (!bmp_read_into_texture(&r, &t))
+		return (solid_color(ERROR_CYAN));
+	t.color_value = ERROR_CYAN;
+	t.value = image_return;
+	return (t);
+}
+
+texture	from_png(const char *filename)
+{
+	texture		t;
+	bmp_read	r;
+
+	t = (texture){};
+	r = (bmp_read){0, 0, 0};
+	if (!read_png(filename, &r))
+		return (solid_color(ERROR_CYAN));
+	if (!bmp_read_into_texture(&r, &t))
 		return (solid_color(ERROR_CYAN));
 	t.color_value = ERROR_CYAN;
 	t.value = image_return;

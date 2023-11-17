@@ -148,7 +148,8 @@ void	help_ui(void)
 
 	_c = new_color(.9, .8, 0);
 	scribe_mode_name();
-	draw_rotation_indicator();
+	if (v.render_mode == RASTER)
+		draw_rotation_indicator();
 	if (!v._help)
 		return ;
 	scribe_num("FPS %d", (int)(1.0 / v.delta_time), v3(10, 10), _c);

@@ -125,5 +125,5 @@ color	trace(ray *r, int max_depth)
 		}
 		bounce++;
 	}
-	return (tone(light));
+	return (light);
 }

@@ -15,7 +15,7 @@
 static inline void	signature_fail(const char *filename)
 {
 	write(1, "\33[2K\r", ft_strlen("\33[2K\r"));
-	fprintf(stderr, "Error %s: File is not a BMP file\n", filename);
+	fprintf(stderr, ERROR" %s: File is not a BMP file\n", filename);
 }
 
 static inline void	headsize_12(FILE *file, t_bmp_header *header)
@@ -44,7 +44,7 @@ static inline void	headsize_40(FILE *file, t_bmp_header *header)
 static inline void	headsize_less_128(FILE *file, t_bmp_header *header)
 {
 	if (header->header_size != 124)
-		fprintf(stderr, "WARNING: header size %d has not been tested\n",
+		fprintf(stderr, WARNING" header size %d has not been tested\n",
 			header->header_size);
 	fprintf(stderr, "READING headsize: %d..", header->header_size);
 	fread(&header->width, sizeof(int32_t), 1, file);
@@ -72,7 +72,7 @@ bool	read_header(FILE *file, t_bmp_header *header, const char *filename)
 	else
 	{
 		write(1, "\33[2K\r", ft_strlen("\33[2K\r"));
-		fprintf(stderr, "Error %s: wrong HEADER size %u\n", filename,
+		fprintf(stderr, ERROR" %s: wrong HEADER size %u\n", filename,
 			header->header_size);
 		return (False);
 	}

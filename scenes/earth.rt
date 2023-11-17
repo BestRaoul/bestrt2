@@ -1,0 +1,22 @@
+BG  1
+C   0,1,3.1415 - -
+CE  1   0,1,0
+RS  3840 2160 3 1 1 2
+
+M   check   CHECKERBOARD(.1|.9|.5)
+M   earth   textures/earth/color.bmp -  textures/earth/specular.xpm  -  -  -  -  -  -  -  textures/earth/normal.bmp  3 - -
+M   earth_clouds    textures/earth_clouds/color.xpm -  -  -  -  1.0  textures/earth_clouds/alpha4k.xpm  0.1  -  - - - - textures/earth_clouds/alpha.xpm
+M   moon    textures/moon/color.xpm - - - - - - - - - textures/moon/normal.xpm 3 - -
+
+M   clouds1     textures/earth_clouds/color.xpm
+M   clouds2     textures/earth_clouds/alpha.xpm
+M   clouds3     textures/earth_clouds/alpha4k.xpm
+
+PL  0,0,0       -       1   check
+SP  2,1,0       -       1   clouds1
+SP  0,1,0       -       1   clouds2
+SP  -2,1,0      -       1   clouds3
+
+# SP  0,1,0       -       1   earth
+# SP  0,1,0       -       1.1   earth_clouds
+# SP  1,2,0       -       .2   moon

@@ -46,16 +46,17 @@ int	handle_mouse_press(int button, int x, int y)
 		v._rclick = 1;
 		v.rm_start_pos = v3(x, y);
 	}
-	else if (button == ZOOM_IN)
-		v._scroll += 1;
-	else if (button == ZOOM_OUT)
-		v._scroll -= 1;
-	if (v._shift && (button == ZOOM_IN || button == ZOOM_OUT))
+	else if (!v._shift && (button == ZOOM_IN || button == ZOOM_OUT))
+	{
+		v._scroll += ((button == ZOOM_IN) - (button == ZOOM_OUT));
 		set_cursor(v._scroll);
+	}
+	else if (v._shift && (button == ZOOM_IN || button == ZOOM_OUT))
+	{
+		v.focus_dist += 0.1 * ((button == ZOOM_IN) - (button == ZOOM_OUT));
+		v._rerender = 1;
+	}
 	return (0);
-	(void)button;
-	(void)x;
-	(void)y;
 }
 
 int	handle_mouse_release(int button, int x, int y)

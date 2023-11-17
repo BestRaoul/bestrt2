@@ -12,19 +12,28 @@
 
 #include "fractol.h"
 
+//XC_crosshair
+#define CUR_CROSSHAIR 34
+//XC_fleur
+#define CUR_FLEUR 52
+//XC_exchange
+#define CUR_EXCHANGE 50
+//XC_sizing
+#define CUR_SIZING 120
+
 void	default_crusor(void)
 {
-	set_cursor(XC_crosshair);
+	set_cursor(CUR_CROSSHAIR);
 }
 
 void	mode_cursor(int mode)
 {
 	if (mode == MOVE)
-		set_cursor(XC_fleur);
+		set_cursor(CUR_FLEUR);
 	if (mode == ROTATE)
-		set_cursor(XC_exchange);
+		set_cursor(CUR_EXCHANGE);
 	if (mode == SCALE)
-		set_cursor(XC_sizing);
+		set_cursor(CUR_SIZING);
 }
 
 PFPN	g_kernel[5][5] = {

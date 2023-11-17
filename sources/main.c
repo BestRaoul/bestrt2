@@ -63,7 +63,7 @@ int	main(int ac, char **av)
 {
 	vars_init(ac, av);
 	srand(time(NULL));
-	set_cursor(XC_crosshair);
+	default_crusor();
 	hooks();
 	mlx_loop(v.mlx);
 	return (0);

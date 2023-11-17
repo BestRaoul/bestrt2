@@ -13,7 +13,7 @@
 #ifndef STRUCTS_H
 # define STRUCTS_H
 
-#include <X11/Xlib.h>
+// #include <X11/Xlib.h>
 
 typedef struct s_point		vec3;
 typedef struct s_quat		quat;

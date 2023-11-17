@@ -107,16 +107,16 @@ You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
 # include <X11/cursorfont.h>
 
 //temp
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xresource.h>
+// #include <X11/Xlib.h>
+// #include <X11/keysym.h>
+// #include <X11/Xatom.h>
+// #include <X11/Xresource.h>
 
 // The Xkb extension provides improved keyboard support
-#include <X11/XKBlib.h>
+// #include <X11/XKBlib.h>
 
 // The XInput extension provides raw mouse motion input
-#include <X11/extensions/XInput2.h>
+// #include <X11/extensions/XInput2.h>
 //--temp end
 
 typedef struct s_vars {

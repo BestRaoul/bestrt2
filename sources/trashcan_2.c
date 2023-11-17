@@ -54,6 +54,7 @@ void	set_cursor(unsigned int xc)
 	if (!notified)
 		dprintf(2, "["ANSI_YELLOW"WARNING"ANSI_RESET"] "
 			"Cursor modification disabled as not on LINUX\n");
+	notified = 1;
 	(void) xc;
 }
 #endif

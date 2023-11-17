@@ -25,6 +25,9 @@
 # include <stdio.h>
 # include <stdbool.h>
 
+# define True 1
+# define False 0
+
 static inline void	notify_illegal(const char *feature)
 {
 	dprintf(2, "["ANSI_YELLOW"WARNING"ANSI_RESET"] ""\

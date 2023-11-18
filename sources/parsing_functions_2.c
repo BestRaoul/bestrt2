@@ -17,7 +17,7 @@ vec3	dir_to_rot(vec3 dir)
 	if (v_eq(dir, v3(0, 0, 0)))
 		return (v3(0, MYPI, 0));
 	dir = v_norm(dir);
-	return (look_rotation(v3(), dir));
+	return (look_at(v3(), dir, v3(0, 1, 0)));
 }
 
 int	parse_camera(const char **line)

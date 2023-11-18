@@ -51,7 +51,6 @@ int	parse_point_lamp(const char **line)
 	new = (t_light){(tfm){v3(), v3(), v3()}, WHITE, v3(), 1.0, False};
 	new.transform.pos = atov3(*(line++), v3(0, 0, 0));
 	new.intensity = atod(*(line++), 1.0);
-	new.transform.scale = v_3(new.intensity);
 	new.col = atov3(*(line++), WHITE);
 	new.is_dir = False;
 	add_lamp_(new);
@@ -64,11 +63,11 @@ int	parse_directional_lamp(const char **line)
 
 	new = (t_light){(tfm){v3(), v3(), v3()}, WHITE, v3(), 1.0, True};
 	new.dir = atov3(*(line++), v3(0, -1, 0));
-	new.transform.rot = dir_to_rot(new.dir);
 	new.intensity = atod(*(line++), 1.0);
-	new.transform.scale = v_3(new.intensity);
 	new.col = atov3(*(line++), WHITE);
 	new.is_dir = True;
+	print_pos(new.dir, "b");
 	add_lamp_(new);
+	print_pos(new.transform.rot, "a");
 	return (1);
 }

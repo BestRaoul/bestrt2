@@ -47,12 +47,9 @@ void	remove_item(t_item *t_ptr)
 
 t_light	*add_lamp(color col, vec3 pos_dir, PFPN intensity, bool is_dir)
 {
-	vec3	new_rot;
-
 	if (is_dir)
 	{
-		new_rot = dir_to_rot(pos_dir);
-		return (add_lamp_((t_light){(tfm){v3(), new_rot, v_3(intensity)}, col,
+		return (add_lamp_((t_light){(tfm){v3(), v3(), v_3(intensity)}, col,
 			v_norm(pos_dir), intensity, True}));
 	}
 	else
@@ -62,6 +59,10 @@ t_light	*add_lamp(color col, vec3 pos_dir, PFPN intensity, bool is_dir)
 
 t_light	*add_lamp_(t_light l)
 {
+	l.transform.scale = v_3(l.intensity);
+	if (l.is_dir)
+		l.transform.rot = dir_to_rot(l.dir);
+
 	if (v.light_count >= MAX_LIGHT_COUNT)
 	{
 		printf("Too many lamps >%d, recompile with greater MAX_LIGHT_COUNT\n",

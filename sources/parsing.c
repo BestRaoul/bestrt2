@@ -142,24 +142,35 @@ int	parse_file(const char *filename)
 }
 
 //crash on its own
+//rework with smart flag system
 void	parse_2nd_argument(int ac, char **av)
 {
 	int	i;
 
 	if (ac < 2)
-		init_scene(100);
-	else if (ft_strncmp(av[1], "-n", 3) == 0)
+		return (init_scene(100));
+	i = 1;
+	if (ft_strncmp(av[1], "-headless", 10) == 0)
 	{
-		if (ac == 3)
-			init_scene(ft_atoi(av[2]));
+		(v.is_headless_print = True, i++);
+		if (av[i] == NULL)
+			(dprintf(2, ERROR" no scenes provided\n"), my_exit());
+	}
+	if (ft_strncmp(av[i], "-n", 3) == 0)
+	{
+		if (av[i + 1])
+			init_scene(ft_atoi(av[i + 1]));
 		else
 			init_scene(-1);
 	}
-	else if (ft_strncmp(av[1], "-h", 3) == 0)
-		(print_rt_format(), my_exit());
+	else if (ft_strncmp(av[i], "-h", 3) == 0 || ft_strncmp(av[i], "-help", 3) == 0)
+	{
+		print_rt_format();
+		my_exit();
+	}
 	else
 	{
-		i = 1;
+		populate_defaults();
 		while (i < ac)
 		{
 			if (parse_file(av[i]) == -1)

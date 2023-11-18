@@ -24,6 +24,26 @@ const char	*g_imported_materials_names[MAX_IMPORT_MATERIALS] = {};
 material	g_imported_materials[MAX_IMPORT_MATERIALS] = {};
 int			g_im_index = 0;
 
+static void	__add_tex(char *name, texture t)
+{
+	g_imported_textures_names[g_it_index] = name;
+	g_imported_textures[g_it_index] = t;
+	g_it_index++;
+}
+
+void	populate_defaults(void)
+{
+	__add_tex("builtin_sky", from_func(sky_background));
+	__add_tex("builtin_shit_sky", from_func(shit_sky_background));
+	__add_tex("builtin_uv", from_func(uv_background));
+	__add_tex("builtin_stars", from_func(stars));
+	__add_tex("FULL_MAP",	FULL_MAP);
+	__add_tex("NO_MAP",		NO_MAP);
+	__add_tex("HALF_MAP",	HALF_MAP);
+	__add_tex("WHITE_MAP",	WHITE_MAP);
+	__add_tex("BLACK_MAP",	BLACK_MAP);
+}
+
 bool	get_id(const char *tag, const char **dictionary, int *id)
 {
 	*id = 0;

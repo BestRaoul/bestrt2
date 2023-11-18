@@ -53,16 +53,15 @@ bool	fullfill(t_split_task *task, int _split)
 			if (!task->noblock && get_elapsed(v.last_update) > 1000000.0
 				/ TARGET_FPS)
 			{
-				print_progress(_split * task->w_size * task->h_size
-					+ task->_x + task->_y * task->w_size);
+				print_progress((PFPN)(task->_y * task->w_size + task->_x
+						+ _split * task->w_size * task->h_size)
+						/ ((PFPN)(v.w * v.h) / (PFPN)(v.upscale * v.upscale)));
 				return (False);
 			}
 		}
 		task->_x = 0;
 		task->_y += task->upscale;
-		if (v.rendering_movie)
-			print_progress(_split * task->w_size * task->h_size
-				+ task->_y * task->w_size);
+		print_progress((PFPN)(_split * task->w_size * task->h_size + task->_y * task->w_size) / ((PFPN)(v.w * v.h) / (PFPN)(v.upscale * v.upscale)));
 	}
 	task->_y = 0;
 	return (True);
@@ -73,21 +72,22 @@ void	show_progress(int _split, int max_splits,
 {
 	if (_split == max_splits)
 	{
-		print_progress(v.w * v.h);
+		print_progress(1.0);
 		printf(" in %.2f ms\n", get_elapsed(frame_start) / 1000.0);
 	}
 }
 
-void	print_progress(int pixel_count)
+// (none) 0.0 to 1.0 (full)
+void	print_progress(PFPN progress)
 {
-	PFPN		progress;
 	const char	pm[21] = "####################";
 	const char	no_pm[21] = "....................";
 	char		s[100];
 
-	progress = (PFPN)pixel_count / (v.w * v.h) * 100;
+	progress = clamp_(progress);
+	progress *= 100;
 	write(1, "\33[2K\r", ft_strlen("\33[2K\r"));
-	sprintf(s, "frame %d : [%s%.*s%s%.*s]  %.0f%%", v.steps_rendered, T_GRN,
+	sprintf(s, "frame %d : [%s%.*s%s%.*s]  %.2f%%", v.steps_rendered, T_GRN,
 		(int)progress / 5, pm, T_RESET,
 		20 - (int)progress / 5, no_pm, progress);
 	write(1, s, ft_strlen(s));

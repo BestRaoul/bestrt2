@@ -40,7 +40,8 @@ void	set_cursor(unsigned int xc)
 	xvar = (t_xvar *)v.mlx;
 	win = (t_win_list *)v.win;
 	xc %= 154;
-	printf("xc: %u\n", xc);
+	if (v._debug)
+		printf("xc: %u\n", xc);
 	cursor = XCreateFontCursor(xvar->display, xc);
 	XDefineCursor(xvar->display, win->window, cursor);
 	XMoveWindow(xvar->display, win->window, 955, 0);

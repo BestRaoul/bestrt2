@@ -1,22 +1,28 @@
-BG  1
+BG  stars
 C   0,1,3.1415 - -
 CE  1   0,1,0
-RS  3840 2160 3 1 1 2
+RS  960 540 1 10 100 1
+
+T   cl_albedo           textures/earth_clouds/color.xpm
+T   cl_transmission     textures/earth_clouds/transparency.xpm
+T   cl_alpha            textures/earth_clouds/alpha.xpm
+
 
 M   check   CHECKERBOARD(.1|.9|.5)
 M   earth   textures/earth/color.bmp -  textures/earth/specular.xpm  -  -  -  -  -  -  -  textures/earth/normal.bmp  3 - -
-M   earth_clouds    textures/earth_clouds/color.xpm -  -  -  -  1.0  textures/earth_clouds/alpha4k.xpm  0.1  -  - - - - textures/earth_clouds/alpha.xpm
+M   earth_clouds    cl_albedo -  -  -  - 1.0 cl_transmission 1.0 - - - - - cl_alpha
 M   moon    textures/moon/color.xpm - - - - - - - - - textures/moon/normal.xpm 3 - -
 
 M   clouds1     textures/earth_clouds/color.xpm
 M   clouds2     textures/earth_clouds/alpha.xpm
 M   clouds3     textures/earth_clouds/alpha4k.xpm
 
-PL  0,0,0       -       1   check
-SP  2,1,0       -       1   clouds1
-SP  0,1,0       -       1   clouds2
-SP  -2,1,0      -       1   clouds3
+# PL  0,0,0       -       1   check
 
-# SP  0,1,0       -       1   earth
-# SP  0,1,0       -       1.1   earth_clouds
-# SP  1,2,0       -       .2   moon
+# SP  2,1,0       -       1   clouds1
+# SP  0,1,0       -       1   clouds2
+# SP  -2,1,0      -       1   clouds3
+
+SP  0,1,0       -       1       earth
+SP  0,1,0       -       1.02    earth_clouds
+SP  1,2,0       -       .2      moon

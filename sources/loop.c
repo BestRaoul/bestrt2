@@ -60,7 +60,6 @@ void	render_movie(void)
 	int	loops;
 	int	frame_id;
 
-	mlx_destroy_window(v.mlx, v.win);
 	v.render_mode = v.animation_render_mode;
 	v.rendering_movie = True;
 	framerate = v.animation_framerate;
@@ -70,14 +69,34 @@ void	render_movie(void)
 	v.time_passed = 0;
 	v.motion_enabled = 1;
 	frame_id = 0;
+
+	dprintf(2, "\n---------- "ANSI_BOLD""ANSI_BLUE"Rendering Movie"ANSI_RESET" ----------\n");
+	dprintf(2, "| mode :  % 2d | framerate: % 3d / % 3d |\n", v.render_mode, framerate, frames);
+	dprintf(2, "-------------------------------------\n");
+	my_exit();
 	while (frame_id < frames)
 	{
-		(apply_motions(), update_camera(), raytrace(), write_img());
+		(apply_motions(), update_camera(), 	update_lamp_stats(), update_tfm_matrices());
+		(raytrace(), write_img());
 		printf("%d/%d !\n", frame_id++, frames);
 		v.time_passed += v.delta_time * v.animation_speed;
 	}
+	mlx_destroy_window(v.mlx, v.win);
 	ffmpeg_bmp_to_mp4(framerate, loops);
-	exit(0);
+	my_exit();
+}
+
+void	headless_print(void)
+{
+	dprintf(2, "\n---------- "ANSI_BOLD""ANSI_BLUE"Headless Render"ANSI_RESET" ----------\n");
+	
+	v.rendering_movie = True;
+	(apply_motions(), update_camera(), 	update_lamp_stats(), update_tfm_matrices());
+	(raytrace(), write_img());
+
+	dprintf(2, "-------------------------------------\n");
+
+	my_exit();
 }
 
 /*

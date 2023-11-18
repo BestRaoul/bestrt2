@@ -16,7 +16,7 @@ static inline void	close_file(FILE *file, const char *filename)
 {
 	fclose(file);
 	write(1, "\33[2K\r", ft_strlen("\33[2K\r"));
-	fprintf(stderr, ANSI_GREEN"READ"ANSI_RESET" %s: done!\n", filename);
+	fprintf(stderr, ANSI_GREEN""ANSI_BOLD"READ"ANSI_RESET" %s: done!\n", filename);
 }
 
 // 0 on failure
@@ -64,6 +64,7 @@ bool	read_xmp(const char *filename, bmp_read *r)
 		y++;
 	}
 	mlx_destroy_image(v.mlx, new.mlx_img);
+	dprintf(2, ANSI_GREEN""ANSI_BOLD"READ"ANSI_RESET" %s: done!\n", filename);
 	return (True);
 }
 

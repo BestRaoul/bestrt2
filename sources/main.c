@@ -29,13 +29,17 @@ void	vars_init(int ac, char **av)
 		b->image[xy] = gaussian_blur(xy % b->image_width,
 				xy / b->image_width, b);
 	v.blurry_irradiance_map = *b;
-	v.win = mlx_new_window(v.mlx, v.w, v.h, "bruh");
 	v.img.mlx_img = mlx_new_image(v.mlx, v.w, v.h);
 	v.img.addr = mlx_get_data_addr(v.img.mlx_img, &v.img.bpp, &v.img.line_len,
 			&v.img.endian);
 	v.dist_heatmap = (PFPN **)alloc_2d(sizeof(PFPN), v.w, v.h);
 	v.accumulate_img = (vec3 **)alloc_2d(sizeof(vec3), v.w, v.h);
 	gettimeofday(&v.last_update, 0);
+	
+	if (v.is_headless_print)
+		headless_print();
+	
+	v.win = mlx_new_window(v.mlx, v.w, v.h, "bruh");
 }
 
 int	my_exit(void)

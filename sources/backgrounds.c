@@ -47,3 +47,16 @@ color	uv_background(vec3 uv)
 {
 	return (v_scal(v_add(uv, v_3(1)), 0.5));
 }
+
+static double noise(int x, int y) {
+    int n = x + y * 57;
+    n = (n << 13) ^ n;
+    return (1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0);
+}
+
+color	stars(vec3 uv) {
+    double n = noise(uv.x * 512, uv.y * 512);
+	if (n > .98)
+		return WHITE;
+	return BLACK;
+}

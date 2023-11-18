@@ -18,6 +18,7 @@
 # define ANSI_GREEN   "\x1b[32m"
 # define ANSI_YELLOW  "\x1b[33m"
 # define ANSI_BLUE    "\x1b[34m"
+# define ANSI_BOLD	  "\x1b[1m"
 
 # define PFPN	double
 
@@ -28,8 +29,8 @@
 # define True 1
 # define False 0
 
-# define WARNING "["ANSI_YELLOW"WARNING"ANSI_RESET"]"
-# define ERROR	 "["ANSI_RED"ERROR"ANSI_RESET"]"
+# define WARNING "["ANSI_BOLD""ANSI_YELLOW"WARNING"ANSI_RESET"]"
+# define ERROR	 "["ANSI_BOLD""ANSI_RED"ERROR"ANSI_RESET"]"
 
 static inline void	notify_illegal(const char *feature)
 {
@@ -78,6 +79,7 @@ You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
 
 # define BW_MAP(w)		c3(w,w,w)
 # define NO_MAP			BW_MAP(0.0)
+# define HALF_MAP		BW_MAP(0.5)
 # define FULL_MAP		BW_MAP(1.0)
 # define WHITE_MAP		cc3(WHITE)
 # define BLACK_MAP		cc3(BLACK)
@@ -284,6 +286,8 @@ typedef struct s_vars {
 
 	bool		solo_lighting;
 
+	bool		is_headless_print;
+
 }	t_vars;
 
 extern t_vars	v;
@@ -297,11 +301,13 @@ int		my_exit();
 // Loop
 int		loop();
 void	render_movie();
+void	headless_print(void);
 
 // Backgrounds
 color	sky_background(vec3 uv);
 color	shit_sky_background(vec3 uv);
 color	uv_background(vec3 uv);
+color	stars(vec3 uv);
 
 // Disk
 // # ffmpeg
@@ -537,6 +543,7 @@ void	parse_2nd_argument(int ac, char **av);
 // # atoos
 vec3	atov3(const char *str, vec3 __default);
 PFPN	atod(const char *str, PFPN __default);
+void	populate_defaults(void);
 texture	atotexture(const char *str, texture __default);
 material	atomaterial(const char **line, material __default);
 bool	get_id(const char *tag, const char **dictionary, int *id);
@@ -614,7 +621,7 @@ void    render_pixel(int x, int y);
 void	generate_tasks(t_split_task *tasks, int w_splits, int h_splits, int upscale);
 bool	fullfill(t_split_task *task, int _split);
 void	show_progress(int _split, int max_splits, struct timeval frame_start);
-void	print_progress(int pixel_count);
+void	print_progress(PFPN  progress);
 // # trace
 color	tone(color light);
 color	trace(ray *r, int max_depth);

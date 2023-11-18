@@ -1,7 +1,7 @@
 C   0,0,3.1415  - -
 BG  0
 CE  1   0,0,0   -   -   -   -   -
-RS  900 900 2 6 10 2
+RS  900 900 1 6 10 2
 
 M   rubik     textures/abstract/color.bmp textures/abstract/metalic.bmp - - textures/abstract/rough.bmp - - - - - textures/abstract/normal.bmp 5.0
 

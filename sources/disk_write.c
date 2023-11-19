@@ -129,8 +129,8 @@ void	write_img(void)
 		return ((void)printf("no such directory \"%s\"\n", OUTFOLDER));
 	closedir(dir);
 	write(1, "writing img..", 14);
-	sprintf(filename, "%s/%s", OUTFOLDER, FF);
-	sprintf(filename, filename, count);
+	sprintf(filename, "%s/img_%s.bmp", OUTFOLDER, get_current_date_time());
+	// sprintf(filename, filename, count);
 	pixels = gc_malloc(v.w * v.h * sizeof(unit8_color));
 	set_pixels(pixels);
 	write_bmp(filename, v.w, v.h, pixels);

@@ -311,6 +311,7 @@ color	stars(vec3 uv);
 
 // Disk
 // # ffmpeg
+char	*get_current_date_time(void);
 void	ffmpeg_bmp_to_mp4(int framerate, int loops);
 // # read
 bool	read_bmp(const char *filename, bmp_read *r);

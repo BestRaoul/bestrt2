@@ -1,10 +1,18 @@
-C   0,0,3.1415  - -
-BG  0
-CE  1   0,0,0   -   -   -   -   -
-RS  900 900 1 6 10 2
+C   6.0680,4.8104,5.0505  - 20
+BG  1
+# IBL	textures/hdri/emptyroom1k.bmp
+CE  1   0,1,0   -   -   -   -   -
+RS	1000 1000	1	6	50	2
 
-M   rubik     textures/abstract/color.bmp textures/abstract/metalic.bmp - - textures/abstract/rough.bmp - - - - - textures/abstract/normal.bmp 5.0
+M   whitey  .95,.94,.92
+M	lamp	0	- - - - - - - 1,0,0 10
 
-BX  -0,-.5,-.4      0,-0.31415,0    .5	        rubik
+SQ	0,-0.001,0		0,0,0			6	whitey 
+SQ	0,0,-4			1.57,0,0		6	whitey 
+SQ	-4,0,0	        0,0,-1.57		6	whitey
 
-SQ  0,.999,0        3.1415,0,0      .8           1 - - - - - - - 1 3
+M   rubick      textures/rubick/color.xpm   0   textures/rubick/reflection.xpm   -   textures/rubick/roughness.xpm    - - - - -   textures/rubick/normal.xpm    10   -   -
+
+BX	0,1,0		0,0,0			1		rubick
+
+LP	-1,3,-2		2	1,1,.8

@@ -90,6 +90,7 @@ void	headless_print(void)
 {
 	dprintf(2, "\n---------- "ANSI_BOLD""ANSI_BLUE"Headless Render"ANSI_RESET" ----------\n");
 	
+	v.render_mode = RAYTRACE;
 	v.rendering_movie = True;
 	(apply_motions(), update_camera(), 	update_lamp_stats(), update_tfm_matrices());
 	(raytrace(), write_img());

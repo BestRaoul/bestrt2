@@ -29,9 +29,13 @@ It is a plenty featured raytracer built with mlx the school 42 window library ba
 Anyway, even with all those features missing it can render some relatively realistic images
 
 -- UNDER CONSTRUCTION --
+<!-- 
 [insert images]
   1. BestRT logo with cool features
   2. cornell box but with a twist
   3. blender PBR material rows showcase
-  4. planet earth with clouds
-  5. burger image under a glass
+  -->
+![Cone and his buddies](gallery/img1.bmp)
+![Cornell box with two glass primitives](gallery/img4.bmp)
+![Burger image under frosted glass](gallery/img2.bmp)
+![Planet earth with clouds](gallery/img3.bmp)

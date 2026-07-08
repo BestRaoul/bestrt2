@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   scenes.c                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: pkondrac <marvin@42lausanne.ch>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/11 10:46:01 by pkondrac          #+#    #+#             */
-/*   Updated: 2022/11/21 20:41:00 by pkondrac         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "fractol.h"
 
@@ -40,18 +29,6 @@ void	default_cam(void)
 	v.uv_debug = from_bmp("textures/debug/uv_check.bmp");
 	v.solo_lighting = 0;
 }
-
-#ifndef ILLEGAL
-
-void	init_scene(int select)
-{
-	notify_illegal("premade scene");
-	my_exit();
-	(void)select;
-}
-#endif
-
-#ifdef ILLEGAL
 
 void	init_scene(int select)
 {
@@ -201,4 +178,3 @@ void	test(void)
 	mirrors();
 	return ;
 }
-#endif

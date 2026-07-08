@@ -1,18 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   scenes.c                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: pkondrac <marvin@42lausanne.ch>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/11 10:46:01 by pkondrac          #+#    #+#             */
-/*   Updated: 2022/11/21 20:41:00 by pkondrac         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "fractol.h"
-
-#ifdef ILLEGAL
 
 void	bumpy(void)
 {
@@ -109,5 +96,3 @@ void	normal_reflection(void)
 	add_motion(&(lp->x), -d, d, sin_tween);
 	add_motion(&(lp->z), -d, d, cos_tween);
 }
-
-#endif

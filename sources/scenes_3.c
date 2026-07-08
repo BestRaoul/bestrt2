@@ -1,18 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   scenes.c                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: pkondrac <marvin@42lausanne.ch>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/11 10:46:01 by pkondrac          #+#    #+#             */
-/*   Updated: 2022/11/21 20:41:00 by pkondrac         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "fractol.h"
-
-#ifdef ILLEGAL
 
 //!6 : earth in space normal mapped
 void	showoff_6(void)
@@ -209,4 +196,3 @@ void	showoff_9(void)
 	add_lamp(WHITE, v_norm(v3(-1,-.5,-1)), 1.0, True);
 	write(1, "1: Metalic\n2: Specular\n3: Roughness\n4: transmission\n5: Transmission roughness\n", 79);
 }
-#endif

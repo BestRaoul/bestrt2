@@ -1,18 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   item.c                                             :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: pkondrac <marvin@42lausanne.ch>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/11 10:46:01 by pkondrac          #+#    #+#             */
-/*   Updated: 2022/11/21 20:41:00 by pkondrac         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "fractol.h"
-
-#ifdef ILLEGAL
 
 t_item	*add_item(vec3 position, vec3 scale, vec3 rotation, material m,
 		void (*raster)(t_item *), bool (*hit)(const ray *, const interval,
@@ -21,7 +8,6 @@ t_item	*add_item(vec3 position, vec3 scale, vec3 rotation, material m,
 	return (add_item_((t_item){(tfm){position, rotation, scale}, m, raster,
 		hit}));
 }
-#endif
 
 t_item	*add_item_(t_item t)
 {

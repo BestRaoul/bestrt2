@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   fractol.h                                          :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: pkondrac <marvin@42lausanne.ch>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/11 10:46:01 by pkondrac          #+#    #+#             */
-/*   Updated: 2022/11/21 20:41:00 by pkondrac         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef FRACTOL_H
 # define FRACTOL_H
 
@@ -22,7 +10,6 @@
 
 # define PFPN	double
 
-# define ILLEGAL
 # include <stdio.h>
 # include <stdbool.h>
 
@@ -31,13 +18,6 @@
 
 # define WARNING "["ANSI_BOLD""ANSI_YELLOW"WARNING"ANSI_RESET"]"
 # define ERROR	 "["ANSI_BOLD""ANSI_RED"ERROR"ANSI_RESET"]"
-
-static inline void	notify_illegal(const char *feature)
-{
-	dprintf(2, WARNING" \
-You are trying to invoke \"%s\", an ILLEGAL feature.\n", feature);
-	dprintf(2, "Please recompile with that flag\n");
-}
 
 # define FF	"\%03d.bmp"
 # define OUTFOLDER "output"

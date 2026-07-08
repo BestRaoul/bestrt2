@@ -1,18 +1,7 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   disk.c                                             :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: pkondrac <marvin@42lausanne.ch>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/11 10:46:01 by pkondrac          #+#    #+#             */
-/*   Updated: 2022/11/21 20:41:00 by pkondrac         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "fractol.h"
 
-#define NTFY_SERVER "0.0.0.0:80/balls"
+#define NTFY_SERVER "0.0.0.0:80/balls" //TODO: CHANGE THIS
 
 extern char	**environ;
 
@@ -41,8 +30,6 @@ char	*get_current_date_time(void)
 	return (date_time_string);
 }
 
-#ifdef ILLEGAL
-
 void	ntfy_file(const char *filename, const char *output_filename,
 	pid_t id, char *message)
 {
@@ -68,24 +55,11 @@ void	ntfy_file(const char *filename, const char *output_filename,
 	av[14] = NULL;
 	execve(av[0], av, environ);
 }
-#else
 
-void	ntfy_file(const char *filename, const char *output_filename,
-	pid_t id, char *message)
-{
-	notify_illegal(__func__);
-	(void) filename;
-	(void) output_filename;
-	(void) id;
-	(void) message;
-}
-
-#endif
 //"\%03d.bmp"
 /*
 ffmpeg -i output/%03d.bmp -r 24 -c:v libx264 -preset slow -crf 18 output.mp4
 */
-#ifdef ILLEGAL
 
 void	ffmpeg_bmp_to_mp4(int framerate, int loops)
 {
@@ -115,12 +89,3 @@ void	ffmpeg_bmp_to_mp4(int framerate, int loops)
 		execve(av[0], av, environ);
 	ntfy_file(output_filename, output_filename, id, "The Render has finished!");
 }
-#else
-
-void	ffmpeg_bmp_to_mp4(int framerate, int loops)
-{
-	notify_illegal(__func__);
-	(void) framerate;
-	(void) loops;
-}
-#endif

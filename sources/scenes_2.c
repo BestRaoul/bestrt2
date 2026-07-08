@@ -1,18 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   scenes.c                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: pkondrac <marvin@42lausanne.ch>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/11 10:46:01 by pkondrac          #+#    #+#             */
-/*   Updated: 2022/11/21 20:41:00 by pkondrac         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "fractol.h"
-
-#ifdef ILLEGAL
 
 //!1 : green plane, 3 balls (gold, blue, hollow glass)
 //ok, 1 noise
@@ -151,4 +138,3 @@ void	showoff_5(void)
 
 	add_lamp(WHITE, v3(.9,.9,.9), 1.0, False);
 }
-#endif

@@ -1,0 +1,121 @@
+
+#include "fractol.h"
+
+bool	hit(const ray *r, const interval ray_t, hit_record *rec)
+{
+	bool		hit_anything;
+	PFPN		closest_so_far;
+	hit_record	temp_rec;
+	int			alpha;
+	int			i;
+
+	hit_anything = False;
+	closest_so_far = ray_t.max;
+	i = -1;
+	while (++i < v.item_count)
+	{
+		if (v.items[i].hit(r, (interval){ray_t.min, closest_so_far},
+			&temp_rec, &v.items[i]))
+		{
+			alpha = .5 + evaluate_bw(&(temp_rec.mat.alpha), temp_rec.u,
+					temp_rec.v);
+			if (alpha == 0)
+				continue ;
+			hit_anything = True;
+			closest_so_far = temp_rec.t;
+			*rec = temp_rec;
+		}
+	}
+	return (hit_anything);
+}
+
+bool	info_hit(const ray *r, const interval ray_t, hit_record *rec)
+{
+	bool		hit_anything;
+	PFPN		closest_so_far;
+	hit_record	temp_rec;
+	int			alpha;
+	int			i;
+
+	hit_anything = False;
+	closest_so_far = ray_t.max;
+	i = -1;
+	while (++i < v.item_count)
+	{
+		if (v.items[i].hit(r, (interval){ray_t.min, closest_so_far},
+			&temp_rec, &v.items[i]))
+		{
+			alpha = .5 + evaluate_bw(&(temp_rec.mat.alpha), temp_rec.u,
+					temp_rec.v);
+			if (alpha == 0)
+				continue ;
+			hit_anything = True;
+			closest_so_far = temp_rec.t;
+			temp_rec.item = &(v.items[i]);
+			*rec = temp_rec;
+		}
+	}
+	return (hit_anything);
+}
+
+bool	check_hit(const ray *r, const interval ray_t)
+{
+	hit_record	temp_rec;
+	int			alpha;
+	int			i;
+
+	i = 0;
+	while (i < v.item_count)
+	{
+		if (v.items[i].hit(r, ray_t, &temp_rec, &v.items[i]))
+		{
+			alpha = .5 + evaluate_bw(&(temp_rec.mat.alpha), temp_rec.u,
+					temp_rec.v);
+			if (alpha == 0)
+			{
+				i++;
+				continue ;
+			}
+			return (True);
+		}
+		i++;
+	}
+	return (False);
+}
+
+// Sets the hit record normal vector.
+// NOTE: the parameter `outward_normal` is assumed to have unit length.
+void	set_face_normal(hit_record *rec, const ray *r,
+		const vec3 outward_normal)
+{
+	rec->front_face = v_dot(r->dir, outward_normal) < 0;
+	if (rec->front_face)
+		rec->normal = outward_normal;
+	else
+		rec->normal = v_scal(outward_normal, -1);
+}
+
+// If you find a better quicker way to go from local_t to global
+// tell me.
+PFPN	t2global(const PFPN lt, const ray *local_r, const ray *r,
+		const m4x4 fwd)
+{
+	vec3	temp;
+
+	multiply_matrix_vector(fwd, ray_at(local_r, lt), &temp);
+	return (vec_dist(r->orig, temp));
+}
+
+bool	is_interior(const PFPN a, const PFPN b)
+{
+	if ((a < 0) || (1 < a) || (b < 0) || (1 < b))
+		return (False);
+	return (True);
+}
+
+vec3	get_cube_normal(const int id, hit_record *rec)
+{
+	return (v3(1 * (id == 3) - 1 * (id == 2), 1 * (id == 5) - 1 * (id == 4), 1
+			* (id == 0) - 1 * (id == 1)));
+}
+
